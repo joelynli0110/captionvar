@@ -1,0 +1,23 @@
+{
+  "sample-size": {
+    "caption": "Northbridge FC completed passes to recover possession at Northbridge FC during the observational period.",
+    "provider": "Microsoft Foundry Local",
+    "model": "qwen2.5-1.5b",
+    "generated_at_utc": "2026-10-22T15:06:15.436109+00:00",
+    "disclosure": "Unverified model prose; VAR checks a separate typed claim, not all words in this caption."
+  },
+  "pressing": {
+    "caption": "Northbridge FC recovered the ball three times in the final 90 seconds of the match.",
+    "provider": "Microsoft Foundry Local",
+    "model": "qwen2.5-1.5b",
+    "generated_at_utc": "2026-10-22T15:06:21.965200+00:00",
+    "disclosure": "Unverified model prose; VAR checks a separate typed claim, not all words in this caption."
+  },
+  "missing-xg": {
+    "caption": "Northbridge FC scored their first goal at 83:11 during the 90-minute match against Riverside United.",
+    "provider": "Microsoft Foundry Local",
+    "model": "qwen2.5-1.5b",
+    "generated_at_utc": "2026-10-22T15:06:29.535506+00:00",
+    "disclosure": "Unverified model prose; VAR checks a separate typed claim, not all words in this caption."
+  }
+}

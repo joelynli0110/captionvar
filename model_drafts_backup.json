@@ -1,0 +1,23 @@
+{
+  "sample-size": {
+    "caption": "North Northbridgebridge FC recover recover the ball at the attacking third during the 90 seconds of the match.",
+    "provider": "Microsoft Foundry Local",
+    "model": "qwen2.5-1.5b",
+    "generated_at_utc": "2026-10-22T14:41:06.164262+00:00",
+    "disclosure": "Unverified model prose; VAR checks a separate typed claim, not all words in this caption."
+  },
+  "pressing": {
+    "caption": "Northbridge FC recovered the ball three times in the final 90 seconds of the match.",
+    "provider": "Microsoft Foundry Local",
+    "model": "qwen2.5-1.5b",
+    "generated_at_utc": "2026-10-22T14:41:13.207167+00:00",
+    "disclosure": "Unverified model prose; VAR checks a separate typed claim, not all words in this caption."
+  },
+  "missing-xg": {
+    "caption": "Northbridge FC scored their first goal at 83:11 during the 90-minute match against Riverside United.",
+    "provider": "Microsoft Foundry Local",
+    "model": "qwen2.5-1.5b",
+    "generated_at_utc": "2026-10-22T14:41:21.309125+00:00",
+    "disclosure": "Unverified model prose; VAR checks a separate typed claim, not all words in this caption."
+  }
+}
