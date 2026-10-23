@@ -1,6 +1,6 @@
 {
   "label": "Small, hand-curated regression/stress suite — NOT an estimate of deployment accuracy",
-  "recordedAt": "2026-10-23T20:56:32.532Z",
+  "recordedAt": "2026-10-23T22:00:04.922Z",
   "methodology": "Fixed synthetic match events and manually annotated candidate captions. A prediction is counted as a match only if its three-way action agrees with one human label. This is not an unbiased test set or a safety guarantee.",
   "totals": {
     "count": 30,
@@ -94,7 +94,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 1.409,
+      "latencyMs": 1.25,
       "reason": "The candidate does not match the limited supported claim grammar. Unrecognized prose is never auto-approved.",
       "label": "Supported but outside restricted grammar; safety gate should block it."
     },
@@ -104,7 +104,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.387,
+      "latencyMs": 0.388,
       "reason": "The candidate does not match the limited supported claim grammar. Unrecognized prose is never auto-approved.",
       "label": "Two passes do not support claims about domination."
     },
@@ -124,7 +124,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.278,
+      "latencyMs": 0.277,
       "reason": "A recovery was mentioned but its quantity could not be parsed reliably.",
       "label": "Actual captured draft cannot establish a recovery count."
     },
@@ -144,7 +144,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.268,
+      "latencyMs": 0.29,
       "reason": "Caption recovery totals (3) differ from the recorded totals (0, opponent 0).",
       "label": "No recovery events in the supplied scene."
     },
@@ -164,7 +164,7 @@
       "expected": "VERIFY",
       "actual": "VERIFY",
       "match": true,
-      "latencyMs": 0.186,
+      "latencyMs": 0.188,
       "reason": "The parsed recovery count matches timestamped attacking-third events. Only this supported claim is verified, not arbitrary extra text.",
       "label": "Directly supported count and time-window."
     },
@@ -184,7 +184,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.03,
+      "latencyMs": 0.031,
       "reason": "Caption recovery totals (4) differ from the recorded totals (3, opponent 0).",
       "label": "Four vs three."
     },
@@ -194,7 +194,7 @@
       "expected": "VERIFY",
       "actual": "VERIFY",
       "match": true,
-      "latencyMs": 0.027,
+      "latencyMs": 0.024,
       "reason": "The parsed recovery count matches timestamped attacking-third events. Only this supported claim is verified, not arbitrary extra text.",
       "label": "Supported count with abbreviated numeral."
     },
@@ -204,7 +204,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.026,
+      "latencyMs": 0.036,
       "reason": "Caption recovery totals (2) differ from the recorded totals (3, opponent 0).",
       "label": "Two vs three."
     },
@@ -214,7 +214,7 @@
       "expected": "QUALIFY",
       "actual": "QUALIFY",
       "match": true,
-      "latencyMs": 0.141,
+      "latencyMs": 0.135,
       "reason": "The count matches, but pressing causality is unsupported.",
       "label": "Numeric evidence exists but causal attribution is not present."
     },
@@ -234,7 +234,7 @@
       "expected": "QUALIFY",
       "actual": "QUALIFY",
       "match": true,
-      "latencyMs": 0.026,
+      "latencyMs": 0.04,
       "reason": "The count matches, but other event or player claims are not supported by this parser.",
       "label": "Count supported but injury not evidenced; preserve only supported facts."
     },
@@ -274,7 +274,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.008,
+      "latencyMs": 0.007,
       "reason": "The caption claims a goal, but no goal event exists in the supplied records.",
       "label": "Real model draft invents a goal."
     },
@@ -284,7 +284,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.029,
+      "latencyMs": 0.027,
       "reason": "The caption mentions xG but the source supplies no xG estimate.",
       "label": "No xG provided by source."
     },
@@ -294,7 +294,7 @@
       "expected": "QUALIFY",
       "actual": "QUALIFY",
       "match": true,
-      "latencyMs": 0.02,
+      "latencyMs": 0.018,
       "reason": "A shot is supported, but only the verified event is safe to publish; surrounding prose is not fully parsed.",
       "label": "Shot supported; limited grammar permits partial rewrite."
     },
@@ -344,7 +344,7 @@
       "expected": "VERIFY",
       "actual": "VERIFY",
       "match": true,
-      "latencyMs": 0.016,
+      "latencyMs": 0.015,
       "reason": "The parsed recovery count matches timestamped attacking-third events. Only this supported claim is verified, not arbitrary extra text.",
       "label": "Both counts supported."
     },
@@ -354,7 +354,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.01,
+      "latencyMs": 0.014,
       "reason": "Caption recovery totals (4, opponent 1) differ from the recorded totals (3, opponent 1).",
       "label": "Home count incorrect."
     },
@@ -364,7 +364,7 @@
       "expected": "QUALIFY",
       "actual": "QUALIFY",
       "match": true,
-      "latencyMs": 0.021,
+      "latencyMs": 0.017,
       "reason": "The count matches, but pressing causality is unsupported.",
       "label": "Cause not given; three recoveries supported."
     },
@@ -374,7 +374,7 @@
       "expected": "QUALIFY",
       "actual": "QUALIFY",
       "match": true,
-      "latencyMs": 0.018,
+      "latencyMs": 0.017,
       "reason": "The count matches, but long-term superiority or dominance is not established; other event or player claims are not supported by this parser.",
       "label": "Season-long superiority unsupported; retain only count."
     },
@@ -384,7 +384,7 @@
       "expected": "WITHHOLD",
       "actual": "WITHHOLD",
       "match": true,
-      "latencyMs": 0.011,
+      "latencyMs": 0.014,
       "reason": "Caption recovery totals (3, opponent 2) differ from the recorded totals (3, opponent 1).",
       "label": "Opponent count incorrect."
     }
