@@ -1,195 +1,180 @@
-# CaptionVAR Live — Local-First Hackathon Starter
+# CaptionVAR Live
 
 **Every AI insight deserves a VAR check.**
 
-A small React prototype that replays **fully synthetic** football situations,
-checks *typed / structured* commentary claims against event evidence, and
-shows different viewer narratives. No Azure account or cloud model calls needed.
+> **A local-first, evidence-grounded verification layer for AI-generated football commentary.** Built for the Microsoft × Premier League *Inside the Game* Hackathon.
 
-> **Prototype disclosure:** This starter checks four **structured** claim types
-> (`pass_dominance`, `high_recoveries`, `xg`, and `recovery_causality`). It **does not** verify every
-> possible free-text assertion in an LLM response, and should not be described as
-> an open-domain fact checker. The match replay is simulated, not live Premier
-> League data. `src/data/model_drafts.json` defaults to `{}` until you run the
-> optional local inference script. The online GitHub Pages demo does not run
-> Foundry Local in the browser; it uses locally generated drafts saved at build
-> time. The VAR engine still runs interactively in the browser.
+**[Try the interactive demo](https://joelynli0110.github.io/captionvar-live-starter/)** · **[Browse the source](https://github.com/joelynli0110/captionvar-live-starter)**
 
-## 0. Requirements (Windows)
+## Why CaptionVAR?
 
-- Windows 11 24H2+ recommended for Foundry Local SDK, 16 GB RAM recommended.
-- Node.js LTS 22/24, Git, optionally Python 3.11 or 3.12.
-- No GPU required if a CPU-compatible model is available; internet for first model download.
+AI can turn match events into football commentary in seconds, but it can also invent goals, misstate time windows, exaggerate statistics, or attach unsupported tactical explanations to correct numbers. A plausible caption is not necessarily a reliable one.
 
-## 1. Run the offline-capable UI
+**CaptionVAR Live adds a VAR-style editorial checkpoint between generated commentary and the viewer.** It compares supported classes of claims against **synthetic, timestamped match events**, then chooses whether to **VERIFY**, **QUALIFY**, or **WITHHOLD** the candidate. Viewers can replay the relevant events, inspect the supporting records, and switch between casual-fan and tactical-analyst presentations.
 
-In PowerShell, extract the zip, open the `captionvar-live-starter` directory:
+This is an **interactive hackathon prototype**, not a general-purpose fact checker or a production live-broadcast service.
 
-```powershell
-npm install
-npm test
-npm run dev
+## Try the demo
+
+**Live demo:** https://joelynli0110.github.io/captionvar-live-starter/
+
+No sign-in or Azure subscription is required. Select any editorial scenario, press **RUN VAR CHECK**, and inspect its event IDs on the pitch. Use the replay controls and switch the **Casual fan / Tactical analyst** view.
+
+The public website runs **interactive, deterministic browser-side verification over saved candidate captions**. It does **not** generate new text using Foundry Local in the browser: model generation was performed separately on a Windows computer, and the resulting drafts were saved in the repository.
+
+### Five interactive scenarios
+
+| Scenario | What it demonstrates | Editorial action |
+| --- | --- | --- |
+| **01 · Perfect passing, tiny sample** | A superficially impressive percentage that cannot justify a broad dominance claim; real local-model prose may also be too garbled to approve | QUALIFY or WITHHOLD depending on the displayed draft |
+| **02 · Attacking-third recoveries** | Checking recovery counts against timestamped events and correcting a misdescribed 90-second window | VERIFY or QUALIFY depending on the displayed draft |
+| **03 · Fabricated goal / missing evidence** | A local model claims a goal, while the supplied source contains a related shot but no supporting goal event | WITHHOLD |
+| **04 · Unsupported tactical causality** | Correct recovery counts do not establish that aggressive pressing *caused* them | QUALIFY |
+| **05 · Hidden hallucination** | One supported statistic is combined with an unsupported hat-trick claim; the two claims are audited separately | WITHHOLD |
+
+**Scenario 05 — the showcase case:**
+
+> “Northbridge regained possession three times in the attacking third in the last 90 seconds, then went on to score a hat trick.”
+
+- **Supported:** Three attacking-third recoveries with traceable synthetic event IDs `R-711`, `R-712`, `R-713`.
+- **Not supported:** No goal/scorer records sufficient to establish a hat-trick.
+- **Decision:** WITHHOLD the original mixed-claim caption. A correct subclaim does not authorize an unsupported companion claim.
+
+Scenario 05 is **deliberately curated adversarial test text**, **not** a newly generated Qwen response. Scenarios 01–03 can show actual locally generated Foundry Local drafts; scenario 04 is a saved, observed model response.
+
+## How it works
+
+```text
+             Synthetic match-event records
+           (event ID · team · time · coordinates)
+                             │
+                             ▼
+              Microsoft Foundry Local
+         Qwen 2.5 1.5B · offline text drafting
+                             │
+                             ▼
+             Saved candidate commentary
+               src/data/model_drafts.json
+                             │
+                             ▼
+                 CaptionVAR text gate
+           limited parsing + evidence checks
+                             │
+                 ┌───────────┼───────────┐
+                 ▼           ▼           ▼
+               VERIFY      QUALIFY     WITHHOLD
+                 └───────────┼───────────┘
+                             ▼
+           Traceable evidence + safe output
+             Interactive React/Vite replay
 ```
 
-Open the local address printed by Vite (normally http://127.0.0.1:5173/).
-Click the four match scenarios and **RUN VAR CHECK**. Switch **Casual fan** / **Tactical analyst**.
+**Design choices**
 
-You should see these outcomes:
+- **Evidence first.** Numeric and event assertions are checked by deterministic code, not delegated to the language model.
+- **Conservative editorial actions.** Unrecognized or insufficiently supported statements are withheld rather than silently certified.
+- **Inspectable provenance.** Each synthetic source event has a timestamp, an event ID, and a visual location on the pitch. Relevant events are distinguished from events that actually support the challenged claim.
+- **Local-first.** Text generation uses Microsoft Foundry Local on the developer's device with no Azure cloud-model token charges.
+- **Small, testable scope.** The current text gate recognizes a limited set of English constructions. The focused claim-by-claim audit in scenario 05 is tailored to that curated demonstration; it is not general NLP extraction.
 
-- 100% pass accuracy from 2/2 passes → **QUALIFY** (sample too small)
-- 3 recoveries high up the pitch → **VERIFY**
-- fabricated 0.82 xG without a source xG estimate → **WITHHOLD**
-- A real local 1.5B commentary response (replayed) that attributes recoveries to aggressive pressing without causal evidence → **QUALIFY**
+### Tech stack
 
-## 2. Try Microsoft Foundry Local (no Azure account)
-
-Install CLI through PowerShell:
-
-```powershell
-winget install -e --id Microsoft.FoundryLocal
-```
-
-Restart PowerShell and verify:
-
-```powershell
-foundry --version
-foundry model list
-foundry model info qwen2.5-1.5b
-foundry chat qwen2.5-1.5b
-```
-
-Type `/exit` to leave chat. If the alias isn't listed, use another small chat model
-from `foundry model list` and update `MODEL_ALIAS` in the script below.
-
-## 3. Generate actual local model drafts (optional, later step)
-
-In a separate PowerShell from the project directory:
-
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install foundry-local-sdk-winml
-.\.venv\Scripts\python.exe scripts\generate_local_drafts.py
-```
-
-This script downloads/loads a small local model, makes three actual local
-inference calls **using synthetic event facts, not prewritten faulty claims as prompts**,
-and writes the UNVERIFIED generated candidate commentary to
-`src/data/model_drafts.json`. Then run the React UI again to display them.
-
-If virtual environment activation is blocked by PowerShell execution policy,
-use the venv Python directly rather than modifying machine-wide policies:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install foundry-local-sdk-winml
-.\.venv\Scripts\python.exe scripts\generate_local_drafts.py
-```
-
-Microsoft docs: https://learn.microsoft.com/en-us/azure/foundry-local/get-started
-
-## 4. GitHub repository and demo
-
-Create a **new public repo** `captionvar-live` and upload/commit all project
-files except ignored dependencies and private data. Then in GitHub:
-
-1. Go to **Settings → Pages**.
-2. Choose **Build and deployment → Source → GitHub Actions**.
-3. Push to `main`; `.github/workflows/pages.yml` builds/deploys the Vite React site.
-4. Open the `https://YOURUSERNAME.github.io/captionvar-live/` URL shown in Pages.
-
-The public demo works without your Windows PC being on, but it does **not**
-perform new local LLM inference on remote judges' machines. Judges can run
-`scripts/generate_local_drafts.py` locally following the above instructions.
-
-## 5. The seven-day plan
-
-| Day | Outcome |
+| Layer | Technology |
 | --- | --- |
-| 1 | Computer checked, Node/Git/Foundry CLI installed, starter UI and tests run |
-| 2 | Expand football-realistic synthetic data, implement event replay/timestamps |
-| 3 | Add robust verifier, unique event IDs, failure test cases, provenance |
-| 4 | Run Foundry Local SDK and connect constrained generation to verification |
-| 5 | Polish animation, overlay, two audience modes, narrative corrections |
-| 6 | Measure precision/false positives, publish public Pages demo and README |
-| 7 | Record under-2-minute demo, write English submission, test judge setup |
+| Local text generation | Microsoft Foundry Local, Qwen 2.5 1.5B, Python SDK |
+| Verifier & replay | JavaScript deterministic claim/evidence checks |
+| User interface | React + Vite |
+| Evaluation | Node.js test runner and curated label fixture |
+| Public hosting | GitHub Pages via GitHub Actions |
+| Football data | Fully synthetic, fictional clubs and match events |
 
-## Architecture
+## Evaluation and limitations
 
-`src/data/scenarios.json` → typed claim extraction → `src/verifier.js` → status
-and supporting event IDs → `src/App.jsx` (viewer mode / screen overlay).
+Latest completed development checks:
 
-Optional offline generation:
+- **47 JavaScript unit tests passing** (as reported during v0.8 validation).
+- **30 / 30 label matches** on a **curated regression fixture** after fixes guided by that fixture.
+- A successful local Vite production build and a publicly reachable, interactive GitHub Pages demonstration.
 
-`Microsoft Foundry Local` → `scripts/generate_local_drafts.py` →
-`src/data/model_drafts.json` → **unverified draft**, with a separate deterministic
-claim check. For higher-quality final submission, ensure the verifier checks
-*all claims* that the model emits, or constrain the generator to evidence-approved
-fact fields; do not claim arbitrary natural language is automatically fact-checked.
+**Do not interpret 30 / 30 as 100% hallucination detection accuracy.** The regression examples informed development; they are *not* an unseen independent test set. The evaluation makes no claim about performance on arbitrary natural language or real-world football feeds. Run `npm.cmd run eval` to regenerate the current report in `reports/evaluation.md` and `reports/evaluation.json`.
 
-## Official competition requirements
+**Known limits:**
 
-- Newly created, original work; synthetic football-realistic data.
-- Public GitHub repository and English documentation.
-- A real demonstration video **under two minutes** using a public supported host.
-- Free judge access to a working demo/test build through the judging period.
-- No Premier League footage, club marks or licensed event data is used here.
+- The app recognizes a **narrow set of claims and phrasings**. Unsupported/unrecognized inputs can be rejected conservatively, including captions that may actually be true.
+- The full text gate is **not** a broadly validated semantic fact checker, and the specialized two-claim presentation is **specific to the curated fifth scenario**.
+- The match and pitch events are fictional and replayed, not a live Premier League feed. The positions are illustrative synthetic coordinates, not real player tracking.
+- The hosted demo replays **pre-generated** model outputs; Foundry Local inference happens only when you run the local Python script.
+- The project does not use licensed Premier League footage, match data, club crests, or live broadcast feeds.
 
-Rules: https://github.com/microsoft/insidethegamehackathon/blob/main/OFFICIAL%20RULES.md
+## Run locally
 
-## License and integrity
+**Browser demo (Windows PowerShell)**
 
-The sample event data and project code were newly generated for this prototype.
-Review any dependencies' licenses. Do not push private data, tokens, or secrets.
-
-## What changed in v0.2
-
-- Added the user's observed qwen2.5-1.5b football commentary as a **replayed** case.
-- Added a typed claim validator for correct recovery counts plus unsupported causal inference.
-- Updated the verified-recoveries casual-fan caption so it does not imply that pressing caused the recoveries.
-- The observed text is manually annotated with a claim type; this is **not** general-purpose claim extraction or real-time free-text verification.
-- The online UI remains a static replay plus interactive deterministic verifier.
-
-## v0.3 — Event-grounded Foundry Local generator (important)
-
-In PowerShell from the project directory, after `npm.cmd test` passes:
+Requirements: Node.js 22/24, npm, and Git. Python and Foundry Local are **not** required to explore the already saved drafts and browser verifier.
 
 ```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install foundry-local-sdk-winml
-.\.venv\Scripts\python.exe -m unittest discover -s scripts -p "test_*.py"
-.\.venv\Scripts\python.exe scripts\generate_local_drafts.py
-npm.cmd run dev
-```
-
-- **Generation really uses the local SDK**, on your computer; no Azure account or cloud token billing.
-- **Prompts are constructed from synthetic event records**, rather than paraphrasing faulty seed statements.
-- The model outputs for the first three scenarios appear under **UNVERIFIED CAPTION**.
-- The fourth scenario remains a transparently labeled **manually copied replay** of the user's actual local model output.
-- **Critical distinction:** `RUN VAR CHECK` still verifies the *typed seed claim in the scenario*, **not every sentence the LLM just wrote**. Never tell a judge that generated prose is automatically verified. Live generated-caption claim extraction and consistency checks remain future work.
-- The exported GitHub Pages build runs only the interactive browser verifier and can replay saved local model drafts; the visitor does not receive local AI inference.
-- If the Python SDK installation fails on a Windows machine, consult the Microsoft Foundry Local Python SDK quickstart and keep the verified static MVP intact.
-
-Microsoft SDK reference: https://learn.microsoft.com/en-us/azure/foundry-local/how-to/how-to-integrate-with-inference-sdks
-
-## v0.4 — Model-output-aware, fail-closed verification
-
-The dashboard now runs `verifyCaption` against **the exact currently displayed local model draft** (when a generated draft is present), rather than validating an unrelated pre-annotated seed claim.
-
-- A tiny allowlist recognizes selected recovery counts, limited shot mentions, goal inventions and unsupported pressing / rolling-window claims.
-- The default is **WITHHOLD** for unrecognized language. This is **not an open-domain NLP fact checker**; the purpose is to give an honest, inspectable, conservative MVP.
-- The audience-facing published/qualified output is generated independently from the event records, not a blindly polished model hallucination.
-- It should not be claimed that the app validates all information in unconstrained natural language.
-- For original structured seed scenarios with no model draft, the previous `verifyScenario` route remains available for demo comparisons.
-
-### Apply the update without losing your real draft output
-
-If you have actual generated captions in `src/data/model_drafts.json`, **do not overwrite that file**. The v0.4 **Update** ZIP contains only the source/code files required for these changes and does not include `model_drafts.json`.
-
-After unpacking the update into the existing project root:
-
-```powershell
+# From the repository root
+npm.cmd install
 npm.cmd test
+npm.cmd run eval
 npm.cmd run dev
 ```
 
-Expected: 14 tests (7 existing + 7 new). The three generated captions should now receive **WITHHOLD / QUALIFY / WITHHOLD** respectively, while the manually replayed causal statement receives **QUALIFY**.
+Open the URL printed by Vite (normally `http://127.0.0.1:5173/`). For a production build, run:
+
+```powershell
+npm.cmd run build
+```
+
+**Optional: regenerate real model drafts offline with Microsoft Foundry Local**
+
+Use a supported Windows machine (16 GB RAM recommended). This project was developed using Windows 11, Python 3.11, and a 4 GB RTX 3050 Laptop GPU; model availability and hardware acceleration depend on the installed Foundry Local runtime.
+
+```powershell
+winget install --id Microsoft.FoundryLocal -e
+foundry model list
+foundry chat qwen2.5-1.5b
+# Type /exit to leave the model chat.
+```
+
+Create the Python environment and run the existing script:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install foundry-local-sdk-winml
+.\.venv\Scripts\python.exe -u scripts\generate_local_drafts.py
+```
+
+This reads the synthetic-event scenario data and writes generated **unverified** drafts to `src/data/model_drafts.json`. Rebuild or restart the frontend to display the latest saved results. Foundry Local does not require an Azure subscription for this setup.
+
+## Project layout
+
+```text
+.github/workflows/pages.yml       # GitHub Pages build/deploy
+src/App.jsx                       # Interactive dashboard
+src/verifier.js                  # Structured evidence checks
+src/verifyCaption.js             # Limited text gate
+src/data/scenarios.json          # Synthetic scenarios and events
+src/data/model_drafts.json       # Saved local model outputs
+scripts/generate_local_drafts.py  # Optional local text generation
+scripts/evaluate_captionvar.mjs  # Curated regression evaluation
+reports/evaluation.md            # Human-readable evaluation report
+reports/evaluation.json          # Per-case evaluation output
+V08_SHOWCASE.md                   # v0.8 details and caveats
+```
+
+## Deployment
+
+This repository publishes the compiled React/Vite site to **GitHub Pages** with `.github/workflows/pages.yml`. For this project repository, the public site lives under `/captionvar-live-starter/`, and the GitHub branch is `master`.
+
+**[Open the public demo](https://joelynli0110.github.io/captionvar-live-starter/)**
+
+If rebuilding the deployment setup, configure the Vite `base` to `/captionvar-live-starter/` and make the Actions push trigger match your actual default branch. In GitHub: **Settings → Pages → Source: GitHub Actions**.
+
+## Hackathon scope and integrity
+
+Developed as a local-first prototype for the **Microsoft × Premier League Inside the Game Hackathon**. The goal is to explore how automated football narratives can become **more explainable and evidence-grounded** without requiring a large cloud infrastructure budget.
+
+All match events, teams, coordinates, and scenarios are synthetic. Generated model captions are distinguished from manually curated challenge examples in the UI. No claims are made about real club performance or about general-purpose detection accuracy.
+
+**Tagline:** *Every AI insight deserves a VAR check.*
