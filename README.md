@@ -42,6 +42,17 @@ The public website runs **interactive, deterministic browser-side verification o
 
 Scenario 05 is **deliberately curated adversarial test text**, **not** a newly generated Qwen response. Scenarios 01–03 can show actual locally generated Foundry Local drafts; scenario 04 is a saved, observed model response.
 
+## Synthetic match engine
+
+CaptionVAR ships a seeded match simulator that generates a full, football-realistic 90-minute event stream (~2,200 events: passes, carries, pressures, tackles, recoveries, shots with xG, set pieces, cards, substitutions, sprint and distance indicators) and replays it live on the match clock. Events are causally linked (a recovery records the pressure that caused it; a goal its shot and assist), so explanatory claims can be verified, and scripted story beats provide ground truth for evaluation. Totals are calibrated against top-flight per-team averages and every match is checked by an invariant validator.
+
+```bash
+npm run match       # writes the demo match (Northbridge FC 2-1 Riverside United)
+npm run calibrate   # realism report over many seeds
+```
+
+Details and schema: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
+
 ## How it works
 
 ```text

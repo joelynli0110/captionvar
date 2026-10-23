@@ -7,8 +7,10 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test src/*.test.js",
-    "eval": "node scripts/evaluate_captionvar.mjs"
+    "test": "node --test src/*.test.js src/sim/*.test.js",
+    "eval": "node scripts/evaluate_captionvar.mjs",
+    "match": "node scripts/generate_match.mjs",
+    "calibrate": "node scripts/calibrate_sim.mjs"
   },
   "dependencies": {
     "react": "^19.1.0",
