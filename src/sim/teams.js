@@ -86,7 +86,7 @@ export const DEFAULT_TEAMS = {
     name: 'Riverside United',
     short_name: 'Riverside',
     formation: '4-2-3-1',
-    colors: { primary: '#d64545', secondary: '#1b1b1b' },
+    colors: { primary: '#f1efe6', secondary: '#1b1b1b' },
     style: {
       label: 'compact counter-attack',
       passing: 0.79,

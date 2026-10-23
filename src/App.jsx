@@ -1,117 +1,194 @@
-import React,{useEffect,useMemo,useState} from 'react';
-import scenarios from './data/scenarios.json';
-import drafts from './data/model_drafts.json';
-import {verifyScenario} from './verifier.js';
-import {verifyCaption} from './verifyCaption.js';
-import {auditMixedClaims} from './claimAudit.js';
-import {eventTime,scenarioTime,sortedEvents,visibleEvents,replayWindow,eventById,eventPosition,evidenceGroups,timeLabel} from './replay.js';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { loadBroadcast, indexAt, clockLabel, DEMO } from './ui/data.js';
+import { matchStats, playerStats } from './sim/stats.js';
+import { renderCaption } from './broadcast/render.js';
+import { summarise } from './broadcast/trace.js';
+import Pitch from './ui/Pitch.jsx';
+import { ScoreBug, LowerThird } from './ui/Broadcast.jsx';
+import VarRoom from './ui/VarRoom.jsx';
+import Timeline from './ui/Timeline.jsx';
+import { ViewerBar, StatsPanel, PlayerCard } from './ui/Panels.jsx';
 
-const colors={VERIFY:'#4ee7a7', QUALIFY:'#f8c966',WITHHOLD:'#f67878'};
-const eventColors={pass:'#9cecae',recovery:'#80e9ff',shot:'#ffca70',goal:'#ff8686'};
+const B = loadBroadcast();
+const PEOPLE = B.trace.people;
+const PLAYERS = [...PEOPLE.players.values()];
+const ON_BALL = new Set(['pass', 'carry', 'shot', 'recovery', 'tackle', 'interception', 'clearance', 'save', 'block', 'foul']);
+const CAPTION_HOLD_S = 45; // match seconds a caption stays in the lower third
+const SPEEDS = [2, 4, 8, 16, 32];
 
-function FootballPitch({events,selectedId,onSelect}){
- return <svg viewBox="0 0 540 290" role="img" aria-label="Synthetic pitch, with actual event positions and selectable markers" className="pitch">
-  <rect x="6" y="6" width="528" height="278" rx="14" fill="#0c3935"/>
-  <rect x="27" y="24" width="486" height="241" fill="none" stroke="#75ab9e" strokeWidth="1.4"/>
-  <path d="M270 24V265" stroke="#75ab9e" strokeWidth="1.4"/>
-  <circle cx="270" cy="145" r="44" stroke="#75ab9e" fill="none" strokeWidth="1.4"/>
-  <rect x="27" y="87" width="80" height="116" stroke="#75ab9e" fill="none"/>
-  <rect x="433" y="87" width="80" height="116" stroke="#75ab9e" fill="none"/>
-  <text x="35" y="47" fill="#b6d0c7" fontSize="11" letterSpacing="2">SYNTHETIC EVENT LOCATIONS</text>
-  <text x="452" y="251" fill="#b6d0c7" fontSize="11">REPLAY</text>
-  {events.map(e=>{const p=eventPosition(e);if(!p)return null;const selected=selectedId===e.id;return <g key={e.id} role="button" tabIndex="0" aria-label={`${e.id}, ${e.type}, ${timeLabel(eventTime(e))}`} onClick={()=>onSelect(e.id)} onKeyDown={ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();onSelect(e.id)}}} style={{cursor:'pointer'}}>
-   {selected&&<circle cx={p.x} cy={p.y} r="16" fill="none" stroke="#fff7cc" strokeWidth="2"/>}
-   <circle cx={p.x} cy={p.y} r="8" fill={eventColors[e.type]||'#ddd'} stroke="#10413e" strokeWidth="2"/>
-   <text x={p.x+11} y={p.y-10} fill="#e8fff5" fontSize="10" fontWeight="700">{e.id}</text>
-   <title>{`${e.id}: ${e.team}, ${e.type}, ${timeLabel(eventTime(e))}`}</title>
-  </g>})}
- </svg>;
+const teamColor = side => B.teams[side].colors.primary;
+
+function usePlayback() {
+  const [g, setG] = useState(B.startG);
+  const [playing, setPlaying] = useState(true);
+  const [speed, setSpeed] = useState(DEMO.speed);
+  useEffect(() => {
+    if (!playing) return undefined;
+    let frame;
+    let last = performance.now();
+    const tick = now => {
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      setG(prev => {
+        const next = prev + dt * speed;
+        if (next >= B.endG) { setPlaying(false); return B.endG; }
+        return next;
+      });
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [playing, speed]);
+  return { g, setG, playing, setPlaying, speed, setSpeed };
 }
 
-function ClaimAudit({claims,onInspect}) {
- if (!claims.length) return null;
- return <div className="claim-audit" aria-label="Claim-by-claim evidence audit">
-   <div className="claim-audit-heading"><span>CLAIM-BY-CLAIM AUDIT</span><small>Curated adversarial example · limited grammar</small></div>
-   {claims.map(claim=><div className="audit-row" key={claim.key}>
-     <div className="audit-row-head"><strong>{claim.label}</strong><span className={claim.supported?'audit-supported':'audit-unsupported'}>{claim.supported?'✓ SUPPORTED':'× NOT SUPPORTED'}</span></div>
-     <p>{claim.detail}</p>
-     {claim.evidence.length>0&&<div className="audit-events">{claim.evidence.map(id=><button key={id} className="evidence-button" onClick={()=>onInspect(id)}>{id} ↗</button>)}</div>}
-   </div>)}
-   <p className="audit-note">The original caption remains WITHHELD. A supported subclaim never authorizes its unsupported companion.</p>
- </div>;
+/** Ball position between two located events, so the ball travels instead of jumping. */
+function ballAt(idx, g) {
+  let i = idx;
+  while (i > 0 && B.events[i].x == null) i -= 1;
+  const e = B.events[i];
+  if (!e || e.x == null) return null;
+  let j = idx + 1;
+  while (j < B.events.length && B.events[j].x == null) j += 1;
+  const next = B.events[j];
+  const to = e.end_x != null ? { x: e.end_x, y: e.end_y } : next && next.period === e.period ? { x: next.x, y: next.y } : { x: e.x, y: e.y };
+  const span = next ? B.eventG[j] - B.eventG[i] : 1;
+  const f = span > 0 ? Math.min(1, Math.max(0, (g - B.eventG[i]) / span)) : 1;
+  return { x: e.x + (to.x - e.x) * f, y: e.y + (to.y - e.y) * f, event: e };
 }
 
-function EventInspector({event,scenario}){
- if(!event)return <div className="inspect-empty">Select a pitch marker, event row or evidence ID to inspect its source record.</div>;
- const fields=[['Timestamp',timeLabel(eventTime(event))],['Team',event.team],['Action',event.type],['Pitch location',`${event.x}%, ${event.y}%`]];
- if(event.zone)fields.push(['Zone',event.zone.replaceAll('_',' ')]);
- if(typeof event.successful==='boolean')fields.push(['Pass outcome',event.successful?'Completed':'Unsuccessful']);
- if(typeof event.on_target==='boolean')fields.push(['Shot on target',event.on_target?'Yes':'No']);
- return <div className="event-inspector"><div className="inspector-heading"><strong>{event.id} · {event.type.toUpperCase()}</strong><span>SYNTHETIC SOURCE</span></div><div className="detail-grid">{fields.map(([label,value])=><div key={label}><small>{label}</small><span>{value}</span></div>)}</div><div className="inspector-note">Only fields shown here are recorded; no pressing cause, xG or goal is inferred.</div></div>;
+function recent(idx, pick, limit, lookback = 400) {
+  const out = [];
+  for (let i = idx; i >= 0 && i > idx - lookback && out.length < limit; i -= 1) {
+    if (pick(B.events[i])) out.push(B.events[i]);
+  }
+  return out.reverse();
 }
 
-export default function App(){
- const [index,setIndex]=useState(0);
- const [audience,setAudience]=useState('fan');
- const [reviewed,setReviewed]=useState({});
- const [progressById,setProgressById]=useState({});
- const [selectedById,setSelectedById]=useState({});
- const [playing,setPlaying]=useState(false);
- const scenario=scenarios[index];
- const {start,end}=replayWindow(scenario);
- const progress=progressById[scenario.id]??end;
- const selectedId=selectedById[scenario.id]||null;
- const currentEvents=useMemo(()=>visibleEvents(scenario,progress),[scenario,progress]);
- const draft=drafts[scenario.id];
- const candidate=draft?.caption || scenario.claim_text;
- const checkGenerated=Boolean(draft || scenario.origin==='locally_generated_replayed_output' || scenario.origin==='curated_multiclaim_seed');
- const result=useMemo(()=>checkGenerated?verifyCaption(scenario,candidate):verifyScenario(scenario),[scenario,candidate,checkGenerated]);
- const groups=useMemo(()=>evidenceGroups(scenario,result),[scenario,result]);
- const claimAudit=useMemo(()=>scenario.showcase==='mixed_claims'?auditMixedClaims(scenario,candidate):[],[scenario,candidate]);
- const isReviewed=!!reviewed[scenario.id];
- const selectedEvent=selectedId?eventById(scenario,selectedId):null;
- useEffect(()=>{
-  if(!playing)return;
-  const timer=setInterval(()=>setProgressById(p=>({...p,[scenario.id]:Math.min(end,(p[scenario.id]??start)+3)})),200);
-  return ()=>clearInterval(timer);
- },[playing,scenario.id,start,end]);
- useEffect(()=>{if(playing&&progress>=end)setPlaying(false)},[playing,progress,end]);
- const changeScenario=i=>{setPlaying(false);setIndex(i)};
- const inspect=id=>{
-  const target=eventById(scenario,id);if(!target)return;
-  setPlaying(false);setSelectedById(s=>({...s,[scenario.id]:id}));
-  setProgressById(p=>({...p,[scenario.id]:Math.max(p[scenario.id]??end,eventTime(target))}));
- };
- const togglePlay=()=>{
-  if(playing){setPlaying(false);return}
-  if(progress>=end)setProgressById(p=>({...p,[scenario.id]:start}));
-  setSelectedById(p=>({...p,[scenario.id]:null}));setPlaying(true);
- };
- return <div className="app">
-  <header className="header"><div className="brand"><div className="brand-icon">CV<span>↗</span></div><div><div className="brand-name">Caption<span>VAR</span> <b>LIVE</b></div><div className="subbrand">THE AI REFEREE FOR FOOTBALL INTELLIGENCE</div></div></div><div className="topright"><span className="status-dot"/> SYNTHETIC REPLAY <span className="divider-v"/> MICROSOFT FOUNDRY LOCAL · OFFLINE DRAFTS</div></header>
-  <main>
-   <div className="hero"><div><div className="eyebrow">MATCH INTELLIGENCE / TRUST LAYER / V0.8</div><h1>Every AI insight deserves a <em>VAR check.</em></h1><p>Inspect an actual synthetic event on the pitch, replay the source timeline, and decide whether an AI-written claim deserves the screen.</p></div><div className="hero-stat"><div>{String(scenarios.length).padStart(2,'0')}</div><span>REVIEW SCENARIOS</span><small>No Azure account required</small></div></div>
-   <div className="workbench"><section className="left"><div className="sectiontop"><span><i className="dot"/> EVENT REPLAY</span><strong>Northbridge FC <span>vs</span> Riverside United</strong></div>
-    <FootballPitch events={currentEvents} selectedId={selectedId} onSelect={inspect}/>
-    <div className="replay-controls"><button className="replay-button" onClick={togglePlay}>{playing?'Ⅱ PAUSE':'▶ PLAY REPLAY'}</button><span className="replay-clock">{timeLabel(progress)}</span><span className="replay-observations">{currentEvents.length}/{sortedEvents(scenario).length} observed</span></div>
-    <div className="timeline"><span>{timeLabel(start)}</span><input aria-label="Replay time" type="range" min={start} max={end} value={progress} onChange={e=>{setPlaying(false);setProgressById(p=>({...p,[scenario.id]:Number(e.target.value)}))}}/><span>{timeLabel(end)}</span></div>
-    <div className="match-meta">90-SECOND SYNTHETIC WINDOW · EVENT POSITION MARKERS ARE ILLUSTRATIVE</div>
-    <div className="event-stream"><div className="stream-head">Events observed by this point <small>{currentEvents.length}</small></div>
-      {currentEvents.length?currentEvents.map(e=><button key={e.id} className={'event-row '+(selectedId===e.id?'selected':'')} onClick={()=>inspect(e.id)}><span className="event-time">{timeLabel(eventTime(e))}</span><span className="event-title">{e.team} · {e.type.replaceAll('_',' ')}<small>{e.id}{e.zone?' · '+e.zone.replaceAll('_',' '):''}</small></span><span className="chev">↗</span></button>):<div className="inspect-empty">No events at this point in the replay. Press Play or scrub forward.</div>}
+export default function App() {
+  const { g, setG, playing, setPlaying, speed, setSpeed } = usePlayback();
+  const [view, setView] = useState({ persona: 'fan', follow: 'neutral', player: '', lang: 'en' });
+  const [selectedId, setSelectedId] = useState(null);
+
+  const idx = indexAt(B.eventG, g);
+  const observed = useMemo(() => B.events.slice(0, idx + 1), [idx]);
+  const stats = useMemo(() => matchStats(observed), [observed]);
+
+  const aired = useMemo(() => B.trace.decisions.filter(d => d.g <= g), [g]);
+  const airedNewestFirst = useMemo(() => [...aired].reverse(), [aired]);
+  const summary = useMemo(() => summarise(aired), [aired]);
+  const latest = aired.at(-1);
+  const onAir = latest && g - latest.g <= CAPTION_HOLD_S ? latest : null;
+  const selected = selectedId ? B.trace.decisions.find(d => d.id === selectedId) : null;
+  const reviewed = selected || onAir;
+
+  const renderAired = useCallback(d => renderCaption(d, d.verdict, PEOPLE, view), [view]);
+
+  const ball = ballAt(idx, g);
+  const actorEvent = recent(idx, e => ON_BALL.has(e.type) && e.player_id, 1, 6)[0];
+  const actor = actorEvent ? { ...PEOPLE.players.get(actorEvent.player_id), side: actorEvent.side } : null;
+  const trail = recent(idx, e => ON_BALL.has(e.type) && e.x != null, view.persona === 'analyst' ? 14 : 6, 40);
+  const focus = view.player ? recent(idx, e => e.player_id === view.player && e.x != null, 6) : [];
+  // Draw only the evidence that belongs to this moment (same half, within
+  // 150 s); older supporting events, such as earlier goals behind a score
+  // claim, stay in the VAR room list.
+  const evidence = reviewed
+    ? reviewed.verdict.evidence.map(id => B.byId.get(id))
+      .filter(e => e && e.x != null && e.period === reviewed.period && Math.abs(e.t - reviewed.t) <= 150)
+      .sort((a, b) => a.seq - b.seq)
+    : [];
+  const popEvent = recent(idx, e => (e.type === 'sprint' || e.type === 'shot') && g - B.eventG[e.seq - 1] < 4, 1, 4)[0];
+  const pop = popEvent ? (popEvent.type === 'sprint' ? `${popEvent.top_speed_kmh} km/h` : `xG ${popEvent.xg.toFixed(2)}, ${popEvent.shot_speed_kmh} km/h`) : null;
+
+  const focusPlayer = view.player ? PEOPLE.players.get(view.player) : null;
+  const focusStats = useMemo(() => (view.player ? playerStats(observed, view.player) : null), [observed, view.player]);
+
+  const keyMoments = useMemo(() => [
+    { label: "72' Northbridge press", g: B.startG },
+    ...B.events.map((e, i) => ({ e, g: B.eventG[i] })).filter(({ e }) => e.type === 'goal')
+      .map(({ e, g: eg }) => ({ label: `${e.display_minute} Goal, ${PEOPLE.name(e.scorer_id)}`, g: eg - 30 })),
+  ].sort((a, b) => a.g - b.g), []);
+
+  const seek = useCallback(value => setG(Math.max(0, Math.min(B.endG, value))), [setG]);
+  const inspect = useCallback(id => {
+    const i = B.events.findIndex(e => e.id === id);
+    if (i >= 0) { setPlaying(false); seek(B.eventG[i]); }
+  }, [seek, setPlaying]);
+
+  useEffect(() => {
+    const onKey = e => {
+      if (e.code === 'Space' && !['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+        setPlaying(p => !p);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [setPlaying]);
+
+  return (
+    <div className="app">
+      <header className="masthead">
+        <div className="wordmark" aria-label="CaptionVAR">Caption<span>VAR</span></div>
+        <p className="tagline">AI match commentary, checked against the data before it airs.</p>
+        <p className="fixture">
+          {B.teams.home.name} v {B.teams.away.name}
+          <small>Synthetic match between fictional clubs</small>
+        </p>
+      </header>
+
+      <ViewerBar view={view} setView={setView} teams={B.teams} players={PLAYERS} />
+
+      <main className="stage">
+        <div className="broadcast">
+          <div className="screen">
+            <Pitch ball={ball} actor={actor} trail={trail} evidence={evidence} focus={focus} pop={pop} teamColor={teamColor} analyst={view.persona === 'analyst'} />
+            <ScoreBug teams={B.teams} score={stats.score} clock={clockLabel(g, B.halfG)} />
+            {focusPlayer && focusStats && (
+              <PlayerCard player={focusPlayer} stats={focusStats} team={B.teams[focusPlayer.side]} onClose={() => setView(v => ({ ...v, player: '' }))} />
+            )}
+            <LowerThird decision={onAir} text={onAir ? renderAired(onAir) : ''} lang={view.lang} />
+          </div>
+
+          <div className="transport">
+            <button type="button" className="play" onClick={() => setPlaying(p => !p)} aria-label={playing ? 'Pause' : 'Play'}>
+              {playing ? <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" /><rect x="9.5" y="2" width="3.5" height="12" /></svg>
+                : <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" /></svg>}
+            </button>
+            <label className="speed">
+              <span className="sr-only">Playback speed</span>
+              <select value={speed} onChange={e => setSpeed(Number(e.target.value))}>
+                {SPEEDS.map(s => <option key={s} value={s}>{s}× speed</option>)}
+              </select>
+            </label>
+            <nav className="jumps" aria-label="Key moments">
+              {keyMoments.map(m => (
+                <button key={m.label} type="button" onClick={() => { seek(m.g); setSelectedId(null); setPlaying(true); }}>{m.label}</button>
+              ))}
+            </nav>
+          </div>
+
+          <Timeline events={B.events} eventG={B.eventG} endG={B.endG} halfG={B.halfG} decisions={aired} g={g} onSeek={seek} teamColor={teamColor} />
+
+          {view.persona === 'analyst' && <StatsPanel stats={stats} teams={B.teams} />}
+        </div>
+
+        <VarRoom
+          decisions={airedNewestFirst}
+          selectedId={selectedId}
+          onSelect={id => { setSelectedId(id); if (id) setPlaying(false); }}
+          summary={summary}
+          people={PEOPLE}
+          view={view}
+          renderAired={renderAired}
+          onInspect={inspect}
+        />
+      </main>
+
+      <footer className="colophon">
+        <p>Built for the Microsoft × Premier League Inside the Game hackathon. All clubs, players and events are synthetic.</p>
+        <p><a href="https://github.com/joelynli0110/captionvar-live-starter">Source on GitHub</a></p>
+      </footer>
     </div>
-    <EventInspector event={selectedEvent} scenario={scenario}/>
-    <div className="scenario-title">Editorial scenarios</div><div className="scene-list">{scenarios.map((s,i)=><button className={'scene '+(i===index?'selected':'')} key={s.id} onClick={()=>changeScenario(i)}><span className="minute">{s.minute}'</span><span className="scene-copy"><strong>{s.title}</strong><small>{s.tag}</small></span><span className="chev">↗</span></button>)}</div></section>
-    <section className="right"><div className="sectiontop"><span><i className="dot amber"/> EDITORIAL QUEUE</span><div className="refcode">CANDIDATE {String(index+1).padStart(2,'0')} / {String(scenarios.length).padStart(2,'0')}</div></div>
-     <div className="candidate"><div className="candidate-label">UNVERIFIED CAPTION · {timeLabel(scenarioTime(scenario))}</div><blockquote>“{candidate}”</blockquote><div className="candidate-source">{draft?'SOURCE: FOUNDRY LOCAL · REAL GENERATED DRAFT · LIMITED TEXT GATE':scenario.origin==='locally_generated_replayed_output'?'SOURCE: OBSERVED QWEN2.5-1.5B OUTPUT · REPLAY · LIMITED TEXT GATE':scenario.origin==='curated_multiclaim_seed'?'SOURCE: CURATED ADVERSARIAL CAPTION · NO LLM CALL':'SOURCE: STRUCTURED SEED CLAIM · NO LLM CALL'}</div></div>
-     <div className="action-line"><button className="primary" onClick={()=>setReviewed(v=>({...v,[scenario.id]:true}))}>{isReviewed?'RUN VAR AGAIN':'RUN VAR CHECK'} <span>→</span></button><span>{scenario.showcase==='mixed_claims'?'Narrow text gate checks a curated mixed-claim challenge':checkGenerated?'Narrow, fail-closed parser checks generated text':'Checks the scenario’s structured seed claim'}</span></div>
-     {isReviewed?<div className="verdict"><div className="verdict-head"><div className="verdict-pill" style={{color:colors[result.status],borderColor:colors[result.status]}}>{result.status==='VERIFY'?'✓ VERIFIED':result.status==='QUALIFY'?'! QUALIFIED':'× WITHHELD'}</div><div className="evidence-count">{groups.supporting.length} SUPPORTING · {groups.related.length} RELATED</div></div>
-      <p className="reason">{result.reason}</p>{scenario.showcase==='mixed_claims'&&<ClaimAudit claims={claimAudit} onInspect={inspect}/>}<div className="audience-picker"><span>BROADCAST MODE</span><div><button className={audience==='fan'?'active':''} onClick={()=>setAudience('fan')}>Casual fan</button><button className={audience==='analyst'?'active':''} onClick={()=>setAudience('analyst')}>Tactical analyst</button></div></div>
-      <div className="output"><span>{result.status==='WITHHOLD'?'SAFE FALLBACK — NOT APPROVED':'APPROVED / QUALIFIED OUTPUT'}</span><p>“{result[audience]}”</p></div>
-      <div className="evidence evidence-v05"><strong>SUPPORTING EVIDENCE</strong><div>{groups.supporting.length?groups.supporting.map(e=><button key={e.id} className="evidence-button" onClick={()=>inspect(e.id)}>{e.id} ↗</button>):<small>None for the rejected claim</small>}</div></div>
-      {groups.related.length>0&&<div className="evidence evidence-v05"><strong>RELATED SOURCE EVENTS</strong><div>{groups.related.map(e=><button key={e.id} className="evidence-button related" onClick={()=>inspect(e.id)}>{e.id} ↗</button>)}</div></div>}
-      <p className="evidence-explainer">Supporting IDs substantiate the permitted claim. Related events are observed data, not proof of rejected assertions. Click an ID to inspect it on the pitch.</p>
-      </div>:<div className="awaiting"><span className="orbit">◎</span><strong>Awaiting verification</strong><p>Candidate claims don't reach viewers without checking their supporting events.</p></div>}
-    </section></div>
-    <footer><span>CaptionVAR Live · Hackathon prototype</span><span>Event replay is client-side and synthetic. Local-model captions are pre-generated; the fifth caption is a curated adversarial test, not a new model response. The text gate is narrow and not general-purpose fact checking.</span></footer>
-  </main></div>;
+  );
 }

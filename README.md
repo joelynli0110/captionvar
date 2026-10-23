@@ -16,31 +16,19 @@ This is an **interactive hackathon prototype**, not a general-purpose fact check
 
 ## Try the demo
 
-**Live demo:** https://joelynli0110.github.io/captionvar-live-starter/
+**Live demo:** [https://joelynli0110.github.io/captionvar-live-starter/](https://joelynli0110.github.io/captionvar-live-starter/)
 
-No sign-in or Azure subscription is required. Select any editorial scenario, press **RUN VAR CHECK**, and inspect its event IDs on the pitch. Use the replay controls and switch the **Casual fan / Tactical analyst** view.
+No sign-in required. The page opens on a synthetic match already in play at 72:30 and runs at 8× speed:
 
-The public website runs **interactive, deterministic browser-side verification over saved candidate captions**. It does **not** generate new text using Foundry Local in the browser: model generation was performed separately on a Windows computer, and the resulting drafts were saved in the repository.
+- **Broadcast view** – a live pitch with score bug and lower-third captions. Every caption shows its VAR verdict as it airs.
+- **VAR room** – each caption the narrator proposed, split into claims. Claims that fail are struck through; unverifiable ones are underlined. Open a caption to see why each claim holds or fails, the event IDs behind it (drawn on the pitch as violet VAR lines) and the machine-readable overlay record.
+- **Viewer settings** – fan or analyst view, neutral or partisan framing, follow a single player, and English, Spanish, German or Chinese captions.
+- **Timeline** – final-third pressure per minute for both teams, goals, cards and VAR interventions. Click or drag to move through the match.
 
-### Five interactive scenarios
+In the first four minutes of play you will see a caption trimmed for an unverifiable superlative (73'), an invented goal withheld and corrected (74'), a misattributed shot corrected (76') and the equaliser verified with its full pressing chain as evidence (77').
 
-| Scenario | What it demonstrates | Editorial action |
-| --- | --- | --- |
-| **01 · Perfect passing, tiny sample** | A superficially impressive percentage that cannot justify a broad dominance claim; real local-model prose may also be too garbled to approve | QUALIFY or WITHHOLD depending on the displayed draft |
-| **02 · Attacking-third recoveries** | Checking recovery counts against timestamped events and correcting a misdescribed 90-second window | VERIFY or QUALIFY depending on the displayed draft |
-| **03 · Fabricated goal / missing evidence** | A local model claims a goal, while the supplied source contains a related shot but no supporting goal event | WITHHOLD |
-| **04 · Unsupported tactical causality** | Correct recovery counts do not establish that aggressive pressing *caused* them | QUALIFY |
-| **05 · Hidden hallucination** | One supported statistic is combined with an unsupported hat-trick claim; the two claims are audited separately | WITHHOLD |
+**What is real and what is simulated in this build.** The match is fully synthetic (see below). Captions currently come from a *test narrator* that writes broadcast-style lines and deliberately plants errors (wrong player, invented goal, inflated number, invented cause, unverifiable superlative) in roughly a third of them. The VAR check, the corrections, the translations and the overlay records are the real pipeline: claims are checked by deterministic code against only the events observed up to that moment. Because the test narrator hands over structured claims, the detection score shown in the VAR room (all planted errors caught, no false alarms) measures the checking step, not claim extraction from free text.
 
-**Scenario 05 — the showcase case:**
-
-> “Northbridge regained possession three times in the attacking third in the last 90 seconds, then went on to score a hat trick.”
-
-- **Supported:** Three attacking-third recoveries with traceable synthetic event IDs `R-711`, `R-712`, `R-713`.
-- **Not supported:** No goal/scorer records sufficient to establish a hat-trick.
-- **Decision:** WITHHOLD the original mixed-claim caption. A correct subclaim does not authorize an unsupported companion claim.
-
-Scenario 05 is **deliberately curated adversarial test text**, **not** a newly generated Qwen response. Scenarios 01–03 can show actual locally generated Foundry Local drafts; scenario 04 is a saved, observed model response.
 
 ## Synthetic match engine
 
