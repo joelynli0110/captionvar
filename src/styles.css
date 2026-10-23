@@ -19,3 +19,18 @@
 .evidence-button:hover{border-color:#9bf7cb;background:#234d4d}.evidence-button.related{color:#e4c995;border-color:#63543c}
 .evidence-explainer{font-size:10px;line-height:1.65;color:#789ba0;margin-top:14px}
 @media(max-width:550px){.replay-controls{margin:12px}.event-inspector{margin:2px 12px 15px}.evidence-v05{flex-wrap:wrap}.evidence-count{font-size:9px}.scene-list{padding:0 10px 16px}}
+
+
+/* v0.8 — proof-oriented, narrow claim-by-claim showcase */
+.claim-audit{border:1px solid #3b6166;border-radius:10px;background:#0c2028;padding:15px;margin:-7px 0 24px}
+.claim-audit-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px;flex-wrap:wrap}
+.claim-audit-heading span{font-size:10px;color:#c4efe1;font-weight:800;letter-spacing:1px}
+.claim-audit-heading small{color:#8aa6ab;font-size:10px}
+.audit-row{padding:12px 1px;border-top:1px solid #ffffff1c}
+.audit-row-head{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap}
+.audit-row-head strong{font-size:12px;color:#e4f5ed}
+.audit-row-head span{font-size:10px;font-weight:800;letter-spacing:.35px}
+.audit-supported{color:#8ff0bb}.audit-unsupported{color:#fa8e91}
+.audit-row p{font-size:11px;color:#a8c0c4;margin:8px 0;line-height:1.6}
+.audit-events{display:flex;flex-wrap:wrap;gap:6px;padding-top:3px}
+.audit-note{margin:10px 0 0;font-size:10px;line-height:1.6;color:#dfc797;border-top:1px solid #ffffff1c;padding-top:12px}

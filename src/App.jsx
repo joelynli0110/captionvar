@@ -3,6 +3,7 @@ import scenarios from './data/scenarios.json';
 import drafts from './data/model_drafts.json';
 import {verifyScenario} from './verifier.js';
 import {verifyCaption} from './verifyCaption.js';
+import {auditMixedClaims} from './claimAudit.js';
 import {eventTime,scenarioTime,sortedEvents,visibleEvents,replayWindow,eventById,eventPosition,evidenceGroups,timeLabel} from './replay.js';
 
 const colors={VERIFY:'#4ee7a7', QUALIFY:'#f8c966',WITHHOLD:'#f67878'};
@@ -25,6 +26,19 @@ function FootballPitch({events,selectedId,onSelect}){
    <title>{`${e.id}: ${e.team}, ${e.type}, ${timeLabel(eventTime(e))}`}</title>
   </g>})}
  </svg>;
+}
+
+function ClaimAudit({claims,onInspect}) {
+ if (!claims.length) return null;
+ return <div className="claim-audit" aria-label="Claim-by-claim evidence audit">
+   <div className="claim-audit-heading"><span>CLAIM-BY-CLAIM AUDIT</span><small>Curated adversarial example · limited grammar</small></div>
+   {claims.map(claim=><div className="audit-row" key={claim.key}>
+     <div className="audit-row-head"><strong>{claim.label}</strong><span className={claim.supported?'audit-supported':'audit-unsupported'}>{claim.supported?'✓ SUPPORTED':'× NOT SUPPORTED'}</span></div>
+     <p>{claim.detail}</p>
+     {claim.evidence.length>0&&<div className="audit-events">{claim.evidence.map(id=><button key={id} className="evidence-button" onClick={()=>onInspect(id)}>{id} ↗</button>)}</div>}
+   </div>)}
+   <p className="audit-note">The original caption remains WITHHELD. A supported subclaim never authorizes its unsupported companion.</p>
+ </div>;
 }
 
 function EventInspector({event,scenario}){
@@ -50,9 +64,10 @@ export default function App(){
  const currentEvents=useMemo(()=>visibleEvents(scenario,progress),[scenario,progress]);
  const draft=drafts[scenario.id];
  const candidate=draft?.caption || scenario.claim_text;
- const checkGenerated=Boolean(draft || scenario.origin==='locally_generated_replayed_output');
+ const checkGenerated=Boolean(draft || scenario.origin==='locally_generated_replayed_output' || scenario.origin==='curated_multiclaim_seed');
  const result=useMemo(()=>checkGenerated?verifyCaption(scenario,candidate):verifyScenario(scenario),[scenario,candidate,checkGenerated]);
  const groups=useMemo(()=>evidenceGroups(scenario,result),[scenario,result]);
+ const claimAudit=useMemo(()=>scenario.showcase==='mixed_claims'?auditMixedClaims(scenario,candidate):[],[scenario,candidate]);
  const isReviewed=!!reviewed[scenario.id];
  const selectedEvent=selectedId?eventById(scenario,selectedId):null;
  useEffect(()=>{
@@ -75,7 +90,7 @@ export default function App(){
  return <div className="app">
   <header className="header"><div className="brand"><div className="brand-icon">CV<span>↗</span></div><div><div className="brand-name">Caption<span>VAR</span> <b>LIVE</b></div><div className="subbrand">THE AI REFEREE FOR FOOTBALL INTELLIGENCE</div></div></div><div className="topright"><span className="status-dot"/> SYNTHETIC REPLAY <span className="divider-v"/> MICROSOFT FOUNDRY LOCAL · OFFLINE DRAFTS</div></header>
   <main>
-   <div className="hero"><div><div className="eyebrow">MATCH INTELLIGENCE / TRUST LAYER / V0.5</div><h1>Every AI insight deserves a <em>VAR check.</em></h1><p>Inspect an actual synthetic event on the pitch, replay the source timeline, and decide whether an AI-written claim deserves the screen.</p></div><div className="hero-stat"><div>{String(scenarios.length).padStart(2,'0')}</div><span>REVIEW SCENARIOS</span><small>No Azure account required</small></div></div>
+   <div className="hero"><div><div className="eyebrow">MATCH INTELLIGENCE / TRUST LAYER / V0.8</div><h1>Every AI insight deserves a <em>VAR check.</em></h1><p>Inspect an actual synthetic event on the pitch, replay the source timeline, and decide whether an AI-written claim deserves the screen.</p></div><div className="hero-stat"><div>{String(scenarios.length).padStart(2,'0')}</div><span>REVIEW SCENARIOS</span><small>No Azure account required</small></div></div>
    <div className="workbench"><section className="left"><div className="sectiontop"><span><i className="dot"/> EVENT REPLAY</span><strong>Northbridge FC <span>vs</span> Riverside United</strong></div>
     <FootballPitch events={currentEvents} selectedId={selectedId} onSelect={inspect}/>
     <div className="replay-controls"><button className="replay-button" onClick={togglePlay}>{playing?'Ⅱ PAUSE':'▶ PLAY REPLAY'}</button><span className="replay-clock">{timeLabel(progress)}</span><span className="replay-observations">{currentEvents.length}/{sortedEvents(scenario).length} observed</span></div>
@@ -87,16 +102,16 @@ export default function App(){
     <EventInspector event={selectedEvent} scenario={scenario}/>
     <div className="scenario-title">Editorial scenarios</div><div className="scene-list">{scenarios.map((s,i)=><button className={'scene '+(i===index?'selected':'')} key={s.id} onClick={()=>changeScenario(i)}><span className="minute">{s.minute}'</span><span className="scene-copy"><strong>{s.title}</strong><small>{s.tag}</small></span><span className="chev">↗</span></button>)}</div></section>
     <section className="right"><div className="sectiontop"><span><i className="dot amber"/> EDITORIAL QUEUE</span><div className="refcode">CANDIDATE {String(index+1).padStart(2,'0')} / {String(scenarios.length).padStart(2,'0')}</div></div>
-     <div className="candidate"><div className="candidate-label">UNVERIFIED CAPTION · {timeLabel(scenarioTime(scenario))}</div><blockquote>“{candidate}”</blockquote><div className="candidate-source">{draft?'SOURCE: FOUNDRY LOCAL · REAL GENERATED DRAFT · LIMITED TEXT GATE':scenario.origin==='locally_generated_replayed_output'?'SOURCE: OBSERVED QWEN2.5-1.5B OUTPUT · REPLAY · LIMITED TEXT GATE':'SOURCE: STRUCTURED SEED CLAIM · NO LLM CALL'}</div></div>
-     <div className="action-line"><button className="primary" onClick={()=>setReviewed(v=>({...v,[scenario.id]:true}))}>{isReviewed?'RUN VAR AGAIN':'RUN VAR CHECK'} <span>→</span></button><span>{checkGenerated?'Narrow, fail-closed parser checks generated text':'Checks the scenario’s structured seed claim'}</span></div>
+     <div className="candidate"><div className="candidate-label">UNVERIFIED CAPTION · {timeLabel(scenarioTime(scenario))}</div><blockquote>“{candidate}”</blockquote><div className="candidate-source">{draft?'SOURCE: FOUNDRY LOCAL · REAL GENERATED DRAFT · LIMITED TEXT GATE':scenario.origin==='locally_generated_replayed_output'?'SOURCE: OBSERVED QWEN2.5-1.5B OUTPUT · REPLAY · LIMITED TEXT GATE':scenario.origin==='curated_multiclaim_seed'?'SOURCE: CURATED ADVERSARIAL CAPTION · NO LLM CALL':'SOURCE: STRUCTURED SEED CLAIM · NO LLM CALL'}</div></div>
+     <div className="action-line"><button className="primary" onClick={()=>setReviewed(v=>({...v,[scenario.id]:true}))}>{isReviewed?'RUN VAR AGAIN':'RUN VAR CHECK'} <span>→</span></button><span>{scenario.showcase==='mixed_claims'?'Narrow text gate checks a curated mixed-claim challenge':checkGenerated?'Narrow, fail-closed parser checks generated text':'Checks the scenario’s structured seed claim'}</span></div>
      {isReviewed?<div className="verdict"><div className="verdict-head"><div className="verdict-pill" style={{color:colors[result.status],borderColor:colors[result.status]}}>{result.status==='VERIFY'?'✓ VERIFIED':result.status==='QUALIFY'?'! QUALIFIED':'× WITHHELD'}</div><div className="evidence-count">{groups.supporting.length} SUPPORTING · {groups.related.length} RELATED</div></div>
-      <p className="reason">{result.reason}</p><div className="audience-picker"><span>BROADCAST MODE</span><div><button className={audience==='fan'?'active':''} onClick={()=>setAudience('fan')}>Casual fan</button><button className={audience==='analyst'?'active':''} onClick={()=>setAudience('analyst')}>Tactical analyst</button></div></div>
+      <p className="reason">{result.reason}</p>{scenario.showcase==='mixed_claims'&&<ClaimAudit claims={claimAudit} onInspect={inspect}/>}<div className="audience-picker"><span>BROADCAST MODE</span><div><button className={audience==='fan'?'active':''} onClick={()=>setAudience('fan')}>Casual fan</button><button className={audience==='analyst'?'active':''} onClick={()=>setAudience('analyst')}>Tactical analyst</button></div></div>
       <div className="output"><span>{result.status==='WITHHOLD'?'SAFE FALLBACK — NOT APPROVED':'APPROVED / QUALIFIED OUTPUT'}</span><p>“{result[audience]}”</p></div>
       <div className="evidence evidence-v05"><strong>SUPPORTING EVIDENCE</strong><div>{groups.supporting.length?groups.supporting.map(e=><button key={e.id} className="evidence-button" onClick={()=>inspect(e.id)}>{e.id} ↗</button>):<small>None for the rejected claim</small>}</div></div>
       {groups.related.length>0&&<div className="evidence evidence-v05"><strong>RELATED SOURCE EVENTS</strong><div>{groups.related.map(e=><button key={e.id} className="evidence-button related" onClick={()=>inspect(e.id)}>{e.id} ↗</button>)}</div></div>}
       <p className="evidence-explainer">Supporting IDs substantiate the permitted claim. Related events are observed data, not proof of rejected assertions. Click an ID to inspect it on the pitch.</p>
-      </div>:<div className="awaiting"><span className="orbit">◎</span><strong>Awaiting verification</strong><p>AI-written claims don't reach viewers without checking their supporting events.</p></div>}
+      </div>:<div className="awaiting"><span className="orbit">◎</span><strong>Awaiting verification</strong><p>Candidate claims don't reach viewers without checking their supporting events.</p></div>}
     </section></div>
-    <footer><span>CaptionVAR Live · Hackathon prototype</span><span>Event replay is client-side, synthetic and pre-generated. The narrow text gate does not verify arbitrary free text or run a live model online.</span></footer>
+    <footer><span>CaptionVAR Live · Hackathon prototype</span><span>Event replay is client-side and synthetic. Local-model captions are pre-generated; the fifth caption is a curated adversarial test, not a new model response. The text gate is narrow and not general-purpose fact checking.</span></footer>
   </main></div>;
 }
