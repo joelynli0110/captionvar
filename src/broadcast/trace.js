@@ -29,13 +29,20 @@ export function buildTrace(match, options = {}) {
 }
 
 /**
- * Detection score against the planted errors. A planted error counts as
- * caught when the claim it corrupted did not pass; a false alarm is a
- * caption with no planted error that was not verified.
+ * Detection score against the planted errors.
+ *
+ * Test narrator: an error is caught when the claim it corrupted did not pass,
+ * and a flagged caption without a planted error is a false alarm (its other
+ * claims are true by construction).
+ * Agent narrator: the red team only names the kind of error, so an error is
+ * caught when the caption did not pass; a flagged caption without a planted
+ * error may be a genuine narrator mistake, so it is reported, not scored.
  */
 export function summarise(decisions) {
   const planted = decisions.filter(d => d.planted_error);
-  const caught = planted.filter(d => d.verdict.claims.find(c => c.id === d.planted_error.claim_id)?.status !== 'supported');
+  const caught = planted.filter(d => (d.planted_error.claim_id
+    ? d.verdict.claims.find(c => c.id === d.planted_error.claim_id)?.status !== 'supported'
+    : d.verdict.status !== 'VERIFY'));
   const clean = decisions.filter(d => !d.planted_error);
   const falseAlarms = clean.filter(d => d.verdict.status !== 'VERIFY');
   const count = s => decisions.filter(d => d.verdict.status === s).length;

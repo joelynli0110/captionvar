@@ -1,0 +1,70 @@
+# CaptionVAR agent pipeline
+
+Built with **Microsoft Agent Framework** (Python) on **Microsoft Foundry**.
+
+```
+                 ┌──────────────────────── edit loop (≤ 2) ────────────────────────┐
+                 ▼                                                                 │
+Narrator ──► Extractor ──► Referee ──┬── passes / out of retries ──► Publisher     │
+  (LLM)        (LLM)       (code)    └── fails ──► Editor (LLM) ───────────────────┘
+```
+
+| Agent | Kind | Sees | Produces |
+|---|---|---|---|
+| Narrator | LLM | The moment's true facts and the last few actions, in words | One broadcast caption |
+| Claim Extractor | LLM, structured output | The caption and squad lists **only, never the facts** | Typed claims with the exact words that make each one |
+| Referee (VAR) | Deterministic code | Claims and the events observed **up to that moment** | Verdict per claim (holds / false / cannot be checked) with evidence event IDs |
+| Editor | LLM | The verdict on each claim and the true facts | A repaired caption, which goes back through Extractor and Referee |
+| Publisher | Code | The last checked version | The first version that passes; otherwise a caption rendered from the true facts |
+
+Design choices that matter for trust:
+
+- **The referee is not a model.** Numbers, names and outcomes are compared by code with explicit tolerances (`src/broadcast/verify.js`), the same code the browser runs and the unit tests cover.
+- **The extractor is blind to the truth.** It reports what was said, so it cannot quietly "fix" a claim before it is checked.
+- **Code, not the model, decides what a claim refers to and whether it is core.** `src/broadcast/extracted.js` binds each extracted claim to the moment's event and assigns its role, so a model cannot weaken its own check.
+- **Fail closed.** A caption with no checkable claim is withheld. An editor rewrite airs only if it passes the same check; after two failed rewrites, a template built from the facts airs.
+- **No future data.** The referee only sees events with `seq` up to the moment being captioned.
+- **Red team.** A seeded plan tells the narrator to plant one specific kind of error in about a third of captions (wrong player, invented goal, inflated number, wrong score, invented cause, unverifiable superlative). Only the plan knows; the extractor and referee do not. The trace reports how many were caught, and separately how many other captions were flagged (these may be genuine narrator mistakes and are listed for review rather than scored).
+
+The JavaScript side runs as a small stdio service (`scripts/factbox.mjs`), so Python and the browser share one implementation of spotting, checking and rendering.
+
+## Run it on Microsoft Foundry
+
+Prerequisites: Python 3.10+, Node.js 22+, the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli), and a Foundry project with a `gpt-4.1-mini` deployment.
+
+```powershell
+# from the repository root
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r agents\requirements.txt
+npm install
+
+az login
+
+# Foundry portal -> your project -> Overview -> "Project endpoint"
+$env:FOUNDRY_PROJECT_ENDPOINT = "https://<resource>.services.ai.azure.com/api/projects/<project>"
+$env:FOUNDRY_MODEL = "gpt-4.1-mini"      # your deployment name
+
+# smoke test: 3 moments, a few cents of a cent
+python agents\run_match.py --limit 3 --out public\traces\smoke.json
+
+# full match (40 captions, a few minutes, roughly $0.05-0.10)
+python agents\run_match.py --out public\traces\foundry-demo.json
+```
+
+`public/traces/foundry-demo.json` is picked up by the web app automatically: the VAR room then shows the Foundry agents' captions, with a switch back to the test narrator.
+
+If a call fails with `401`/`403 PermissionDenied`, give your account the **Azure AI User** role on the Foundry resource (Access control (IAM) in the Azure portal) and run `az login` again.
+
+## Run it offline (no model)
+
+```powershell
+python agents\run_match.py --offline --out public\traces\offline-demo.json
+python -m pytest agents\tests
+```
+
+The scripted client answers as the three agents using the test narrator, so the full workflow — agents, executors, conditional edges, the edit loop and the fallback — runs without any cloud resources.
+
+## Trace format
+
+Each decision in the trace carries the narrator's original caption split into claim segments, the verdict on every claim with its evidence event IDs, the red-team label (if any), each attempt (narrator, editor rewrites) with its status, and what aired (`aired.text`, `aired.by`). `usage` records model calls, tokens and the estimated cost of the run.

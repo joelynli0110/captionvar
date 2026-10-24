@@ -20,6 +20,23 @@ export const VERDICT = {
   WITHHOLD: { label: 'Withheld', air: 'VAR corrected', tone: 'stop' },
 };
 
+/**
+ * Load a trace produced by the agent pipeline (agents/run_match.py) if one is
+ * published with the site. Returns null when absent or for a different match.
+ */
+export async function loadAgentTrace(match, url = `${import.meta.env.BASE_URL}traces/foundry-demo.json`) {
+  try {
+    const res = await fetch(url, { cache: 'no-cache' });
+    if (!res.ok) return null;
+    const trace = await res.json();
+    if (trace.match_id !== match.meta.match_id || !Array.isArray(trace.decisions)) return null;
+    trace.decisions = trace.decisions.map(d => ({ ...d, g: globalT(d) + 2 }));
+    return trace;
+  } catch {
+    return null;
+  }
+}
+
 export function loadBroadcast() {
   const match = generateMatch({ seed: DEMO.matchSeed });
   const trace = buildTrace(match, { seed: DEMO.narratorSeed });

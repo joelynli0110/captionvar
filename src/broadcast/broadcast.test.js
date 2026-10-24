@@ -97,3 +97,24 @@ test('overlay records are machine-readable and carry their evidence', () => {
   assert.equal(typeof rec.air_at_t, 'number');
   JSON.parse(JSON.stringify(rec));
 });
+
+test('claims in the extractor format verify exactly like the structured ones', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const spots = spotMoments(match);
+  const toExtracted = c => {
+    const kindFor = { scorer: 'goal_scorer', assist: 'goal_assist', score: 'score', cause: 'goal_from_press', tally: 'scorer_tally', shooter: 'shot_player', outcome: 'shot_outcome', xg: 'shot_xg', booked: 'card_player', change: 'substitution', speed: 'top_speed', distance: 'distance', count: 'final_third_recoveries', pressed: 'recoveries_after_press', possession: 'possession', accuracy: 'pass_accuracy', opinion: 'opinion' };
+    const a = c.asserted;
+    const x = { kind: kindFor[c.id], span: c.id };
+    if (typeof a === 'string') { if (c.id === 'outcome') x.outcome = a; else x.player_id = a; }
+    if (typeof a === 'number') x.number = a;
+    if (a && typeof a === 'object') Object.assign(x, 'home' in a ? { home: a.home, away: a.away } : {}, 'on' in a ? { player_id: a.on, other_player_id: a.off } : {}, 'kmh' in a ? { player_id: a.player, number: a.kmh } : {}, 'km' in a ? { player_id: a.player, number: a.km } : {}, 'pct' in a ? { side: a.side, number: a.pct } : {});
+    if (c.params?.side) x.side = c.params.side;
+    return x;
+  };
+  trace.decisions.forEach((d, i) => {
+    const claims = toVerifiableClaims(spots[i], d.claims.map(toExtracted));
+    const v = verifyCaption({ ...d, claims }, match.events.filter(e => e.seq <= d.seq));
+    assert.equal(v.status, d.verdict.status, `${d.id} ${d.type}`);
+  });
+});

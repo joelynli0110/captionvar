@@ -5,3 +5,9 @@ __pycache__/
 .env
 *.log
 .DS_Store
+
+# Agent pipeline
+.venv/
+public/traces/smoke.json
+public/traces/offline-demo.json
+.pytest_cache/

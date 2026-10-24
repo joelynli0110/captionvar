@@ -138,7 +138,10 @@ function checkClaim(claim, observed, byId) {
     }
 
     case 'opinion':
-      return unverifiable('A season-wide comparison cannot be checked against this match data.');
+      return unverifiable('A judgement or comparison beyond this match cannot be checked against the match data.');
+
+    case 'other_fact':
+      return unverifiable(`No rule can check this statement against the match data${claim.note_hint ? ` (it ${claim.note_hint})` : ''}.`);
 
     default:
       return unverifiable('No rule exists to check this kind of claim.');

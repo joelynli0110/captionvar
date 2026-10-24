@@ -14,35 +14,40 @@ export const LANGUAGES = [
   { code: 'zh', label: '中文' },
 ];
 
-/** Facts the screen may show: actual values, minus any context claim that failed. */
+/**
+ * Facts the screen may show. Core facts always come from the spotter's record
+ * of what happened (so a withheld caption airs the truth); an optional detail
+ * airs only if the caption made that claim and it was verified.
+ */
 export function airFacts(caption, verdict) {
-  const r = Object.fromEntries(verdict.claims.map(c => [c.id, c]));
-  const ok = id => r[id]?.status === 'supported';
-  const actual = id => r[id]?.actual;
+  const F = caption.facts || {};
+  const holds = test => verdict.claims.some(c => c.status === 'supported' && test(c));
+  const kind = k => c => c.kind === k;
   switch (caption.type) {
     case 'goal':
       return {
-        scorer: actual('scorer'), score: actual('score'),
-        assist: ok('assist') ? actual('assist') : null,
-        cause: ok('cause'), tally: ok('tally') ? actual('tally') : null,
+        scorer: F.scorer, score: F.score,
+        assist: F.assist && holds(kind('goal_assist')) ? F.assist : null,
+        cause: Boolean(F.cause) && holds(kind('goal_from_press')),
+        tally: F.tally && holds(kind('scorer_tally')) ? F.tally : null,
       };
     case 'chance':
-      return { shooter: actual('shooter'), outcome: actual('outcome'), xg: ok('xg') ? actual('xg') : null };
+      return { shooter: F.shooter, outcome: F.outcome, xg: F.xg != null && holds(kind('shot_xg')) ? F.xg : null };
     case 'card':
-      return { player: actual('booked') };
+      return { player: F.booked };
     case 'sub':
-      return actual('change');
+      return F.change;
     case 'sprint':
-      return actual('speed');
+      return F.speed;
     case 'milestone':
-      return actual('distance');
+      return F.distance;
     case 'press':
-      return { count: actual('count'), pressed: ok('pressed') ? actual('pressed') : null };
-    case 'stat': {
-      const poss = actual('possession');
-      const acc = ok('accuracy') && actual('accuracy').side === poss.side ? actual('accuracy').pct : null;
-      return { side: poss.side, pct: poss.pct, accuracy: acc };
-    }
+      return {
+        count: F.count,
+        pressed: F.pressed != null && holds(c => c.kind === 'window_count' && c.params?.metric === 'attacking_third_recoveries_after_pressure') ? F.pressed : null,
+      };
+    case 'stat':
+      return { side: F.possession.side, pct: F.possession.pct, accuracy: F.accuracy && holds(kind('pass_accuracy')) ? F.accuracy.pct : null };
     default:
       return {};
   }
@@ -51,6 +56,10 @@ export function airFacts(caption, verdict) {
 export function renderCaption(caption, verdict, people, { lang = 'en', persona = 'fan', follow = 'neutral' } = {}) {
   if (verdict.status === 'VERIFY' && lang === 'en' && persona === 'fan') {
     return prefix(caption, null, people, lang, persona, follow) + caption.segments.map(s => s.text).join('');
+  }
+  // An agent pipeline may supply a rewrite that itself passed the VAR check.
+  if (caption.aired?.verified && lang === 'en' && persona === 'fan') {
+    return prefix(caption, null, people, lang, persona, follow) + caption.aired.text;
   }
   const f = airFacts(caption, verdict);
   const T = TEMPLATES[lang] || TEMPLATES.en;

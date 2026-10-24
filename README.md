@@ -41,6 +41,17 @@ npm run calibrate   # realism report over many seeds
 
 Details and schema: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
+## Agent pipeline (Microsoft Agent Framework on Microsoft Foundry)
+
+Captions are produced by a multi-agent workflow: a **Narrator** writes the line, a **Claim Extractor** that never sees the facts turns it into typed claims, a deterministic **VAR referee** checks every claim against only the events observed so far, and an **Editor** repairs failed captions, which go back through the same check (at most twice) before a fact-built fallback airs. A seeded red team tells the narrator to plant specific errors in about a third of captions, so every run reports how many were caught.
+
+```powershell
+python agents\run_match.py --out public\traces\foundry-demo.json   # needs FOUNDRY_PROJECT_ENDPOINT and FOUNDRY_MODEL
+python agents\run_match.py --offline --out public\traces\offline-demo.json   # no model
+```
+
+Setup, design choices and the trace format: [docs/AGENTS.md](docs/AGENTS.md).
+
 ## How it works
 
 ```text

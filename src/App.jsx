@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { loadBroadcast, indexAt, clockLabel, DEMO } from './ui/data.js';
+import { loadBroadcast, loadAgentTrace, indexAt, clockLabel, DEMO } from './ui/data.js';
 import { matchStats, playerStats } from './sim/stats.js';
 import { renderCaption } from './broadcast/render.js';
 import { summarise } from './broadcast/trace.js';
@@ -69,17 +69,27 @@ export default function App() {
   const { g, setG, playing, setPlaying, speed, setSpeed } = usePlayback();
   const [view, setView] = useState({ persona: 'fan', follow: 'neutral', player: '', lang: 'en' });
   const [selectedId, setSelectedId] = useState(null);
+  // Captions from the Foundry agent pipeline when a trace is published with
+  // the site; otherwise (or on request) from the built-in test narrator.
+  const [agentTrace, setAgentTrace] = useState(null);
+  const [source, setSource] = useState('test');
+  useEffect(() => {
+    loadAgentTrace(B.match).then(trace => {
+      if (trace) { setAgentTrace(trace); setSource('agents'); }
+    });
+  }, []);
+  const decisions = source === 'agents' && agentTrace ? agentTrace.decisions : B.trace.decisions;
 
   const idx = indexAt(B.eventG, g);
   const observed = useMemo(() => B.events.slice(0, idx + 1), [idx]);
   const stats = useMemo(() => matchStats(observed), [observed]);
 
-  const aired = useMemo(() => B.trace.decisions.filter(d => d.g <= g), [g]);
+  const aired = useMemo(() => decisions.filter(d => d.g <= g), [decisions, g]);
   const airedNewestFirst = useMemo(() => [...aired].reverse(), [aired]);
   const summary = useMemo(() => summarise(aired), [aired]);
   const latest = aired.at(-1);
   const onAir = latest && g - latest.g <= CAPTION_HOLD_S ? latest : null;
-  const selected = selectedId ? B.trace.decisions.find(d => d.id === selectedId) : null;
+  const selected = selectedId ? decisions.find(d => d.id === selectedId) : null;
   const reviewed = selected || onAir;
 
   const renderAired = useCallback(d => renderCaption(d, d.verdict, PEOPLE, view), [view]);
@@ -181,6 +191,7 @@ export default function App() {
           people={PEOPLE}
           view={view}
           renderAired={renderAired}
+          source={{ kind: source, agentTrace, onChange: value => { setSource(value); setSelectedId(null); } }}
           onInspect={inspect}
         />
       </main>

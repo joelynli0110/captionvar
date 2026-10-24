@@ -21,6 +21,7 @@ function Detail({ decision, people, view, onInspect }) {
   const record = overlayRecord(decision, people, view);
   return (
     <div className="detail">
+      <Attempts decision={decision} />
       <ul className="claims">
         {decision.verdict.claims.map(c => (
           <li key={c.id} className={`claim claim-${c.status}`}>
@@ -47,17 +48,70 @@ function Detail({ decision, people, view, onInspect }) {
   );
 }
 
-export default function VarRoom({ decisions, selectedId, onSelect, summary, people, view, renderAired, onInspect }) {
+function SourceNote({ source, summary }) {
+  const t = source.agentTrace;
+  if (source.kind === 'agents' && t) {
+    const others = summary.false_alarms;
+    return (
+      <>
+        <p className="vr-summary">
+          {summary.planted_errors > 0 && <><b>{summary.caught} of {summary.planted_errors}</b> red-team errors caught, </>}
+          {others === 0 ? 'no other captions flagged' : `${others} other caption${others === 1 ? '' : 's'} flagged for review`}, {summary.captions} captions checked so far.
+        </p>
+        <p className="vr-note">
+          {t.source === 'foundry-agents' ? `Written by agents on Microsoft Foundry (${t.model}).` : 'Agent workflow run offline with a scripted client, no model.'} A red team told the narrator to slip one error into some captions; the extractor and the VAR check are not told which.
+          {t.usage?.estimated_cost_usd != null && ` Whole match: ${t.usage.llm_calls} model calls, about $${t.usage.estimated_cost_usd.toFixed(2)}.`}
+        </p>
+      </>
+    );
+  }
+  return (
+    <>
+      <p className="vr-summary">
+        {summary.planted_errors > 0
+          ? <><b>{summary.caught} of {summary.planted_errors}</b> planted errors caught, {summary.false_alarms === 0 ? 'no false alarms' : `${summary.false_alarms} false alarms`}, {summary.captions} captions checked so far.</>
+          : <>{summary.captions} captions checked so far.</>}
+      </p>
+      <p className="vr-note">A test narrator writes these captions and makes deliberate mistakes. The checks are real.</p>
+    </>
+  );
+}
+
+const AUTHOR = { narrator: 'Narrator', editor: 'Editor', template: 'Template from match data' };
+
+function Attempts({ decision }) {
+  if (!decision.attempts || decision.attempts.length < 2 && decision.aired?.by !== 'template') return null;
+  return (
+    <ol className="attempts" aria-label="How the aired caption was produced">
+      {decision.attempts.map(a => (
+        <li key={a.attempt}>
+          <span className={`att-status tone-${VERDICT[a.status].tone}`}>{VERDICT[a.status].label}</span>
+          <span className="att-who">{a.attempt === 0 ? 'Narrator' : `Editor rewrite ${a.attempt}`}</span>
+          {a.attempt > 0 && <span className="att-text">{a.text}</span>}
+        </li>
+      ))}
+      {decision.aired?.by === 'template' && (
+        <li><span className="att-status tone-ok">Aired</span><span className="att-who">{AUTHOR.template}</span></li>
+      )}
+    </ol>
+  );
+}
+
+export default function VarRoom({ decisions, selectedId, onSelect, summary, people, view, renderAired, onInspect, source }) {
   return (
     <section className="var-room" aria-label="VAR room">
       <header className="vr-head">
-        <h2>VAR room</h2>
-        <p className="vr-summary">
-          {summary.planted_errors > 0
-            ? <><b>{summary.caught} of {summary.planted_errors}</b> planted errors caught, {summary.false_alarms === 0 ? 'no false alarms' : `${summary.false_alarms} false alarms`}, {summary.captions} captions checked so far.</>
-            : <>{summary.captions} captions checked so far.</>}
-        </p>
-        <p className="vr-note">In this build a test narrator writes the captions and makes deliberate mistakes. The checks are real.</p>
+        <div className="vr-title">
+          <h2>VAR room</h2>
+          {source.agentTrace && (
+            <div className="segmented small" role="radiogroup" aria-label="Who writes the captions">
+              {[['agents', source.agentTrace.source === 'foundry-agents' ? 'Foundry agents' : 'Agent workflow'], ['test', 'Test narrator']].map(([v, label]) => (
+                <button key={v} type="button" role="radio" aria-checked={source.kind === v} className={source.kind === v ? 'on' : ''} onClick={() => source.onChange(v)}>{label}</button>
+              ))}
+            </div>
+          )}
+        </div>
+        <SourceNote source={source} summary={summary} />
       </header>
       {decisions.length === 0 && <p className="vr-empty">Captions appear here as the narrator writes them. Press play.</p>}
       <ol className="vr-list">

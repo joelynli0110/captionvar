@@ -19,28 +19,48 @@ const PRESS_WINDOW_S = 300;
 export function narrate(match, { seed = 'narrator-1', errorRate = 0.38 } = {}) {
   const rng = createRng(`${match.meta.seed}:${seed}`);
   const people = indexPeople(match);
-  const events = match.events;
-  const captions = [];
-  const last = { chance: -Infinity, sprint: -Infinity, press: { home: -Infinity, away: -Infinity }, milestone11: 0 };
-  const statMarks = [15 * 60, 32 * 60, 60 * 60, 82 * 60];
-  let nextStat = 0;
-
-  const push = (trigger, moment) => {
+  return spotMoments(match).map((spot, i) => {
+    const { trigger, moment } = spot;
     const caption = {
-      id: `CAP-${String(captions.length + 1).padStart(3, '0')}`,
-      trigger_event_id: trigger.id,
-      seq: trigger.seq,
-      period: trigger.period,
-      t: trigger.t,
-      display_minute: trigger.display_minute,
-      type: moment.type,
-      side: moment.side,
+      id: `CAP-${String(i + 1).padStart(3, '0')}`,
+      ...captionHeader(trigger, moment),
+      facts: spot.facts,
       claims: moment.claims,
       planted_error: null,
     };
     if (rng.chance(errorRate)) plantError(caption, moment, rng, people);
     caption.segments = moment.write(Object.fromEntries(caption.claims.map(c => [c.id, c.asserted])), people);
-    captions.push(caption);
+    return caption;
+  });
+}
+
+export function captionHeader(trigger, moment) {
+  return {
+    trigger_event_id: trigger.id,
+    seq: trigger.seq,
+    period: trigger.period,
+    t: trigger.t,
+    display_minute: trigger.display_minute,
+    type: moment.type,
+    side: moment.side,
+  };
+}
+
+/**
+ * The spotter: decides which moments deserve a caption and records the true
+ * facts of each (snapshot of its correct claims). Shared by the simulated
+ * narrator and the LLM agent pipeline.
+ */
+export function spotMoments(match) {
+  const events = match.events;
+  const spots = [];
+  const last = { chance: -Infinity, sprint: -Infinity, press: { home: -Infinity, away: -Infinity }, milestone11: 0 };
+  const statMarks = [15 * 60, 32 * 60, 60 * 60, 82 * 60];
+  let nextStat = 0;
+
+  const push = (trigger, moment) => {
+    const facts = Object.fromEntries(moment.claims.map(c => [c.id, structuredClone(c.asserted)]));
+    spots.push({ trigger, moment, facts });
   };
 
   for (let i = 0; i < events.length; i += 1) {
@@ -103,7 +123,7 @@ export function narrate(match, { seed = 'narrator-1', errorRate = 0.38 } = {}) {
         break;
     }
   }
-  return captions;
+  return spots;
 }
 
 /** Monotonic match time across both halves (second-half clock restarts at 45:00). */
