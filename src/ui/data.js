@@ -15,10 +15,27 @@ export const DEMO = {
 };
 
 export const VERDICT = {
-  VERIFY: { label: 'Verified', air: 'VAR checked', tone: 'ok' },
-  QUALIFY: { label: 'Trimmed', air: 'VAR trimmed', tone: 'trim' },
-  WITHHOLD: { label: 'Withheld', air: 'VAR corrected', tone: 'stop' },
+  VERIFY: { label: 'Verified', air: 'VAR checked', decision: 'Checked', tone: 'ok' },
+  QUALIFY: { label: 'Trimmed', air: 'VAR trimmed', decision: 'Detail removed', tone: 'trim' },
+  WITHHOLD: { label: 'Withheld', air: 'VAR corrected', decision: 'Caption corrected', tone: 'stop' },
 };
+
+/**
+ * The narrator's first draft and what the check flagged in it, false claims
+ * first. Agent traces record this per attempt; for the built-in test narrator
+ * it is read from the verdict.
+ */
+export function firstDraft(decision) {
+  const rank = { contradicted: 0, unverifiable: 1 };
+  const recorded = decision.attempts?.[0];
+  const spanOf = c => c.span ?? decision.segments.filter(s => s.claim === c.id).map(s => s.text.trim()).join(' ');
+  const flags = recorded?.flags
+    ?? decision.verdict.claims.filter(c => c.status !== 'supported').map(c => ({ span: spanOf(c), status: c.status, note: c.note }));
+  return {
+    text: recorded?.text ?? decision.segments.map(s => s.text).join(''),
+    flags: [...flags].sort((a, b) => (rank[a.status] ?? 2) - (rank[b.status] ?? 2)),
+  };
+}
 
 /**
  * Load a trace produced by the agent pipeline (agents/run_match.py) if one is

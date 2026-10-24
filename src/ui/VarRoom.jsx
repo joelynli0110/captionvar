@@ -1,28 +1,21 @@
 import React, { useState } from 'react';
-import { VERDICT } from './data.js';
+import { VERDICT, firstDraft } from './data.js';
+import { Draft } from './Broadcast.jsx';
 import { overlayRecord } from '../broadcast/trace.js';
 
 const STATUS_MARK = { supported: '✓', contradicted: '✕', unverifiable: '?' };
 const STATUS_TEXT = { supported: 'Holds', contradicted: 'False', unverifiable: 'Cannot be checked' };
 
-function CandidateText({ decision }) {
-  const status = Object.fromEntries(decision.verdict.claims.map(c => [c.id, c.status]));
-  return (
-    <p className="candidate">
-      {decision.segments.map((s, i) => (
-        <span key={i} className={s.claim ? `seg seg-${status[s.claim]}` : 'seg'}>{s.text}</span>
-      ))}
-    </p>
-  );
-}
-
-function Detail({ decision, people, view, onInspect }) {
+function Detail({ decision, people, view, aired, onInspect }) {
   const [showData, setShowData] = useState(false);
-  const record = overlayRecord(decision, people, view);
+  const changed = decision.verdict.status !== 'VERIFY';
   return (
     <div className="detail">
+      <p className="detail-label">{changed ? 'Narrator wrote' : 'On air'}</p>
+      <Draft decision={decision} />
+      {changed && <p className="aired"><span>On air instead</span>{aired}</p>}
       <Attempts decision={decision} />
-      <ul className="claims">
+      <ul className="claims" aria-label="Claims checked">
         {decision.verdict.claims.map(c => (
           <li key={c.id} className={`claim claim-${c.status}`}>
             <span className="claim-mark" aria-hidden="true">{STATUS_MARK[c.status]}</span>
@@ -43,97 +36,101 @@ function Detail({ decision, people, view, onInspect }) {
       <button type="button" className="link" onClick={() => setShowData(v => !v)} aria-expanded={showData}>
         {showData ? 'Hide overlay data' : 'Show overlay data'}
       </button>
-      {showData && <pre className="overlay-json">{JSON.stringify(record, null, 2)}</pre>}
+      {showData && <pre className="overlay-json">{JSON.stringify(overlayRecord(decision, people, view), null, 2)}</pre>}
     </div>
   );
 }
 
-function SourceNote({ source, summary }) {
-  const t = source.agentTrace;
-  if (source.kind === 'agents' && t) {
-    const own = summary.unprompted_errors;
-    const unconfirmed = summary.unconfirmed_details;
-    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-    return (
-      <>
-        <p className="vr-summary">
-          {summary.planted_errors > 0 && <><b>{summary.caught} of {summary.planted_errors}</b> red-team errors caught. </>}
-          {own > 0 && <>Also caught <b>{plural(own, 'mistake')}</b> the narrator made on its own. </>}
-          {unconfirmed > 0 && <>Trimmed {plural(unconfirmed, 'caption')} where it added details the data cannot confirm. </>}
-          {summary.captions} captions checked so far.
-        </p>
-        <p className="vr-note">
-          {t.source === 'foundry-agents' ? `Written by agents on Microsoft Foundry (${t.model}).` : 'Agent workflow run offline with a scripted client, no model.'} A red team told the narrator to slip one error into some captions; the extractor and the VAR check are not told which.
-          {t.usage?.estimated_cost_usd != null && ` Whole match: ${t.usage.llm_calls} model calls, about $${t.usage.estimated_cost_usd.toFixed(2)}.`}
-        </p>
-      </>
-    );
-  }
-  return (
-    <>
-      <p className="vr-summary">
-        {summary.planted_errors > 0
-          ? <><b>{summary.caught} of {summary.planted_errors}</b> planted errors caught, {summary.false_alarms === 0 ? 'no false alarms' : `${summary.false_alarms} false alarms`}, {summary.captions} captions checked so far.</>
-          : <>{summary.captions} captions checked so far.</>}
-      </p>
-      <p className="vr-note">A test narrator writes these captions and makes deliberate mistakes. The checks are real.</p>
-    </>
-  );
-}
-
-const AUTHOR = { narrator: 'Narrator', editor: 'Editor', template: 'Template from match data' };
-
+/** Which agent produced each draft and how the check judged it. */
 function Attempts({ decision }) {
-  if (!decision.attempts || decision.attempts.length < 2 && decision.aired?.by !== 'template') return null;
+  const attempts = decision.attempts ?? [];
+  if (attempts.length < 2 && decision.aired?.by !== 'template') return null;
   return (
     <ol className="attempts" aria-label="How the aired caption was produced">
-      {decision.attempts.map(a => (
-        <li key={a.attempt}>
-          <span className={`att-status tone-${VERDICT[a.status].tone}`}>{VERDICT[a.status].label}</span>
-          <span className="att-who">{a.attempt === 0 ? 'Narrator' : `Editor rewrite ${a.attempt}`}</span>
-          {a.attempt > 0 && <span className="att-text">{a.text}</span>}
-          {a.flags?.length > 0 && <span className="att-why">{a.flags.map(f => f.note).join(' ')}</span>}
+      {attempts.map(a => (
+        <li key={a.attempt} className={`tone-${VERDICT[a.status].tone}`}>
+          <span className="att-who">{a.attempt === 0 ? 'Narrator' : `Editor ${a.attempt}`}</span>
+          <span className="att-status">{VERDICT[a.status].label}</span>
         </li>
       ))}
       {decision.aired?.by === 'template' && (
-        <li><span className="att-status tone-ok">Aired</span><span className="att-who">{AUTHOR.template}</span></li>
+        <li className="tone-ok"><span className="att-who">From the data</span><span className="att-status">Aired</span></li>
       )}
     </ol>
   );
 }
 
-export default function VarRoom({ decisions, selectedId, onSelect, summary, people, view, renderAired, onInspect, source }) {
+/** One line per caption: what the check objected to, or what aired. */
+function Gist({ decision, aired }) {
+  if (decision.verdict.status === 'VERIFY') return <span className="vr-gist">{aired}</span>;
+  const flag = firstDraft(decision).flags[0];
+  if (!flag) return <span className="vr-gist">{aired}</span>;
+  return (
+    <span className="vr-gist">
+      <span className={`seg seg-${flag.status}`}>{flag.span.replace(/^[\s,;:.!—–-]+/, '')}</span>
+    </span>
+  );
+}
+
+function Kpis({ summary }) {
+  const calls = summary.qualified + summary.withheld;
+  return (
+    <dl className="kpis">
+      {summary.planted_errors > 0 && (
+        <div className="kpi-main">
+          <dd>{summary.caught}<small>/{summary.planted_errors}</small></dd>
+          <dt>planted errors caught</dt>
+        </div>
+      )}
+      <div><dd>{calls}</dd><dt>VAR calls</dt></div>
+      <div><dd>{summary.captions}</dd><dt>captions checked</dt></div>
+    </dl>
+  );
+}
+
+function sourceLine(source) {
+  const t = source.kind === 'agents' ? source.agentTrace : null;
+  if (!t) return 'Test narrator with deliberate mistakes. The checks are real.';
+  if (t.source !== 'foundry-agents') return 'Agent workflow run offline, no model.';
+  const cost = t.usage?.estimated_cost_usd;
+  return `Foundry agents · ${t.model}${cost != null ? ` · $${cost.toFixed(2)} for the whole match` : ''}`;
+}
+
+export default function VarRoom({ decisions, liveId, selectedId, onSelect, summary, people, view, renderAired, onInspect, source, onExplain }) {
+  const [filter, setFilter] = useState('calls');
+  const calls = decisions.filter(d => d.verdict.status !== 'VERIFY');
+  const shown = filter === 'calls' ? calls : decisions;
   return (
     <section className="var-room" aria-label="VAR room">
       <header className="vr-head">
         <div className="vr-title">
           <h2>VAR room</h2>
-          {source.agentTrace && (
-            <div className="segmented small" role="radiogroup" aria-label="Who writes the captions">
-              {[['agents', source.agentTrace.source === 'foundry-agents' ? 'Foundry agents' : 'Agent workflow'], ['test', 'Test narrator']].map(([v, label]) => (
-                <button key={v} type="button" role="radio" aria-checked={source.kind === v} className={source.kind === v ? 'on' : ''} onClick={() => source.onChange(v)}>{label}</button>
-              ))}
-            </div>
-          )}
+          <button type="button" className="link" onClick={onExplain}>How it works</button>
         </div>
-        <SourceNote source={source} summary={summary} />
+        <Kpis summary={summary} />
+        <p className="vr-source">{sourceLine(source)}</p>
+        <div className="vr-tabs" role="tablist" aria-label="Captions to show">
+          {[['calls', `VAR calls · ${calls.length}`], ['all', `All captions · ${decisions.length}`]].map(([value, label]) => (
+            <button key={value} type="button" role="tab" aria-selected={filter === value} className={filter === value ? 'on' : ''} onClick={() => setFilter(value)}>{label}</button>
+          ))}
+        </div>
       </header>
-      {decisions.length === 0 && <p className="vr-empty">Captions appear here as the narrator writes them. Press play.</p>}
+      {shown.length === 0 && (
+        <p className="vr-empty">{decisions.length === 0 ? 'Captions appear here as the narrator writes them.' : 'No VAR calls yet: every caption so far checked out.'}</p>
+      )}
       <ol className="vr-list">
-        {decisions.map(d => {
+        {shown.map(d => {
           const v = VERDICT[d.verdict.status];
           const open = d.id === selectedId;
+          const aired = renderAired(d);
           return (
-            <li key={d.id} className={`vr-item tone-${v.tone} ${open ? 'is-open' : ''}`}>
+            <li key={d.id} className={`vr-item tone-${v.tone}${open ? ' is-open' : ''}${d.id === liveId ? ' is-live' : ''}`}>
               <button type="button" className="vr-row" onClick={() => onSelect(open ? null : d.id)} aria-expanded={open}>
                 <span className="vr-minute">{d.display_minute}</span>
                 <span className="vr-verdict">{v.label}</span>
+                <Gist decision={d} aired={aired} />
               </button>
-              <CandidateText decision={d} />
-              {d.verdict.status !== 'VERIFY' && (
-                <p className="aired"><span>On air instead</span> {renderAired(d)}</p>
-              )}
-              {open && <Detail decision={d} people={people} view={view} onInspect={onInspect} />}
+              {open && <Detail decision={d} people={people} view={view} aired={aired} onInspect={onInspect} />}
             </li>
           );
         })}
