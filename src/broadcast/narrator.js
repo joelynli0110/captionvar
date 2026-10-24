@@ -208,6 +208,13 @@ function chanceMoment(shot, save) {
     { id: 'outcome', kind: 'shot_outcome', role: 'core', ref: shot.id, asserted: shot.outcome },
   ];
   if (shot.xg >= 0.2) claims.push({ id: 'xg', kind: 'shot_xg', role: 'context', ref: shot.id, asserted: shot.xg });
+  // Naming the keeper is a statement too: he made this save.
+  if (save) {
+    claims.push({
+      id: 'keeper', kind: 'recent_action', role: 'context', asserted: true,
+      params: { action: 'save', actor: save.player_id, other: null, side: null, until_seq: shot.seq, window_s: 120 },
+    });
+  }
   return {
     type: 'chance',
     side: shot.side,

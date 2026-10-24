@@ -22,7 +22,7 @@
 import { createInterface } from 'node:readline';
 import { generateMatch } from '../src/sim/generateMatch.js';
 import { spotMoments, captionHeader, indexPeople, narrate, observedFor } from '../src/broadcast/narrator.js';
-import { verifyCaption } from '../src/broadcast/verify.js';
+import { verifyCaption, checkNamedPlayers } from '../src/broadcast/verify.js';
 import { renderCaption } from '../src/broadcast/render.js';
 import { toVerifiableClaims, segmentsFromSpans } from '../src/broadcast/extracted.js';
 import { narratorPacket, extractorPacket, editorPacket } from '../src/broadcast/packets.js';
@@ -56,6 +56,10 @@ function simulated(index, narratorSeed) {
   const extracted = cap.claims.map(c => {
     const span = cap.segments.filter(s => s.claim === c.id).map(s => s.text.trim()).join(' ') || c.id;
     const a = c.asserted;
+    if (c.kind === 'recent_action') {
+      const keeperName = people.name(c.params.actor);
+      return { kind: 'recent_action', span: keeperName, action: c.params.action, player_id: c.params.actor, other_player_id: c.params.other };
+    }
     const x = { kind: EXTRACT_KIND[c.id] ?? 'other_fact', span };
     if (typeof a === 'string') { if (c.id === 'outcome') x.outcome = a; else x.player_id = a; }
     if (typeof a === 'number') x.number = a;
@@ -80,14 +84,16 @@ const OPS = {
     const spot = spotAt(index);
     const claims = toVerifiableClaims(spot, extracted || []);
     const header = captionHeader(spot.trigger, spot.moment);
-    const verdict = verifyCaption({ ...header, claims }, observedFor(match, spot.trigger));
+    let verdict = verifyCaption({ ...header, claims }, observedFor(match, spot.trigger));
+    verdict = checkNamedPlayers(text, verdict, [...people.players.values()]);
     // A caption with no checkable claim at all must not air unchecked.
     if (!claims.length) {
       verdict.status = 'WITHHOLD';
       verdict.claims = [];
       verdict.note = 'No checkable claim was found in the caption.';
     }
-    return { claims, segments: segmentsFromSpans(text, claims), verdict };
+    // Segments cover the extracted claims and any unbacked names, so the UI can mark both.
+    return { claims, segments: segmentsFromSpans(text, verdict.claims), verdict };
   },
   editor_packet: ({ index, text, verdict }) => editorPacket(match, spotAt(index), text, verdict),
   template: ({ index, verdict }) => {

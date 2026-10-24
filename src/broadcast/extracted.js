@@ -64,8 +64,21 @@ export function toVerifiableClaims(spot, extracted) {
   const used = new Map();
   const claims = [];
 
-  for (const x of extracted) {
+  for (let x of extracted) {
     let kind = EXTRACTABLE_KINDS[x.kind] ? x.kind : 'other_fact';
+    // A shot, assist or booking mentioned outside its own moment is a build-up action.
+    if (type !== 'chance' && type !== 'goal' && (kind === 'shot_player' || kind === 'shot_outcome')) {
+      x = { ...x, kind: 'recent_action', action: 'shot' };
+      kind = 'recent_action';
+    }
+    if (type !== 'goal' && kind === 'goal_assist') {
+      x = { ...x, kind: 'recent_action', action: 'pass' };
+      kind = 'recent_action';
+    }
+    if (type !== 'card' && kind === 'card_player') {
+      x = { ...x, kind: 'recent_action', action: 'card' };
+      kind = 'recent_action';
+    }
     // Speed and distance readings are easy to confuse; the moment decides which one it is.
     if (type === 'milestone' && kind === 'top_speed') kind = 'distance';
     if (type === 'sprint' && kind === 'distance') kind = 'top_speed';
@@ -116,7 +129,7 @@ function mapClaim(kind, x, trigger, moment) {
     case 'possession': return { kind, params: { until_seq: trigger.seq }, asserted: { side, pct: num } };
     case 'pass_accuracy': return { kind, params: { until_seq: trigger.seq }, asserted: { side, pct: num } };
     case 'recent_action':
-      if (!RECENT_ACTIONS.includes(x.action)) return { kind: 'other_fact', asserted: x.span };
+      if (!RECENT_ACTIONS.includes(x.action) && x.action !== 'card') return { kind: 'other_fact', asserted: x.span };
       return {
         kind,
         params: { action: x.action, actor: x.player_id ?? null, other: x.other_player_id ?? null, side: x.side ?? null, until_seq: trigger.seq, window_s: RECENT_WINDOW_S },

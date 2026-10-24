@@ -100,11 +100,12 @@ test('overlay records are machine-readable and carry their evidence', () => {
 });
 
 test('claims in the extractor format verify exactly like the structured ones', async () => {
-  const { spotMoments } = await import('./narrator.js');
+  const { spotMoments, observedFor } = await import('./narrator.js');
   const { toVerifiableClaims } = await import('./extracted.js');
   const spots = spotMoments(match);
   const toExtracted = c => {
     const kindFor = { scorer: 'goal_scorer', assist: 'goal_assist', score: 'score', cause: 'goal_from_press', tally: 'scorer_tally', shooter: 'shot_player', outcome: 'shot_outcome', xg: 'shot_xg', booked: 'card_player', change: 'substitution', speed: 'top_speed', distance: 'distance', count: 'final_third_recoveries', pressed: 'recoveries_after_press', possession: 'possession', accuracy: 'pass_accuracy', opinion: 'opinion' };
+    if (c.kind === 'recent_action') return { kind: 'recent_action', span: c.id, action: c.params.action, player_id: c.params.actor };
     const a = c.asserted;
     const x = { kind: kindFor[c.id], span: c.id };
     if (typeof a === 'string') { if (c.id === 'outcome') x.outcome = a; else x.player_id = a; }
@@ -115,7 +116,7 @@ test('claims in the extractor format verify exactly like the structured ones', a
   };
   trace.decisions.forEach((d, i) => {
     const claims = toVerifiableClaims(spots[i], d.claims.map(toExtracted));
-    const v = verifyCaption({ ...d, claims }, match.events.filter(e => e.seq <= d.seq));
+    const v = verifyCaption({ ...d, claims }, observedFor(match, spots[i].trigger));
     assert.equal(v.status, d.verdict.status, `${d.id} ${d.type}`);
   });
 });
@@ -224,4 +225,34 @@ test('the save or block of the captioned shot is visible to the check, later eve
   const after = seen.filter(e => e.seq > chance.trigger.seq);
   assert.ok(after.length >= 1);
   assert.ok(after.every(e => e.shot_id === chance.trigger.id));
+});
+
+
+test('every named player must be backed by a checked statement', async () => {
+  const { checkNamedPlayers } = await import('./verify.js');
+  const players = [...trace.people.players.values()];
+  const reyes = players.find(p => p.short_name === 'Reyes');
+  const marsh = players.find(p => p.short_name === 'Marsh');
+  const verdict = { status: 'VERIFY', claims: [{ id: 'speed', status: 'supported', asserted: { player: marsh.id, kmh: 34.9 } }] };
+  // The real leak seen in a Foundry run: the wrong name survived in prose the extractor skipped.
+  const leaked = checkNamedPlayers('Callum Reyes sprints after the tackle. Aiden Marsh recorded a top speed of 34.9 km/h.', verdict, players);
+  assert.equal(leaked.status, 'QUALIFY');
+  assert.deepEqual(leaked.claims.filter(c => c.kind === 'named_player').map(c => c.params.player), [reyes.id]);
+  // Backed names, and words that merely contain a surname, pass.
+  assert.equal(checkNamedPlayers('Aiden Marsh recorded 34.9 km/h, Marshall says.', verdict, players).status, 'VERIFY');
+  // A withheld verdict stays withheld.
+  assert.equal(checkNamedPlayers('Reyes!', { ...verdict, status: 'WITHHOLD' }, players).status, 'WITHHOLD');
+});
+
+test('a shot, assist or booking mentioned outside its own moment is checked as build-up', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const sub = spotMoments(match).find(s => s.moment.type === 'sub');
+  const claims = toVerifiableClaims(sub, [
+    { kind: 'shot_player', span: 'a', player_id: 'NBR-07' },
+    { kind: 'goal_assist', span: 'b', player_id: 'NBR-08' },
+    { kind: 'card_player', span: 'c', player_id: 'NBR-02' },
+  ]);
+  assert.deepEqual(claims.map(c => [c.kind, c.params.action]), [['recent_action', 'shot'], ['recent_action', 'pass'], ['recent_action', 'card']]);
+  assert.ok(claims.every(c => c.role === 'context'));
 });

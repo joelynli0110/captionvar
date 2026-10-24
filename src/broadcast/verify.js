@@ -168,10 +168,11 @@ const ACTION_MATCH = {
   save: e => e.type === 'save',
   block: e => e.type === 'block' || e.type === 'clearance',
   tackle: e => e.type === 'tackle',
+  card: e => e.type === 'card',
 };
 const ACTION_WORD = {
   foul: 'foul', won_ball: 'ball won back', pressure: 'press', pass: 'completed pass', carry: 'run with the ball',
-  giveaway: 'loss of possession', shot: 'shot', save: 'save', block: 'block or clearance', tackle: 'tackle',
+  giveaway: 'loss of possession', shot: 'shot', save: 'save', block: 'block or clearance', tackle: 'tackle', card: 'booking',
 };
 
 /**
@@ -190,13 +191,21 @@ function participants(e, action, observed) {
     const shooter = shooterOf(e.shot_id);
     return { doers: [e.player_id, shooter], others: [shooter, e.player_id] };
   }
+  if (action === 'giveaway' && e.type === 'pass') {
+    // "lost it to X": X is whoever won the loose or intercepted ball next.
+    const winners = observed.filter(x => x.seq > e.seq && x.seq <= e.seq + 3 && x.side !== e.side
+      && (x.type === 'interception' || x.type === 'recovery')).map(x => x.player_id);
+    return { doers: [e.player_id], others: winners };
+  }
   const other = e.fouled_id ?? e.target_id ?? e.recipient_id ?? null;
   return { doers: [e.player_id], others: other ? [other] : [] };
 }
 
 function checkRecentAction({ action, actor, other, side, until_seq: until, window_s: w }, observed) {
   const end = observed.find(e => e.seq === until);
-  const recent = observed.filter(e => e.seq <= until && e.period === end.period && e.t >= end.t - w);
+  // The window before the moment, plus the save or block of the moment's own shot.
+  const stopsTrigger = e => (e.type === 'save' || e.type === 'block') && e.shot_id === end.id;
+  const recent = observed.filter(e => (e.seq <= until || stopsTrigger(e)) && e.period === end.period && e.t >= end.t - w);
   const matches = (e, withActor) => {
     if (!ACTION_MATCH[action](e)) return false;
     const p = participants(e, action, recent);
@@ -220,4 +229,38 @@ function checkRecentAction({ action, actor, other, side, until_seq: until, windo
     ? `No ${ACTION_WORD[action]} by that player in the last ${minutes} minutes; the latest was by ${action === 'giveaway' && sameAction.type === 'tackle' ? sameAction.target : sameAction.player} (${sameAction.id}).`
     : `No matching ${ACTION_WORD[action]} in the last ${minutes} minutes of play.`;
   return contradicted(false, sameAction ? [sameAction.id] : [], note);
+}
+
+/**
+ * Every player a caption names must be backed by at least one statement that
+ * passed the check. Catches a wrong name left behind in prose the extractor
+ * did not turn into a claim (e.g. "Reyes sprints ... Marsh recorded 34.9 km/h").
+ * Returns the verdict with an 'unverifiable' detail added per unbacked name.
+ */
+export function checkNamedPlayers(text, verdict, players) {
+  const backed = new Set();
+  for (const c of verdict.claims) {
+    if (c.status !== 'supported') continue;
+    const a = c.asserted;
+    if (typeof a === 'string') backed.add(a);
+    if (a && typeof a === 'object') for (const k of ['player', 'on', 'off']) if (a[k]) backed.add(a[k]);
+    for (const k of ['actor', 'other']) if (c.params?.[k]) backed.add(c.params[k]);
+  }
+  const escape = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const extra = [];
+  for (const p of players) {
+    const said = new RegExp(`(^|[^\\p{L}])${escape(p.short_name)}(?![\\p{L}])`, 'u').test(text);
+    if (!said || backed.has(p.id)) continue;
+    extra.push({
+      id: `name-${extra.length + 1}`, kind: 'named_player', role: 'context', span: p.short_name,
+      params: { player: p.id }, asserted: true, status: 'unverifiable', actual: null, evidence: [],
+      note: `Names ${p.name}, but no checked statement about him holds.`,
+    });
+  }
+  if (!extra.length) return verdict;
+  return {
+    ...verdict,
+    status: verdict.status === 'VERIFY' ? 'QUALIFY' : verdict.status,
+    claims: [...verdict.claims, ...extra],
+  };
 }
