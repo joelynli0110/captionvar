@@ -116,3 +116,36 @@ RED_TEAM_BY_TYPE = {
     "press": ["inflated_number", "unverifiable_superlative"],
     "stat": ["inflated_number", "unverifiable_superlative"],
 }
+
+
+# ------------------------------------------------------------- baselines
+# Used only by run_baselines.py, to measure what the multi-agent design adds.
+# Both baselines get the same true facts the narrator had, so any error that
+# still airs is one the model could have caught.
+
+SELF_CHECK = """\
+You wrote the caption below for a live football broadcast from the moment's facts.
+Before it airs, check it yourself against those facts and the recent play.
+If every factual statement is supported, return it unchanged. Otherwise fix or
+remove whatever is not supported. Keep the broadcast tone, at most 30 words.
+Return the final caption text only, without quotes."""
+
+JUDGE = """\
+You are the fact-checker for a live football broadcast.
+You get one caption and the true facts of the moment, including the recent play.
+Decide whether every factual statement in the caption is supported by the facts:
+names, numbers, scorelines, outcomes, causes and build-up actions.
+Superlatives and comparisons the facts cannot support count as problems.
+Set ok to true only if there is no problem. List each problem in a few words."""
+
+JUDGE_EDITOR = """\
+You are the broadcast editor. A fact-checker found problems in a caption.
+You receive the caption, the problems and the true facts of the moment.
+Rewrite the caption so every factual statement is supported by the facts.
+Prefer deleting a failed phrase to rewording it. Keep the broadcast tone and
+stay under 30 words. Return the caption text only, without quotes."""
+
+
+class Judgement(BaseModel):
+    ok: bool
+    problems: list[str]
