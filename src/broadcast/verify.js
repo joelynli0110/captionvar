@@ -140,10 +140,56 @@ function checkClaim(claim, observed, byId) {
     case 'opinion':
       return unverifiable('A judgement or comparison beyond this match cannot be checked against the match data.');
 
+    case 'recent_action':
+      return checkRecentAction(claim.params, observed);
+
     case 'other_fact':
       return unverifiable(`No rule can check this statement against the match data${claim.note_hint ? ` (it ${claim.note_hint})` : ''}.`);
 
     default:
       return unverifiable('No rule exists to check this kind of claim.');
   }
+}
+
+/**
+ * Build-up actions ("after Morita won it back", "a foul on Whitcombe",
+ * "pressing from Vence"): the action must appear among the events of the same
+ * half in the window before the moment. The event record is complete, so an
+ * action that is not there did not happen in that window.
+ */
+const ACTION_MATCH = {
+  foul: e => e.type === 'foul',
+  won_ball: e => e.type === 'recovery' || e.type === 'interception' || (e.type === 'tackle' && e.won),
+  pressure: e => e.type === 'pressure',
+  pass: e => e.type === 'pass' && e.successful,
+  shot: e => e.type === 'shot',
+  save: e => e.type === 'save',
+  block: e => e.type === 'block' || e.type === 'clearance',
+  tackle: e => e.type === 'tackle',
+};
+const ACTION_WORD = {
+  foul: 'foul', won_ball: 'ball won back', pressure: 'press', pass: 'completed pass', shot: 'shot',
+  save: 'save', block: 'block or clearance', tackle: 'tackle',
+};
+const counterpart = e => e.fouled_id ?? e.target_id ?? e.recipient_id ?? null;
+
+function checkRecentAction({ action, actor, other, side, until_seq: until, window_s: w }, observed) {
+  const end = observed.find(e => e.seq === until);
+  const recent = observed.filter(e => e.seq <= until && e.period === end.period && e.t >= end.t - w);
+  const hits = recent.filter(e => ACTION_MATCH[action](e)
+    && (!actor || e.player_id === actor)
+    // A recovery records no opponent, so 'won it back from X' is checked against the actor only.
+    && (!other || counterpart(e) === other || (action === 'won_ball' && counterpart(e) == null))
+    && (actor || other || !side || e.side === side));
+  const minutes = Math.round(w / 60);
+  if (hits.length) {
+    const last = hits.at(-1);
+    return supported(true, hits.slice(-3).map(e => e.id), `Recorded at ${last.display_minute} (${last.id}).`);
+  }
+  // Same action by someone else in the window: name who actually did it.
+  const sameAction = recent.filter(e => ACTION_MATCH[action](e) && (!other || counterpart(e) === other)).at(-1);
+  const note = sameAction && actor
+    ? `No ${ACTION_WORD[action]} by that player in the last ${minutes} minutes; the latest was by ${sameAction.player} (${sameAction.id}).`
+    : `No matching ${ACTION_WORD[action]} in the last ${minutes} minutes of play.`;
+  return contradicted(false, sameAction ? [sameAction.id] : [], note);
 }

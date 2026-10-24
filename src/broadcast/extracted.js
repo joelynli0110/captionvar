@@ -26,6 +26,7 @@ export const EXTRACTABLE_KINDS = {
   recoveries_after_press: 'How many of those recoveries came straight after pressing.',
   possession: "A team's share of possession in percent.",
   pass_accuracy: "A team's pass completion in percent.",
+  recent_action: 'Something a named player (or a team) did in the build-up: a foul, winning the ball, pressing, a pass, a shot, a save, a block or a tackle.',
   opinion: 'A judgement, comparison or superlative that match data cannot confirm.',
   other_fact: 'Any other factual assertion not covered above.',
 };
@@ -45,10 +46,13 @@ const ID_FOR = {
   goal_scorer: 'scorer', goal_assist: 'assist', score: 'score', goal_from_press: 'cause', scorer_tally: 'tally',
   shot_player: 'shooter', shot_outcome: 'outcome', shot_xg: 'xg', card_player: 'booked', substitution: 'change',
   top_speed: 'speed', distance: 'distance', final_third_recoveries: 'count', recoveries_after_press: 'pressed',
-  possession: 'possession', pass_accuracy: 'accuracy', opinion: 'opinion', other_fact: 'other',
+  possession: 'possession', pass_accuracy: 'accuracy', recent_action: 'action', opinion: 'opinion', other_fact: 'other',
 };
 
 const WINDOW_S = 300;
+/** How far back a build-up action may be (match seconds, same half). */
+export const RECENT_WINDOW_S = 120;
+export const RECENT_ACTIONS = ['foul', 'won_ball', 'pressure', 'pass', 'shot', 'save', 'block', 'tackle'];
 
 /**
  * @param spot  { trigger, moment } from spotMoments()
@@ -108,6 +112,13 @@ function mapClaim(kind, x, trigger, moment) {
       return { kind: 'window_count', params: { side, metric: 'attacking_third_recoveries_after_pressure', window_s: WINDOW_S, until_seq: trigger.seq }, asserted: num };
     case 'possession': return { kind, params: { until_seq: trigger.seq }, asserted: { side, pct: num } };
     case 'pass_accuracy': return { kind, params: { until_seq: trigger.seq }, asserted: { side, pct: num } };
+    case 'recent_action':
+      if (!RECENT_ACTIONS.includes(x.action)) return { kind: 'other_fact', asserted: x.span };
+      return {
+        kind,
+        params: { action: x.action, actor: x.player_id ?? null, other: x.other_player_id ?? null, side: x.side ?? null, until_seq: trigger.seq, window_s: RECENT_WINDOW_S },
+        asserted: true,
+      };
     case 'opinion': return { kind, asserted: true };
     default: return { kind: 'other_fact', asserted: x.span };
   }

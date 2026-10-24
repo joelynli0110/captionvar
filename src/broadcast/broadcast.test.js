@@ -118,3 +118,57 @@ test('claims in the extractor format verify exactly like the structured ones', a
     assert.equal(v.status, d.verdict.status, `${d.id} ${d.type}`);
   });
 });
+
+test('build-up actions are checked against the last two minutes of play', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims, RECENT_WINDOW_S } = await import('./extracted.js');
+  const spots = spotMoments(match);
+  const check = (spot, extracted) => {
+    const claims = toVerifiableClaims(spot, extracted);
+    return verifyCaption({ ...trace.decisions[spots.indexOf(spot)], claims }, match.events.filter(e => e.seq <= spot.trigger.seq)).claims[0];
+  };
+  // The scripted equaliser: pressure -> tackle -> recovery -> ... -> goal.
+  const goalSpot = spots.find(s => s.moment.type === 'goal' && s.trigger.id === trace.decisions.find(d => d.type === 'goal' && d.facts?.cause)?.trigger_event_id);
+  const chain = match.events.filter(e => e.seq < goalSpot.trigger.seq && e.period === goalSpot.trigger.period && e.t >= goalSpot.trigger.t - RECENT_WINDOW_S);
+  const press = chain.filter(e => e.type === 'pressure' && e.side === goalSpot.moment.side).at(-1);
+
+  const ok = check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'pressure', player_id: press.player_id }]);
+  assert.equal(ok.status, 'supported');
+  assert.ok(ok.evidence.includes(press.id));
+  assert.equal(ok.role, 'context');
+
+  const someoneElse = match.squads[goalSpot.moment.side].players.find(p => p.id !== press.player_id && !chain.some(e => e.type === 'pressure' && e.player_id === p.id));
+  const wrong = check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'pressure', player_id: someoneElse.id }]);
+  assert.equal(wrong.status, 'contradicted');
+  assert.match(wrong.note, /latest was by/);
+
+  const team = check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'pressure', side: goalSpot.moment.side }]);
+  assert.equal(team.status, 'supported');
+
+  const noFoul = chain.some(e => e.type === 'foul') ? null : check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'foul', side: 'away' }]);
+  if (noFoul) assert.equal(noFoul.status, 'contradicted');
+
+  const bogus = check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'dance' }]);
+  assert.equal(bogus.kind, 'other_fact');
+});
+
+test('a build-up action that happens only after the moment is not accepted', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const spot = spotMoments(match)[5];
+  const later = match.events.find(e => e.seq > spot.trigger.seq && e.type === 'foul');
+  const claims = toVerifiableClaims(spot, [{ kind: 'recent_action', span: 'x', action: 'foul', player_id: later.player_id, other_player_id: later.fouled_id }]);
+  const v = verifyCaption({ ...trace.decisions[5], claims }, match.events.filter(e => e.seq <= spot.trigger.seq));
+  assert.notEqual(v.claims[0].status, 'supported');
+});
+
+test('narrator packets only describe the checkable build-up window', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { narratorPacket } = await import('./packets.js');
+  const spots = spotMoments(match);
+  const halfTime = spots.findIndex(s => s.trigger.type === 'period_end');
+  const packet = narratorPacket(match, spots[halfTime + 1], halfTime + 1);
+  for (const line of packet.recent_play) assert.doesNotMatch(line, /undefined/);
+  const foulLine = spots.map((s, i) => narratorPacket(match, s, i)).flatMap(p => p.recent_play).find(l => / fouls /.test(l));
+  if (foulLine) assert.doesNotMatch(foulLine, /an opponent$/);
+});
