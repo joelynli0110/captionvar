@@ -256,3 +256,22 @@ test('a shot, assist or booking mentioned outside its own moment is checked as b
   assert.deepEqual(claims.map(c => [c.kind, c.params.action]), [['recent_action', 'shot'], ['recent_action', 'pass'], ['recent_action', 'card']]);
   assert.ok(claims.every(c => c.role === 'context'));
 });
+
+test('"booked for a foul on X" links the booking to the foul before it', async () => {
+  const { spotMoments, observedFor } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const spots = spotMoments(match);
+  // A booking followed within two minutes by another captioned moment (e.g. the substitution at 65').
+  const nextSpot = c => spots.find(s => s.trigger.seq > c.seq && s.trigger.period === c.period && s.trigger.t - c.t <= 120);
+  const card = match.events.find(e => e.type === 'card' && nextSpot(e));
+  assert.ok(card, 'demo match has a booking followed by another captioned moment');
+  const spot = nextSpot(card);
+  const foul = match.events.filter(e => e.type === 'foul' && e.player_id === card.player_id && e.seq < card.seq).at(-1);
+  const check = other => verifyCaption(
+    { ...trace.decisions[spots.indexOf(spot)], claims: toVerifiableClaims(spot, [{ kind: 'card_player', span: 'x', player_id: card.player_id, other_player_id: other }]) },
+    observedFor(match, spot.trigger),
+  ).claims[0].status;
+  assert.equal(check(foul.fouled_id), 'supported');
+  const someoneElse = match.squads[foul.side === 'home' ? 'away' : 'home'].players.find(p => p.id !== foul.fouled_id).id;
+  assert.equal(check(someoneElse), 'contradicted');
+});

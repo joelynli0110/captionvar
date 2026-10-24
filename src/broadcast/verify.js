@@ -191,6 +191,11 @@ function participants(e, action, observed) {
     const shooter = shooterOf(e.shot_id);
     return { doers: [e.player_id, shooter], others: [shooter, e.player_id] };
   }
+  if (e.type === 'card') {
+    // A booking records only who was booked; the foul just before it names the victim.
+    const foul = observed.filter(x => x.type === 'foul' && x.player_id === e.player_id && x.seq < e.seq && x.seq >= e.seq - 3).at(-1);
+    return { doers: [e.player_id], others: foul ? [foul.fouled_id] : [] };
+  }
   if (action === 'giveaway' && e.type === 'pass') {
     // "lost it to X": X is whoever won the loose or intercepted ball next.
     const winners = observed.filter(x => x.seq > e.seq && x.seq <= e.seq + 3 && x.side !== e.side
