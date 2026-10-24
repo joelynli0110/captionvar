@@ -7,6 +7,7 @@
  *   editorPacket    the verdict on each claim and the true facts to correct with
  */
 import { indexPeople } from './narrator.js';
+import { RECENT_WINDOW_S } from './extracted.js';
 
 const NOTABLE = new Set(['pass', 'carry', 'shot', 'recovery', 'tackle', 'interception', 'pressure', 'save', 'block', 'foul', 'card', 'goal']);
 
@@ -57,7 +58,7 @@ export function describeEvent(e, people) {
     pressure: () => `presses ${e.target ? e.target.split(' ').at(-1) : 'the ball carrier'}`,
     save: () => 'makes a save',
     block: () => 'blocks a shot',
-    foul: () => 'commits a foul',
+    foul: () => `fouls ${e.fouled ? e.fouled.split(' ').at(-1) : 'an opponent'}`,
     card: () => 'is booked',
     goal: () => 'scores',
   };
@@ -72,7 +73,11 @@ function roster(match) {
 
 export function narratorPacket(match, spot, index) {
   const people = indexPeople(match);
-  const before = match.events.filter(e => e.seq < spot.trigger.seq && NOTABLE.has(e.type)).slice(-8);
+  // Only the window the referee can check build-up claims against.
+  const tr = spot.trigger;
+  const before = match.events
+    .filter(e => e.seq < tr.seq && e.period === tr.period && e.t >= tr.t - RECENT_WINDOW_S && NOTABLE.has(e.type))
+    .slice(-8);
   return {
     index,
     minute: spot.trigger.display_minute,

@@ -92,6 +92,7 @@ function Attempts({ decision }) {
           <span className={`att-status tone-${VERDICT[a.status].tone}`}>{VERDICT[a.status].label}</span>
           <span className="att-who">{a.attempt === 0 ? 'Narrator' : `Editor rewrite ${a.attempt}`}</span>
           {a.attempt > 0 && <span className="att-text">{a.text}</span>}
+          {a.flags?.length > 0 && <span className="att-why">{a.flags.map(f => f.note).join(' ')}</span>}
         </li>
       ))}
       {decision.aired?.by === 'template' && (

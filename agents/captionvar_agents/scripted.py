@@ -59,7 +59,7 @@ class ScriptedChatClient(BaseChatClient):
         if index is None:
             return json.dumps({"claims": []})  # edited text: handled by the template path below
         sim = await self.factbox.call("simulated", index=index, seed=self.narrator_seed)
-        fields = ("player_id", "other_player_id", "side", "number", "outcome", "home", "away")
+        fields = ("player_id", "other_player_id", "side", "number", "outcome", "home", "away", "action")
         claims = [{"kind": c["kind"], "span": c["span"], **{f: c.get(f) for f in fields}} for c in sim["extracted"]]
         return json.dumps({"claims": claims})
 

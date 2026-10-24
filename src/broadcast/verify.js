@@ -15,7 +15,10 @@
  */
 import { possessionShare, teamStats } from '../sim/stats.js';
 
-const TOLERANCE = { pct: 1.5, kmh: 0.2, xg: 0.015 };
+const TOLERANCE = { kmh: 0.2, xg: 0.015 };
+
+/** A whole-number percentage is right only if it is the actual value rounded down or up. */
+const pctMatches = (stated, actual) => stated >= Math.floor(actual) && stated <= Math.ceil(actual);
 
 export function verifyCaption(caption, observed) {
   const byId = new Map(observed.map(e => [e.id, e]));
@@ -124,7 +127,7 @@ function checkClaim(claim, observed, byId) {
       const seen = observed.filter(e => e.seq <= claim.params.until_seq);
       const share = possessionShare(seen);
       const actual = { side: a.side, pct: Math.round(share[a.side]) };
-      return Math.abs(share[a.side] - a.pct) <= TOLERANCE.pct
+      return pctMatches(a.pct, share[a.side])
         ? supported(actual, [], `On-ball share ${share[a.side]}%.`)
         : contradicted({ side: share.home >= share.away ? 'home' : 'away', pct: Math.round(Math.max(share.home, share.away)) }, [], `${a.side === 'home' ? 'Home' : 'Away'} share is ${share[a.side]}%.`);
     }
@@ -132,7 +135,7 @@ function checkClaim(claim, observed, byId) {
     case 'pass_accuracy': {
       const seen = observed.filter(e => e.seq <= claim.params.until_seq);
       const acc = teamStats(seen, a.side).pass_accuracy;
-      return Math.abs(acc - a.pct) <= TOLERANCE.pct
+      return pctMatches(a.pct, acc)
         ? supported({ side: a.side, pct: Math.round(acc) }, [], `Pass accuracy ${acc}%.`)
         : contradicted({ side: a.side, pct: Math.round(acc) }, [], `Pass accuracy is ${acc}%.`);
     }
@@ -140,10 +143,166 @@ function checkClaim(claim, observed, byId) {
     case 'opinion':
       return unverifiable('A judgement or comparison beyond this match cannot be checked against the match data.');
 
+    case 'recent_action':
+      return checkRecentAction(claim.params, observed);
+
     case 'other_fact':
       return unverifiable(`No rule can check this statement against the match data${claim.note_hint ? ` (it ${claim.note_hint})` : ''}.`);
 
     default:
       return unverifiable('No rule exists to check this kind of claim.');
   }
+}
+
+/**
+ * Build-up actions ("after Morita won it back", "a foul on Whitcombe",
+ * "pressing from Vence"): the action must appear among the events of the same
+ * half in the window before the moment. The event record is complete, so an
+ * action that is not there did not happen in that window.
+ */
+const ACTION_MATCH = {
+  foul: e => e.type === 'foul',
+  won_ball: e => e.type === 'recovery' || e.type === 'interception' || (e.type === 'tackle' && e.won),
+  pressure: e => e.type === 'pressure',
+  pass: e => e.type === 'pass' && e.successful,
+  carry: e => e.type === 'carry' || e.type === 'sprint',
+  giveaway: e => (e.type === 'pass' && !e.successful) || (e.type === 'tackle' && e.won),
+  shot: e => e.type === 'shot',
+  save: e => e.type === 'save',
+  block: e => e.type === 'block' || e.type === 'clearance',
+  tackle: e => e.type === 'tackle',
+  card: e => e.type === 'card',
+};
+const ACTION_WORD = {
+  foul: 'foul', won_ball: 'ball won back', pressure: 'press', pass: 'completed pass', carry: 'run with the ball',
+  giveaway: 'loss of possession', shot: 'shot', save: 'save', block: 'block or clearance', tackle: 'tackle', card: 'booking',
+};
+
+/**
+ * Who did the action and who was on the other end, as the claim would name
+ * them. Shots are linked to the block or save that stopped them, so "Vence's
+ * shot is blocked by Abara" and "Strand's chance is blocked" both resolve.
+ */
+function participants(e, action, observed) {
+  const shooterOf = id => observed.find(x => x.id === id)?.player_id;
+  if (action === 'giveaway' && e.type === 'tackle') return { doers: [e.target_id], others: [e.player_id] };
+  if (e.type === 'shot') {
+    const stoppers = observed.filter(x => (x.type === 'block' || x.type === 'save') && x.shot_id === e.id).map(x => x.player_id);
+    return { doers: [e.player_id], others: stoppers };
+  }
+  if ((e.type === 'block' || e.type === 'save') && e.shot_id) {
+    const shooter = shooterOf(e.shot_id);
+    return { doers: [e.player_id, shooter], others: [shooter, e.player_id] };
+  }
+  if (e.type === 'card') {
+    // A booking records only who was booked; the foul just before it names the victim.
+    const foul = observed.filter(x => x.type === 'foul' && x.player_id === e.player_id && x.seq < e.seq && x.seq >= e.seq - 3).at(-1);
+    return { doers: [e.player_id], others: foul ? [foul.fouled_id] : [] };
+  }
+  if (action === 'giveaway' && e.type === 'pass') {
+    // "lost it to X": X is whoever won the loose or intercepted ball next.
+    const winners = observed.filter(x => x.seq > e.seq && x.seq <= e.seq + 3 && x.side !== e.side
+      && (x.type === 'interception' || x.type === 'recovery')).map(x => x.player_id);
+    return { doers: [e.player_id], others: winners };
+  }
+  const other = e.fouled_id ?? e.target_id ?? e.recipient_id ?? null;
+  return { doers: [e.player_id], others: other ? [other] : [] };
+}
+
+function checkRecentAction({ action, actor, other, side, until_seq: until, window_s: w }, observed) {
+  const end = observed.find(e => e.seq === until);
+  // The window before the moment, plus the save or block of the moment's own shot.
+  const stopsTrigger = e => (e.type === 'save' || e.type === 'block') && e.shot_id === end.id;
+  const recent = observed.filter(e => (e.seq <= until || stopsTrigger(e)) && e.period === end.period && e.t >= end.t - w);
+  const matches = (e, withActor) => {
+    if (!ACTION_MATCH[action](e)) return false;
+    const p = participants(e, action, recent);
+    // A recovery or a carry has no opponent recorded: check the actor only.
+    const otherOk = !other || p.others.includes(other) || (p.others.length === 0 && (action === 'won_ball' || action === 'carry'));
+    const actorOk = !withActor || !actor || p.doers.includes(actor);
+    // When a tackle is the giveaway, the team that lost the ball is the other one.
+    const losingSide = action === 'giveaway' && e.type === 'tackle' ? (e.side === 'home' ? 'away' : 'home') : e.side;
+    const sideOk = actor || other || !side || losingSide === side;
+    return otherOk && actorOk && sideOk;
+  };
+  const hits = recent.filter(e => matches(e, true));
+  const minutes = Math.round(w / 60);
+  if (hits.length) {
+    const last = hits.at(-1);
+    return supported(true, hits.slice(-3).map(e => e.id), `Recorded at ${last.display_minute} (${last.id}).`);
+  }
+  // Same action by someone else in the window: name who actually did it.
+  const sameAction = recent.filter(e => matches(e, false)).at(-1);
+  const note = sameAction && actor
+    ? `No ${ACTION_WORD[action]} by that player in the last ${minutes} minutes; the latest was by ${action === 'giveaway' && sameAction.type === 'tackle' ? sameAction.target : sameAction.player} (${sameAction.id}).`
+    : `No matching ${ACTION_WORD[action]} in the last ${minutes} minutes of play.`;
+  return contradicted(false, sameAction ? [sameAction.id] : [], note);
+}
+
+/**
+ * Every player a caption names must be backed by at least one statement that
+ * passed the check. Catches a wrong name left behind in prose the extractor
+ * did not turn into a claim (e.g. "Reyes sprints ... Marsh recorded 34.9 km/h").
+ * Returns the verdict with an 'unverifiable' detail added per unbacked name.
+ */
+export function checkNamedPlayers(text, verdict, players) {
+  const backed = new Set();
+  for (const c of verdict.claims) {
+    if (c.status !== 'supported') continue;
+    const a = c.asserted;
+    if (typeof a === 'string') backed.add(a);
+    if (a && typeof a === 'object') for (const k of ['player', 'on', 'off']) if (a[k]) backed.add(a[k]);
+    for (const k of ['actor', 'other']) if (c.params?.[k]) backed.add(c.params[k]);
+  }
+  const escape = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const extra = [];
+  for (const p of players) {
+    const said = new RegExp(`(^|[^\\p{L}])${escape(p.short_name)}(?![\\p{L}])`, 'u').test(text);
+    if (!said || backed.has(p.id)) continue;
+    extra.push({
+      id: `name-${extra.length + 1}`, kind: 'named_player', role: 'context', span: p.short_name,
+      params: { player: p.id }, asserted: true, status: 'unverifiable', actual: null, evidence: [],
+      note: `Names ${p.name}, but no checked statement about him holds.`,
+    });
+  }
+  if (!extra.length) return verdict;
+  return {
+    ...verdict,
+    status: verdict.status === 'VERIFY' ? 'QUALIFY' : verdict.status,
+    claims: [...verdict.claims, ...extra],
+  };
+}
+
+/**
+ * The fact each kind of moment exists to report. A caption that drops it (an
+ * editor rewrite that removes the scorer, or "Northbridge hit 12 km" for one
+ * player's distance) is true but does not report the moment, so it is withheld
+ * and the moment airs from the data instead.
+ */
+const KEY_FACT = {
+  goal: { kinds: ['goal_scorer'], what: 'who scored' },
+  chance: { kinds: ['shot_player'], what: 'who had the chance' },
+  card: { kinds: ['card_player'], what: 'who was booked' },
+  sub: { kinds: ['substitution'], what: 'who came on and off' },
+  sprint: { kinds: ['top_speed'], what: 'the top speed and who reached it' },
+  milestone: { kinds: ['distance'], what: 'the distance and who covered it' },
+  press: { kinds: ['window_count'], what: 'how many times the ball was won back' },
+  stat: { kinds: ['possession'], what: 'the possession figure' },
+};
+
+export function checkMomentCovered(type, verdict) {
+  const key = KEY_FACT[type];
+  if (!key) return verdict;
+  const covered = verdict.claims.some(c => key.kinds.includes(c.kind) && c.role === 'core' && c.status === 'supported');
+  const statedButWrong = verdict.claims.some(c => key.kinds.includes(c.kind) && c.role === 'core');
+  if (covered || statedButWrong) return verdict; // a wrong key fact is already a core failure
+  return {
+    ...verdict,
+    status: 'WITHHOLD',
+    claims: [...verdict.claims, {
+      id: 'moment', kind: 'moment_missing', role: 'core', span: null, asserted: true,
+      status: 'contradicted', actual: null, evidence: [],
+      note: `Does not report the moment: it never says ${key.what}.`,
+    }],
+  };
 }

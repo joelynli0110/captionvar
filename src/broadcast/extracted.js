@@ -26,6 +26,7 @@ export const EXTRACTABLE_KINDS = {
   recoveries_after_press: 'How many of those recoveries came straight after pressing.',
   possession: "A team's share of possession in percent.",
   pass_accuracy: "A team's pass completion in percent.",
+  recent_action: 'Something a named player (or a team) did in the build-up: a foul, winning the ball, pressing, a pass, a run with the ball, losing the ball, a shot, a save, a block or a tackle.',
   opinion: 'A judgement, comparison or superlative that match data cannot confirm.',
   other_fact: 'Any other factual assertion not covered above.',
 };
@@ -45,10 +46,13 @@ const ID_FOR = {
   goal_scorer: 'scorer', goal_assist: 'assist', score: 'score', goal_from_press: 'cause', scorer_tally: 'tally',
   shot_player: 'shooter', shot_outcome: 'outcome', shot_xg: 'xg', card_player: 'booked', substitution: 'change',
   top_speed: 'speed', distance: 'distance', final_third_recoveries: 'count', recoveries_after_press: 'pressed',
-  possession: 'possession', pass_accuracy: 'accuracy', opinion: 'opinion', other_fact: 'other',
+  possession: 'possession', pass_accuracy: 'accuracy', recent_action: 'action', opinion: 'opinion', other_fact: 'other',
 };
 
 const WINDOW_S = 300;
+/** How far back a build-up action may be (match seconds, same half). */
+export const RECENT_WINDOW_S = 120;
+export const RECENT_ACTIONS = ['foul', 'won_ball', 'pressure', 'pass', 'carry', 'giveaway', 'shot', 'save', 'block', 'tackle'];
 
 /**
  * @param spot  { trigger, moment } from spotMoments()
@@ -60,8 +64,24 @@ export function toVerifiableClaims(spot, extracted) {
   const used = new Map();
   const claims = [];
 
-  for (const x of extracted) {
+  for (let x of extracted) {
     let kind = EXTRACTABLE_KINDS[x.kind] ? x.kind : 'other_fact';
+    // A shot, assist or booking mentioned outside its own moment is a build-up action.
+    if (type !== 'chance' && type !== 'goal' && (kind === 'shot_player' || kind === 'shot_outcome')) {
+      x = { ...x, kind: 'recent_action', action: 'shot' };
+      kind = 'recent_action';
+    }
+    if (type !== 'goal' && kind === 'goal_assist') {
+      x = { ...x, kind: 'recent_action', action: 'pass' };
+      kind = 'recent_action';
+    }
+    if (type !== 'card' && kind === 'card_player') {
+      x = { ...x, kind: 'recent_action', action: 'card' };
+      kind = 'recent_action';
+    }
+    // Speed and distance readings are easy to confuse; the moment decides which one it is.
+    if (type === 'milestone' && kind === 'top_speed') kind = 'distance';
+    if (type === 'sprint' && kind === 'distance') kind = 'top_speed';
     // In a missed-chance moment, "X scores" asserts that the shot went in.
     if (type === 'chance' && kind === 'goal_scorer') kind = 'shot_outcome';
     const claim = mapClaim(kind, x, trigger, moment);
@@ -108,6 +128,13 @@ function mapClaim(kind, x, trigger, moment) {
       return { kind: 'window_count', params: { side, metric: 'attacking_third_recoveries_after_pressure', window_s: WINDOW_S, until_seq: trigger.seq }, asserted: num };
     case 'possession': return { kind, params: { until_seq: trigger.seq }, asserted: { side, pct: num } };
     case 'pass_accuracy': return { kind, params: { until_seq: trigger.seq }, asserted: { side, pct: num } };
+    case 'recent_action':
+      if (!RECENT_ACTIONS.includes(x.action) && x.action !== 'card') return { kind: 'other_fact', asserted: x.span };
+      return {
+        kind,
+        params: { action: x.action, actor: x.player_id ?? null, other: x.other_player_id ?? null, side: x.side ?? null, until_seq: trigger.seq, window_s: RECENT_WINDOW_S },
+        asserted: true,
+      };
     case 'opinion': return { kind, asserted: true };
     default: return { kind: 'other_fact', asserted: x.span };
   }

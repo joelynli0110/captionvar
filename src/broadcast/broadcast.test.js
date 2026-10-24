@@ -17,7 +17,8 @@ test('the VAR check never uses events from after the caption', () => {
   for (const d of trace.decisions) {
     for (const id of d.verdict.evidence) {
       const e = match.events.find(x => x.id === id);
-      assert.ok(e.seq <= d.seq, `${d.id} cites future event ${id}`);
+      const stopsTriggerShot = (e.type === 'save' || e.type === 'block') && e.shot_id === d.trigger_event_id;
+      assert.ok(e.seq <= d.seq || stopsTriggerShot, `${d.id} cites future event ${id}`);
     }
   }
 });
@@ -99,11 +100,12 @@ test('overlay records are machine-readable and carry their evidence', () => {
 });
 
 test('claims in the extractor format verify exactly like the structured ones', async () => {
-  const { spotMoments } = await import('./narrator.js');
+  const { spotMoments, observedFor } = await import('./narrator.js');
   const { toVerifiableClaims } = await import('./extracted.js');
   const spots = spotMoments(match);
   const toExtracted = c => {
     const kindFor = { scorer: 'goal_scorer', assist: 'goal_assist', score: 'score', cause: 'goal_from_press', tally: 'scorer_tally', shooter: 'shot_player', outcome: 'shot_outcome', xg: 'shot_xg', booked: 'card_player', change: 'substitution', speed: 'top_speed', distance: 'distance', count: 'final_third_recoveries', pressed: 'recoveries_after_press', possession: 'possession', accuracy: 'pass_accuracy', opinion: 'opinion' };
+    if (c.kind === 'recent_action') return { kind: 'recent_action', span: c.id, action: c.params.action, player_id: c.params.actor };
     const a = c.asserted;
     const x = { kind: kindFor[c.id], span: c.id };
     if (typeof a === 'string') { if (c.id === 'outcome') x.outcome = a; else x.player_id = a; }
@@ -114,7 +116,195 @@ test('claims in the extractor format verify exactly like the structured ones', a
   };
   trace.decisions.forEach((d, i) => {
     const claims = toVerifiableClaims(spots[i], d.claims.map(toExtracted));
-    const v = verifyCaption({ ...d, claims }, match.events.filter(e => e.seq <= d.seq));
+    const v = verifyCaption({ ...d, claims }, observedFor(match, spots[i].trigger));
     assert.equal(v.status, d.verdict.status, `${d.id} ${d.type}`);
   });
+});
+
+test('build-up actions are checked against the last two minutes of play', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims, RECENT_WINDOW_S } = await import('./extracted.js');
+  const spots = spotMoments(match);
+  const check = (spot, extracted) => {
+    const claims = toVerifiableClaims(spot, extracted);
+    return verifyCaption({ ...trace.decisions[spots.indexOf(spot)], claims }, match.events.filter(e => e.seq <= spot.trigger.seq)).claims[0];
+  };
+  // The scripted equaliser: pressure -> tackle -> recovery -> ... -> goal.
+  const goalSpot = spots.find(s => s.moment.type === 'goal' && s.trigger.id === trace.decisions.find(d => d.type === 'goal' && d.facts?.cause)?.trigger_event_id);
+  const chain = match.events.filter(e => e.seq < goalSpot.trigger.seq && e.period === goalSpot.trigger.period && e.t >= goalSpot.trigger.t - RECENT_WINDOW_S);
+  const press = chain.filter(e => e.type === 'pressure' && e.side === goalSpot.moment.side).at(-1);
+
+  const ok = check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'pressure', player_id: press.player_id }]);
+  assert.equal(ok.status, 'supported');
+  assert.ok(ok.evidence.includes(press.id));
+  assert.equal(ok.role, 'context');
+
+  const someoneElse = match.squads[goalSpot.moment.side].players.find(p => p.id !== press.player_id && !chain.some(e => e.type === 'pressure' && e.player_id === p.id));
+  const wrong = check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'pressure', player_id: someoneElse.id }]);
+  assert.equal(wrong.status, 'contradicted');
+  assert.match(wrong.note, /latest was by/);
+
+  const team = check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'pressure', side: goalSpot.moment.side }]);
+  assert.equal(team.status, 'supported');
+
+  const noFoul = chain.some(e => e.type === 'foul') ? null : check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'foul', side: 'away' }]);
+  if (noFoul) assert.equal(noFoul.status, 'contradicted');
+
+  const bogus = check(goalSpot, [{ kind: 'recent_action', span: 'x', action: 'dance' }]);
+  assert.equal(bogus.kind, 'other_fact');
+});
+
+test('a build-up action that happens only after the moment is not accepted', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const spot = spotMoments(match)[5];
+  const later = match.events.find(e => e.seq > spot.trigger.seq && e.type === 'foul');
+  const claims = toVerifiableClaims(spot, [{ kind: 'recent_action', span: 'x', action: 'foul', player_id: later.player_id, other_player_id: later.fouled_id }]);
+  const v = verifyCaption({ ...trace.decisions[5], claims }, match.events.filter(e => e.seq <= spot.trigger.seq));
+  assert.notEqual(v.claims[0].status, 'supported');
+});
+
+test('narrator packets only describe the checkable build-up window', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { narratorPacket } = await import('./packets.js');
+  const spots = spotMoments(match);
+  const halfTime = spots.findIndex(s => s.trigger.type === 'period_end');
+  const packet = narratorPacket(match, spots[halfTime + 1], halfTime + 1);
+  for (const line of packet.recent_play) assert.doesNotMatch(line, /undefined/);
+  const foulLine = spots.map((s, i) => narratorPacket(match, s, i)).flatMap(p => p.recent_play).find(l => / fouls /.test(l));
+  if (foulLine) assert.doesNotMatch(foulLine, /an opponent$/);
+});
+
+
+test('new build-up actions: runs, giveaways, and shots linked to the block that stopped them', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const { observedFor } = await import('./narrator.js');
+  const spots = spotMoments(match);
+  const verifyAt = (spot, extracted) => verifyCaption(
+    { ...trace.decisions[spots.indexOf(spot)], claims: toVerifiableClaims(spot, extracted) },
+    observedFor(match, spot.trigger),
+  ).claims;
+  const windowOf = spot => match.events.filter(e => e.seq <= spot.trigger.seq && e.period === spot.trigger.period && e.t >= spot.trigger.t - 120);
+
+  // A blocked shot inside some moment's window: "X's shot is blocked by Y" and "X's chance is blocked".
+  const spot = spots.find(s => windowOf(s).some(e => e.type === 'block' && windowOf(s).some(x => x.id === e.shot_id)));
+  const block = windowOf(spot).find(e => e.type === 'block' && windowOf(spot).some(x => x.id === e.shot_id));
+  const shot = match.events.find(e => e.id === block.shot_id);
+  const [byBlocker, byShooter, shotByOther] = verifyAt(spot, [
+    { kind: 'recent_action', span: 'a', action: 'shot', player_id: shot.player_id, other_player_id: block.player_id },
+    { kind: 'recent_action', span: 'b', action: 'block', player_id: shot.player_id },
+    { kind: 'recent_action', span: 'c', action: 'block', player_id: block.player_id, other_player_id: shot.player_id },
+  ]);
+  assert.equal(byBlocker.status, 'supported');
+  assert.equal(byShooter.status, 'supported');
+  assert.equal(shotByOther.status, 'supported');
+
+  // A run with the ball, and a giveaway.
+  const carrySpot = spots.find(s => windowOf(s).some(e => e.type === 'carry'));
+  const carry = windowOf(carrySpot).filter(e => e.type === 'carry').at(-1);
+  const giveawaySpot = spots.find(s => windowOf(s).some(e => e.type === 'pass' && !e.successful));
+  const lost = windowOf(giveawaySpot).filter(e => e.type === 'pass' && !e.successful).at(-1);
+  assert.equal(verifyAt(carrySpot, [{ kind: 'recent_action', span: 'x', action: 'carry', player_id: carry.player_id }])[0].status, 'supported');
+  assert.equal(verifyAt(giveawaySpot, [{ kind: 'recent_action', span: 'x', action: 'giveaway', player_id: lost.player_id }])[0].status, 'supported');
+});
+
+test('a distance mislabelled as a speed is still checked as a distance', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const spot = spotMoments(match).find(s => s.moment.type === 'milestone');
+  const [claim] = toVerifiableClaims(spot, [{ kind: 'top_speed', span: 'x', player_id: spot.trigger.player_id, number: spot.trigger.milestone_km }]);
+  assert.equal(claim.kind, 'distance');
+  assert.equal(claim.role, 'core');
+});
+
+test('the save or block of the captioned shot is visible to the check, later events are not', async () => {
+  const { spotMoments, observedFor } = await import('./narrator.js');
+  const chance = spotMoments(match).find(s => s.moment.type === 'chance' && ['saved', 'blocked'].includes(s.trigger.outcome));
+  const seen = observedFor(match, chance.trigger);
+  const after = seen.filter(e => e.seq > chance.trigger.seq);
+  assert.ok(after.length >= 1);
+  assert.ok(after.every(e => e.shot_id === chance.trigger.id));
+});
+
+
+test('every named player must be backed by a checked statement', async () => {
+  const { checkNamedPlayers } = await import('./verify.js');
+  const players = [...trace.people.players.values()];
+  const reyes = players.find(p => p.short_name === 'Reyes');
+  const marsh = players.find(p => p.short_name === 'Marsh');
+  const verdict = { status: 'VERIFY', claims: [{ id: 'speed', status: 'supported', asserted: { player: marsh.id, kmh: 34.9 } }] };
+  // The real leak seen in a Foundry run: the wrong name survived in prose the extractor skipped.
+  const leaked = checkNamedPlayers('Callum Reyes sprints after the tackle. Aiden Marsh recorded a top speed of 34.9 km/h.', verdict, players);
+  assert.equal(leaked.status, 'QUALIFY');
+  assert.deepEqual(leaked.claims.filter(c => c.kind === 'named_player').map(c => c.params.player), [reyes.id]);
+  // Backed names, and words that merely contain a surname, pass.
+  assert.equal(checkNamedPlayers('Aiden Marsh recorded 34.9 km/h, Marshall says.', verdict, players).status, 'VERIFY');
+  // A withheld verdict stays withheld.
+  assert.equal(checkNamedPlayers('Reyes!', { ...verdict, status: 'WITHHOLD' }, players).status, 'WITHHOLD');
+});
+
+test('a shot, assist or booking mentioned outside its own moment is checked as build-up', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const sub = spotMoments(match).find(s => s.moment.type === 'sub');
+  const claims = toVerifiableClaims(sub, [
+    { kind: 'shot_player', span: 'a', player_id: 'NBR-07' },
+    { kind: 'goal_assist', span: 'b', player_id: 'NBR-08' },
+    { kind: 'card_player', span: 'c', player_id: 'NBR-02' },
+  ]);
+  assert.deepEqual(claims.map(c => [c.kind, c.params.action]), [['recent_action', 'shot'], ['recent_action', 'pass'], ['recent_action', 'card']]);
+  assert.ok(claims.every(c => c.role === 'context'));
+});
+
+test('"booked for a foul on X" links the booking to the foul before it', async () => {
+  const { spotMoments, observedFor } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const spots = spotMoments(match);
+  // A booking followed within two minutes by another captioned moment (e.g. the substitution at 65').
+  const nextSpot = c => spots.find(s => s.trigger.seq > c.seq && s.trigger.period === c.period && s.trigger.t - c.t <= 120);
+  const card = match.events.find(e => e.type === 'card' && nextSpot(e));
+  assert.ok(card, 'demo match has a booking followed by another captioned moment');
+  const spot = nextSpot(card);
+  const foul = match.events.filter(e => e.type === 'foul' && e.player_id === card.player_id && e.seq < card.seq).at(-1);
+  const check = other => verifyCaption(
+    { ...trace.decisions[spots.indexOf(spot)], claims: toVerifiableClaims(spot, [{ kind: 'card_player', span: 'x', player_id: card.player_id, other_player_id: other }]) },
+    observedFor(match, spot.trigger),
+  ).claims[0].status;
+  assert.equal(check(foul.fouled_id), 'supported');
+  const someoneElse = match.squads[foul.side === 'home' ? 'away' : 'home'].players.find(p => p.id !== foul.fouled_id).id;
+  assert.equal(check(someoneElse), 'contradicted');
+});
+
+test('a stated percentage must be the actual value rounded down or up', async () => {
+  const { spotMoments, observedFor } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const { possessionShare } = await import('../sim/stats.js');
+  const spots = spotMoments(match);
+  const spot = spots.find(s => s.moment.type === 'stat');
+  const seen = observedFor(match, spot.trigger);
+  const share = possessionShare(seen).home;
+  const check = pct => verifyCaption(
+    { ...trace.decisions[spots.indexOf(spot)], claims: toVerifiableClaims(spot, [{ kind: 'possession', span: 'x', side: 'home', number: pct }]) },
+    seen,
+  ).claims[0].status;
+  assert.equal(check(Math.floor(share)), 'supported');
+  assert.equal(check(Math.ceil(share)), 'supported');
+  // The miss seen in a Foundry run: actual 61.0%, caption said 62%.
+  assert.equal(check(Math.ceil(share) + 1), 'contradicted');
+  assert.equal(check(Math.floor(share) - 1), 'contradicted');
+});
+
+test('a caption that drops the fact its moment exists to report is withheld', async () => {
+  const { checkMomentCovered } = await import('./verify.js');
+  // "Pell's tackle ... Reyes races forward" for a sprint moment: true details, no top speed.
+  const truthful = { status: 'VERIFY', claims: [{ id: 'a', kind: 'recent_action', role: 'context', status: 'supported' }] };
+  const v = checkMomentCovered('sprint', truthful);
+  assert.equal(v.status, 'WITHHOLD');
+  assert.match(v.claims.at(-1).note, /top speed/);
+  // With the key fact present, nothing changes; a wrong key fact is left to the core check.
+  const withKey = { status: 'VERIFY', claims: [{ id: 's', kind: 'top_speed', role: 'core', status: 'supported' }] };
+  assert.equal(checkMomentCovered('sprint', withKey), withKey);
+  const wrongKey = { status: 'WITHHOLD', claims: [{ id: 's', kind: 'top_speed', role: 'core', status: 'contradicted' }] };
+  assert.equal(checkMomentCovered('sprint', wrongKey).claims.length, 1);
 });
