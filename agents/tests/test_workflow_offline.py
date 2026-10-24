@@ -20,7 +20,7 @@ import run_match  # noqa: E402
 
 def run(tmp_path: Path, **kw) -> dict:
     out = tmp_path / "trace.json"
-    args = argparse.Namespace(out=str(out), offline=True, match_seed="captionvar-demo-6", red_team=0.35,
+    args = argparse.Namespace(out=str(out), offline=True, match_seed="captionvar-demo-6", red_team=0.35, rpm=None, fresh=True,
                               red_team_seed="red-1", limit=kw.get("limit"), from_minute=kw.get("from_minute"), concurrency=4)
     asyncio.run(run_match.main(args))
     return json.loads(out.read_text())
@@ -72,3 +72,29 @@ def test_extractor_kinds_match_the_javascript_vocabulary():
     js = (ROOT.parent / "src" / "broadcast" / "extracted.js").read_text()
     for kind in pipeline.KIND_DOCS:
         assert f"  {kind}:" in js, kind
+
+
+def test_rate_limited_calls_are_retried(tmp_path, monkeypatch):
+    from captionvar_agents.scripted import ScriptedChatClient
+    monkeypatch.setattr(pipeline, "RETRY_BASE_S", 0.01)
+    monkeypatch.setattr(ScriptedChatClient, "rate_limit_first_calls", 3)
+    trace = run(tmp_path, limit=3)
+    assert trace["summary"]["captions"] == 3
+    assert trace["usage"]["rate_limited_retries"] == 3
+
+
+def test_a_failed_run_resumes_without_redoing_finished_moments(tmp_path, monkeypatch):
+    from captionvar_agents.scripted import ScriptedChatClient
+    import pytest
+    monkeypatch.setattr(ScriptedChatClient, "fail_moments_once", {2})
+    out = tmp_path / "trace.json"
+    base = dict(out=str(out), offline=True, match_seed="captionvar-demo-6", red_team=0.35, rpm=None,
+                red_team_seed="red-1", limit=5, from_minute=None, concurrency=1)
+    with pytest.raises(SystemExit):
+        asyncio.run(run_match.main(argparse.Namespace(**base, fresh=True)))
+    partial = Path(str(out) + ".partial.jsonl")
+    assert len(partial.read_text().splitlines()) == 4 and not out.exists()
+    asyncio.run(run_match.main(argparse.Namespace(**base, fresh=False)))
+    trace = json.loads(out.read_text())
+    assert [d["id"] for d in trace["decisions"]] == [f"CAP-{i:03d}" for i in range(1, 6)]
+    assert not partial.exists()

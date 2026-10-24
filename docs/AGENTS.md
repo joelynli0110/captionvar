@@ -54,6 +54,8 @@ python agents\run_match.py --out public\traces\foundry-demo.json
 
 `public/traces/foundry-demo.json` is picked up by the web app automatically: the VAR room then shows the Foundry agents' captions, with a switch back to the test narrator.
 
+**Rate limits.** Model calls are spaced to `--rpm` requests per minute (default 30), `429` responses are retried after the server's `Retry-After`, and progress is saved after every moment to `<out>.partial.jsonl`: if a run stops, run the same command again and it resumes. Each call uses about 1,500 tokens, so keep `--rpm` below both the deployment's requests-per-minute and its tokens-per-minute divided by 1,500 (see the deployment's rate limit in the Foundry portal).
+
 If a call fails with `401`/`403 PermissionDenied`, give your account the **Azure AI User** role on the Foundry resource (Access control (IAM) in the Azure portal) and run `az login` again.
 
 ## Run it offline (no model)

@@ -16,6 +16,9 @@ from .factbox import Factbox
 
 class ScriptedChatClient(BaseChatClient):
     OTEL_PROVIDER_NAME = "scripted"
+    # Test hooks: simulate a throttled deployment or a moment that fails once.
+    rate_limit_first_calls = 0
+    fail_moments_once: set = set()
 
     def __init__(self, factbox: Factbox, narrator_seed: str = "narrator-10") -> None:
         super().__init__()
@@ -28,6 +31,13 @@ class ScriptedChatClient(BaseChatClient):
             raise NotImplementedError("scripted client does not stream")
         # Each agent receives a differently shaped JSON payload.
         user = json.loads(messages[-1].text)
+        if ScriptedChatClient.rate_limit_first_calls > 0:
+            ScriptedChatClient.rate_limit_first_calls -= 1
+            raise RuntimeError("Error code: 429 - rate_limit_exceeded (simulated)")
+        index = user.get("moment", {}).get("index")
+        if index in ScriptedChatClient.fail_moments_once:
+            ScriptedChatClient.fail_moments_once.discard(index)
+            raise RuntimeError(f"simulated outage on moment {index}")
         if "moment" in user:
             reply = await self._narrate(user)
         elif "roster" in user:

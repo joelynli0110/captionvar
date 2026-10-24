@@ -77,7 +77,23 @@ class Usage:
     calls: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
+    throttled: int = 0
     by_agent: dict = field(default_factory=dict)
+
+    def merge(self, other: "Usage | dict") -> None:
+        o = other if isinstance(other, dict) else other.as_dict()
+        self.calls += o["calls"]
+        self.input_tokens += o["input_tokens"]
+        self.output_tokens += o["output_tokens"]
+        self.throttled += o.get("throttled", 0)
+        for name, a in o.get("by_agent", {}).items():
+            mine = self.by_agent.setdefault(name, {"calls": 0, "input_tokens": 0, "output_tokens": 0})
+            for k in mine:
+                mine[k] += a[k]
+
+    def as_dict(self) -> dict:
+        return {"calls": self.calls, "input_tokens": self.input_tokens, "output_tokens": self.output_tokens,
+                "throttled": self.throttled, "by_agent": self.by_agent}
 
     def add(self, agent: str, response: Any) -> None:
         u = getattr(response, "usage_details", None) or {}
@@ -91,9 +107,73 @@ class Usage:
         a["output_tokens"] += o
 
 
+# ------------------------------------------------------- rate limits & retry
+
+
+class RateLimiter:
+    """Spaces model calls evenly so a run stays under the deployment's requests-per-minute."""
+
+    def __init__(self, rpm: float | None) -> None:
+        self.interval = 60.0 / rpm if rpm else 0.0
+        self._next = 0.0
+        self._lock = asyncio.Lock()
+
+    async def wait(self) -> None:
+        if not self.interval:
+            return
+        async with self._lock:
+            loop = asyncio.get_running_loop()
+            now = loop.time()
+            delay = max(0.0, self._next - now)
+            self._next = max(now, self._next) + self.interval
+        if delay:
+            await asyncio.sleep(delay)
+
+
+LIMITER = RateLimiter(None)
+MAX_RETRIES = 8
+RETRY_BASE_S = 2.0
+
+
+def is_rate_limited(exc: BaseException) -> bool:
+    text = repr(exc)
+    return "429" in text or "rate_limit" in text.lower() or "RateLimitError" in text
+
+
+def retry_after_seconds(exc: BaseException) -> float | None:
+    """Read Retry-After from the underlying HTTP response, if the SDK kept it."""
+    seen = set()
+    e: BaseException | None = exc
+    while e is not None and id(e) not in seen:
+        seen.add(id(e))
+        response = getattr(e, "response", None)
+        headers = getattr(response, "headers", None)
+        if headers:
+            for key, scale in (("retry-after-ms", 0.001), ("retry-after", 1.0)):
+                value = headers.get(key)
+                if value:
+                    try:
+                        return float(value) * scale
+                    except ValueError:
+                        pass
+        e = e.__cause__ or e.__context__
+    return None
+
+
 async def ask(agent: Agent, usage: Usage, payload: Any, **options: Any) -> Any:
     prompt = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False, indent=1)
-    response = await agent.run(prompt, options=options or None)
+    for attempt in range(MAX_RETRIES + 1):
+        await LIMITER.wait()
+        try:
+            response = await agent.run(prompt, options=options or None)
+            break
+        except Exception as exc:  # noqa: BLE001 - only rate limits are retried
+            if not is_rate_limited(exc) or attempt == MAX_RETRIES:
+                raise
+            wait = retry_after_seconds(exc) or min(60.0, RETRY_BASE_S * 2 ** attempt)
+            usage.throttled += 1
+            print(f"    rate limited ({agent.name}); waiting {wait:.0f}s, retry {attempt + 1}/{MAX_RETRIES}", flush=True)
+            await asyncio.sleep(wait)
     usage.add(agent.name, response)
     return response
 
