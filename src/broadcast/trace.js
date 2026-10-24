@@ -45,6 +45,10 @@ export function summarise(decisions) {
     : d.verdict.status !== 'VERIFY'));
   const clean = decisions.filter(d => !d.planted_error);
   const falseAlarms = clean.filter(d => d.verdict.status !== 'VERIFY');
+  // Captions flagged without a planted error, split by why: a claim the data
+  // contradicts (the narrator's own mistake) or only details it cannot confirm.
+  const contradicts = d => d.verdict.claims.some(c => c.status === 'contradicted');
+  const ownErrors = falseAlarms.filter(contradicts);
   const count = s => decisions.filter(d => d.verdict.status === s).length;
   return {
     captions: decisions.length,
@@ -54,6 +58,8 @@ export function summarise(decisions) {
     planted_errors: planted.length,
     caught: caught.length,
     false_alarms: falseAlarms.length,
+    unprompted_errors: ownErrors.length,
+    unconfirmed_details: falseAlarms.length - ownErrors.length,
   };
 }
 

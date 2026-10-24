@@ -51,12 +51,16 @@ function Detail({ decision, people, view, onInspect }) {
 function SourceNote({ source, summary }) {
   const t = source.agentTrace;
   if (source.kind === 'agents' && t) {
-    const others = summary.false_alarms;
+    const own = summary.unprompted_errors;
+    const unconfirmed = summary.unconfirmed_details;
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
     return (
       <>
         <p className="vr-summary">
-          {summary.planted_errors > 0 && <><b>{summary.caught} of {summary.planted_errors}</b> red-team errors caught, </>}
-          {others === 0 ? 'no other captions flagged' : `${others} other caption${others === 1 ? '' : 's'} flagged for review`}, {summary.captions} captions checked so far.
+          {summary.planted_errors > 0 && <><b>{summary.caught} of {summary.planted_errors}</b> red-team errors caught. </>}
+          {own > 0 && <>Also caught <b>{plural(own, 'mistake')}</b> the narrator made on its own. </>}
+          {unconfirmed > 0 && <>Trimmed {plural(unconfirmed, 'caption')} where it added details the data cannot confirm. </>}
+          {summary.captions} captions checked so far.
         </p>
         <p className="vr-note">
           {t.source === 'foundry-agents' ? `Written by agents on Microsoft Foundry (${t.model}).` : 'Agent workflow run offline with a scripted client, no model.'} A red team told the narrator to slip one error into some captions; the extractor and the VAR check are not told which.

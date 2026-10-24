@@ -159,7 +159,8 @@ async def main(args: argparse.Namespace) -> None:
     }
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(trace, ensure_ascii=False, indent=1))
+    # Always UTF-8: on Windows the default is cp1252, which browsers decode as garbage.
+    out.write_text(json.dumps(trace, ensure_ascii=False, indent=1), encoding="utf-8")
     if partial.exists():
         partial.unlink()
     s = trace["summary"]
