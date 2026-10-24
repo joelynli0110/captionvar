@@ -42,7 +42,7 @@ function Markings() {
  * The broadcast pitch: ball, recent touches, the acting player and — when a
  * caption is under review — its evidence drawn as VAR lines.
  */
-export default function Pitch({ ball, actor, trail, evidence, focus, pop, teamColor, analyst }) {
+export default function Pitch({ ball, actor, trail, evidence, evidenceLabels, focus, pop, teamColor, analyst }) {
   return (
     <svg className="pitch" viewBox="0 0 105 68" role="img" aria-label="Live pitch view of the synthetic match">
       <Markings />
@@ -69,7 +69,7 @@ export default function Pitch({ ball, actor, trail, evidence, focus, pop, teamCo
           {groupByPlace(evidence).map(group => (
             <g key={`v${group[0].id}`}>
               <circle cx={X(group[0].x)} cy={Y(group[0].y)} r="1.6" fill="none" stroke="var(--var)" strokeWidth="0.35" />
-              <text x={X(group[0].x) + 2.2} y={Y(group[0].y) - 1.8} className="var-label">{group.map(e => e.id).join(', ')}</text>
+              {evidenceLabels && <text x={X(group[0].x) + 2.2} y={Y(group[0].y) - 1.8} className="var-label">{group.map(e => e.id).join(', ')}</text>}
             </g>
           ))}
         </g>
