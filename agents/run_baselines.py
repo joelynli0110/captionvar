@@ -80,10 +80,16 @@ async def measure(extractor: Agent, usage: Usage, factbox: Factbox, index: int, 
     value = response.value or prompts.Extraction.model_validate_json(response.text)
     result = await factbox.call("verify", index=index, text=text, extracted=[c.model_dump() for c in value.claims])
     claims = result["verdict"]["claims"]
-    pick = lambda status: [{"span": c.get("span"), "note": c.get("note")} for c in claims  # noqa: E731
-                           if c["status"] == status and c["kind"] != "moment_missing"]
+    pick = lambda status: [brief(c) for c in claims if c["status"] == status and c["kind"] != "moment_missing"]  # noqa: E731
     return {"aired": True, "false": pick("contradicted"), "unchecked": pick("unverifiable"),
             "missed_moment": any(c["kind"] == "moment_missing" for c in claims)}
+
+
+def brief(claim: dict) -> dict:
+    """What the summary needs to classify a failed claim: its kind, and for a build-up action who did what."""
+    params = claim.get("params") or {}
+    return {"kind": claim["kind"], "status": claim["status"], "span": claim.get("span"), "note": claim.get("note"),
+            "action": params.get("action"), "actor": params.get("actor"), "side": params.get("side")}
 
 
 def summarise(rows: list[dict]) -> dict:
@@ -160,7 +166,9 @@ async def main(args: argparse.Namespace) -> None:
             usage.merge(u)
             row = {"id": d["id"], "minute": d["display_minute"], "type": d["type"],
                    "planted": d["planted_error"]["kind"] if d["planted_error"] else None,
-                   "draft": draft, "aired": out["text"], "steps": out["steps"], "m": m}
+                   "draft": draft, "aired": out["text"], "steps": out["steps"], "m": m,
+                   # What the published run's referee found wrong in the draft, for summarise_baselines.py.
+                   "draft_flags": [brief(c) for c in d["verdict"]["claims"] if c["status"] != "supported"]}
             done[f"{setup}:{index}"] = row
             with partial.open("a", encoding="utf-8") as f:
                 f.write(json.dumps({"model": model, "trace_generated_at": trace["generated_at"], "setup": setup,

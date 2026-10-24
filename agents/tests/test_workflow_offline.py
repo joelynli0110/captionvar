@@ -118,3 +118,17 @@ def test_baselines_measure_every_setup_on_the_same_drafts(tmp_path):
     # ... while what CaptionVAR aired measures clean.
     ours = setups["captionvar"]["summary"]
     assert ours["planted_errors_on_air"] == 0 and ours["captions_with_false_fact"] == 0
+
+
+def test_own_errors_are_told_apart_from_planted_ones():
+    import summarise_baselines as sb
+    card = {"planted": "wrong_player", "type": "card"}
+    foul = {"kind": "recent_action", "status": "contradicted", "action": "foul", "actor": "RVU-10"}
+    press = {"kind": "recent_action", "status": "contradicted", "action": "pressure", "actor": "RVU-05"}
+    assert not sb.is_own(foul, card)  # the foul behind a wrong booking is part of the plant
+    assert sb.is_own(press, card)
+    colour = {"kind": "recent_action", "status": "contradicted", "action": "pressure", "actor": None}
+    assert not sb.is_own(colour, {"planted": None, "type": "press"})
+    assert sb.is_own({"kind": "possession", "status": "contradicted"}, {"planted": None, "type": "stat"})
+    assert sb.carries_plant([{"kind": "card_player", "status": "contradicted"}], "wrong_player")
+    assert not sb.carries_plant([{"kind": "named_player", "status": "unverifiable"}], "wrong_player")
