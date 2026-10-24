@@ -318,7 +318,7 @@ KIND_DOCS = {
     "recoveries_after_press": "How many of those recoveries came straight after pressing.",
     "possession": "A team's share of possession in percent.",
     "pass_accuracy": "A team's pass completion in percent.",
-    "recent_action": "Something a named player (or a team) did in the build-up: a foul, winning the ball, pressing, a pass, a shot, a save, a block or a tackle.",
+    "recent_action": "Something a named player (or a team) did in the build-up: a foul, winning the ball, pressing, a pass, a run with the ball, losing the ball, a shot, a save, a block or a tackle.",
     "opinion": "A judgement, comparison or superlative that match data cannot confirm.",
     "other_fact": "Any other factual assertion not covered above.",
 }

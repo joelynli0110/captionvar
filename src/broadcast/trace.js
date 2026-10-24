@@ -6,7 +6,7 @@
  * pipeline will emit the same shape, so the UI does not change when the
  * simulated narrator is replaced.
  */
-import { narrate, globalT, indexPeople } from './narrator.js';
+import { narrate, globalT, indexPeople, observedFor } from './narrator.js';
 import { verifyCaption } from './verify.js';
 import { renderCaption, airFacts } from './render.js';
 
@@ -17,7 +17,7 @@ export function buildTrace(match, options = {}) {
   const people = indexPeople(match);
   const captions = narrate(match, options);
   const decisions = captions.map(caption => {
-    const observed = match.events.filter(e => e.seq <= caption.seq);
+    const observed = observedFor(match, match.events[caption.seq - 1]);
     const verdict = verifyCaption(caption, observed);
     return {
       ...caption,

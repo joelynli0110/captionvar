@@ -26,7 +26,7 @@ export const EXTRACTABLE_KINDS = {
   recoveries_after_press: 'How many of those recoveries came straight after pressing.',
   possession: "A team's share of possession in percent.",
   pass_accuracy: "A team's pass completion in percent.",
-  recent_action: 'Something a named player (or a team) did in the build-up: a foul, winning the ball, pressing, a pass, a shot, a save, a block or a tackle.',
+  recent_action: 'Something a named player (or a team) did in the build-up: a foul, winning the ball, pressing, a pass, a run with the ball, losing the ball, a shot, a save, a block or a tackle.',
   opinion: 'A judgement, comparison or superlative that match data cannot confirm.',
   other_fact: 'Any other factual assertion not covered above.',
 };
@@ -52,7 +52,7 @@ const ID_FOR = {
 const WINDOW_S = 300;
 /** How far back a build-up action may be (match seconds, same half). */
 export const RECENT_WINDOW_S = 120;
-export const RECENT_ACTIONS = ['foul', 'won_ball', 'pressure', 'pass', 'shot', 'save', 'block', 'tackle'];
+export const RECENT_ACTIONS = ['foul', 'won_ball', 'pressure', 'pass', 'carry', 'giveaway', 'shot', 'save', 'block', 'tackle'];
 
 /**
  * @param spot  { trigger, moment } from spotMoments()
@@ -66,6 +66,9 @@ export function toVerifiableClaims(spot, extracted) {
 
   for (const x of extracted) {
     let kind = EXTRACTABLE_KINDS[x.kind] ? x.kind : 'other_fact';
+    // Speed and distance readings are easy to confuse; the moment decides which one it is.
+    if (type === 'milestone' && kind === 'top_speed') kind = 'distance';
+    if (type === 'sprint' && kind === 'distance') kind = 'top_speed';
     // In a missed-chance moment, "X scores" asserts that the shot went in.
     if (type === 'chance' && kind === 'goal_scorer') kind = 'shot_outcome';
     const claim = mapClaim(kind, x, trigger, moment);

@@ -162,34 +162,62 @@ const ACTION_MATCH = {
   won_ball: e => e.type === 'recovery' || e.type === 'interception' || (e.type === 'tackle' && e.won),
   pressure: e => e.type === 'pressure',
   pass: e => e.type === 'pass' && e.successful,
+  carry: e => e.type === 'carry' || e.type === 'sprint',
+  giveaway: e => (e.type === 'pass' && !e.successful) || (e.type === 'tackle' && e.won),
   shot: e => e.type === 'shot',
   save: e => e.type === 'save',
   block: e => e.type === 'block' || e.type === 'clearance',
   tackle: e => e.type === 'tackle',
 };
 const ACTION_WORD = {
-  foul: 'foul', won_ball: 'ball won back', pressure: 'press', pass: 'completed pass', shot: 'shot',
-  save: 'save', block: 'block or clearance', tackle: 'tackle',
+  foul: 'foul', won_ball: 'ball won back', pressure: 'press', pass: 'completed pass', carry: 'run with the ball',
+  giveaway: 'loss of possession', shot: 'shot', save: 'save', block: 'block or clearance', tackle: 'tackle',
 };
-const counterpart = e => e.fouled_id ?? e.target_id ?? e.recipient_id ?? null;
+
+/**
+ * Who did the action and who was on the other end, as the claim would name
+ * them. Shots are linked to the block or save that stopped them, so "Vence's
+ * shot is blocked by Abara" and "Strand's chance is blocked" both resolve.
+ */
+function participants(e, action, observed) {
+  const shooterOf = id => observed.find(x => x.id === id)?.player_id;
+  if (action === 'giveaway' && e.type === 'tackle') return { doers: [e.target_id], others: [e.player_id] };
+  if (e.type === 'shot') {
+    const stoppers = observed.filter(x => (x.type === 'block' || x.type === 'save') && x.shot_id === e.id).map(x => x.player_id);
+    return { doers: [e.player_id], others: stoppers };
+  }
+  if ((e.type === 'block' || e.type === 'save') && e.shot_id) {
+    const shooter = shooterOf(e.shot_id);
+    return { doers: [e.player_id, shooter], others: [shooter, e.player_id] };
+  }
+  const other = e.fouled_id ?? e.target_id ?? e.recipient_id ?? null;
+  return { doers: [e.player_id], others: other ? [other] : [] };
+}
 
 function checkRecentAction({ action, actor, other, side, until_seq: until, window_s: w }, observed) {
   const end = observed.find(e => e.seq === until);
   const recent = observed.filter(e => e.seq <= until && e.period === end.period && e.t >= end.t - w);
-  const hits = recent.filter(e => ACTION_MATCH[action](e)
-    && (!actor || e.player_id === actor)
-    // A recovery records no opponent, so 'won it back from X' is checked against the actor only.
-    && (!other || counterpart(e) === other || (action === 'won_ball' && counterpart(e) == null))
-    && (actor || other || !side || e.side === side));
+  const matches = (e, withActor) => {
+    if (!ACTION_MATCH[action](e)) return false;
+    const p = participants(e, action, recent);
+    // A recovery or a carry has no opponent recorded: check the actor only.
+    const otherOk = !other || p.others.includes(other) || (p.others.length === 0 && (action === 'won_ball' || action === 'carry'));
+    const actorOk = !withActor || !actor || p.doers.includes(actor);
+    // When a tackle is the giveaway, the team that lost the ball is the other one.
+    const losingSide = action === 'giveaway' && e.type === 'tackle' ? (e.side === 'home' ? 'away' : 'home') : e.side;
+    const sideOk = actor || other || !side || losingSide === side;
+    return otherOk && actorOk && sideOk;
+  };
+  const hits = recent.filter(e => matches(e, true));
   const minutes = Math.round(w / 60);
   if (hits.length) {
     const last = hits.at(-1);
     return supported(true, hits.slice(-3).map(e => e.id), `Recorded at ${last.display_minute} (${last.id}).`);
   }
   // Same action by someone else in the window: name who actually did it.
-  const sameAction = recent.filter(e => ACTION_MATCH[action](e) && (!other || counterpart(e) === other)).at(-1);
+  const sameAction = recent.filter(e => matches(e, false)).at(-1);
   const note = sameAction && actor
-    ? `No ${ACTION_WORD[action]} by that player in the last ${minutes} minutes; the latest was by ${sameAction.player} (${sameAction.id}).`
+    ? `No ${ACTION_WORD[action]} by that player in the last ${minutes} minutes; the latest was by ${action === 'giveaway' && sameAction.type === 'tackle' ? sameAction.target : sameAction.player} (${sameAction.id}).`
     : `No matching ${ACTION_WORD[action]} in the last ${minutes} minutes of play.`;
   return contradicted(false, sameAction ? [sameAction.id] : [], note);
 }

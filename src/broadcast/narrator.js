@@ -126,6 +126,19 @@ export function spotMoments(match) {
   return spots;
 }
 
+/**
+ * What the VAR check may see for a caption: every event up to the trigger,
+ * plus, for a shot, the save or block that stopped it (same moment, about a
+ * second later). Nothing else from after the trigger.
+ */
+export function observedFor(match, trigger) {
+  const before = match.events.filter(e => e.seq <= trigger.seq);
+  if (trigger.type !== 'shot') return before;
+  const stoppers = match.events.filter(e => e.seq > trigger.seq && e.seq <= trigger.seq + 3
+    && (e.type === 'save' || e.type === 'block') && e.shot_id === trigger.id);
+  return before.concat(stoppers);
+}
+
 /** Monotonic match time across both halves (second-half clock restarts at 45:00). */
 export function globalT(e) {
   return e.period === 1 ? e.t : 2700 + 600 + (e.t - 2700);

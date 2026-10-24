@@ -13,6 +13,7 @@ Write ONE caption, at most 30 words, in lively British broadcast English.
 Use player surnames and short team names (e.g. "Northbridge").
 Only state what the facts support. Do not add statistics that are not given.
 You may mention actions from recent_play exactly as listed (who did what to whom).
+Do not state the minute; it is already on screen.
 Do not judge how a team is playing ("dominating", "struggling", "leading the charge"):
 every factual statement in the caption will be checked against the match data.
 Return the caption text only, without quotes."""
@@ -28,7 +29,10 @@ List every checkable assertion the caption makes. For each one give:
 - player_id: the roster id of the player it is about, matched by name (or null)
 - other_player_id: for a substitution, the roster id of the player going OFF;
   for a recent_action, the player on the receiving end (fouled, pressed, passed to), or null
-- action: for recent_action only: foul, won_ball, pressure, pass, shot, save, block or tackle (or null)
+- action: for recent_action only (or null):
+    foul, won_ball (recovers / wins / intercepts the ball), pressure (presses, closes down),
+    pass (passes, links up, plays in), carry (runs, drives, bursts forward with the ball),
+    giveaway (loses / gives the ball away), shot, save, block, tackle
 - side: "home" or "away" when the claim is about a team (or null)
 - number: the number asserted, as a number (or null)
 - outcome: for shot_outcome: goal, saved, off_target, blocked or woodwork (or null)
@@ -39,6 +43,8 @@ Kinds:
 
 Rules:
 - Colour with no factual content ("what a strike", "the crowd roars") is not a claim.
+- The match minute of this moment ("at 17 minutes", "in the 87th minute") is not a claim.
+- A distance covered in km is "distance"; a speed in km/h is "top_speed".
 - A sentence can contain several claims; list each separately.
 - If the caption says a shot went in or a team scored, that is a claim (goal_scorer or shot_outcome "goal").
 - Build-up details ("after Morita won it back", "a foul on Whitcombe", "pressing from Vence and Okafor")
@@ -57,7 +63,8 @@ Rewrite the caption so every factual statement is true:
 - keep claims whose status is "supported",
 - correct "contradicted" claims using true_facts,
 - remove anything "unverifiable".
-Do not add facts that are not in true_facts. Keep the broadcast tone and stay
+Prefer deleting a failed phrase to rewording it. Do not add new descriptions,
+judgements or facts that are not in true_facts. Keep the broadcast tone and stay
 under 30 words. Return the caption text only, without quotes."""
 
 ClaimKind = Literal[
@@ -67,7 +74,7 @@ ClaimKind = Literal[
     "possession", "pass_accuracy", "recent_action", "opinion", "other_fact",
 ]
 
-Action = Literal["foul", "won_ball", "pressure", "pass", "shot", "save", "block", "tackle"]
+Action = Literal["foul", "won_ball", "pressure", "pass", "carry", "giveaway", "shot", "save", "block", "tackle"]
 
 
 class ExtractedClaim(BaseModel):
@@ -91,7 +98,7 @@ class Extraction(BaseModel):
 # how LLM commentary typically goes wrong. The planted kind is recorded as
 # ground truth; the extractor and the referee never see it.
 RED_TEAM = {
-    "wrong_player": "Name a different player from the same team (pick one from team_players) as the one who made the main action.",
+    "wrong_player": "Replace the player named in facts (the scorer, shooter, booked player, player coming on, or the runner) with a different player from team_players, and present that wrong player as the one who did it.",
     "invented_goal": "Say the shot went in and the team scored.",
     "inflated_number": "State the main number one or two higher than the facts say.",
     "wrong_score": "Give the scoreline with one goal too many for the scoring team.",

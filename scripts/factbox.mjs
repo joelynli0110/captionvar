@@ -21,7 +21,7 @@
  */
 import { createInterface } from 'node:readline';
 import { generateMatch } from '../src/sim/generateMatch.js';
-import { spotMoments, captionHeader, indexPeople, narrate } from '../src/broadcast/narrator.js';
+import { spotMoments, captionHeader, indexPeople, narrate, observedFor } from '../src/broadcast/narrator.js';
 import { verifyCaption } from '../src/broadcast/verify.js';
 import { renderCaption } from '../src/broadcast/render.js';
 import { toVerifiableClaims, segmentsFromSpans } from '../src/broadcast/extracted.js';
@@ -40,7 +40,6 @@ const spotAt = i => {
   if (!spot) throw new Error(`no moment ${i}`);
   return spot;
 };
-const observedUntil = seq => match.events.filter(e => e.seq <= seq);
 
 /** Inverse of extracted.js, used to give the offline client realistic extractor output. */
 const EXTRACT_KIND = {
@@ -81,7 +80,7 @@ const OPS = {
     const spot = spotAt(index);
     const claims = toVerifiableClaims(spot, extracted || []);
     const header = captionHeader(spot.trigger, spot.moment);
-    const verdict = verifyCaption({ ...header, claims }, observedUntil(spot.trigger.seq));
+    const verdict = verifyCaption({ ...header, claims }, observedFor(match, spot.trigger));
     // A caption with no checkable claim at all must not air unchecked.
     if (!claims.length) {
       verdict.status = 'WITHHOLD';

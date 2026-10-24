@@ -17,7 +17,8 @@ test('the VAR check never uses events from after the caption', () => {
   for (const d of trace.decisions) {
     for (const id of d.verdict.evidence) {
       const e = match.events.find(x => x.id === id);
-      assert.ok(e.seq <= d.seq, `${d.id} cites future event ${id}`);
+      const stopsTriggerShot = (e.type === 'save' || e.type === 'block') && e.shot_id === d.trigger_event_id;
+      assert.ok(e.seq <= d.seq || stopsTriggerShot, `${d.id} cites future event ${id}`);
     }
   }
 });
@@ -171,4 +172,56 @@ test('narrator packets only describe the checkable build-up window', async () =>
   for (const line of packet.recent_play) assert.doesNotMatch(line, /undefined/);
   const foulLine = spots.map((s, i) => narratorPacket(match, s, i)).flatMap(p => p.recent_play).find(l => / fouls /.test(l));
   if (foulLine) assert.doesNotMatch(foulLine, /an opponent$/);
+});
+
+
+test('new build-up actions: runs, giveaways, and shots linked to the block that stopped them', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const { observedFor } = await import('./narrator.js');
+  const spots = spotMoments(match);
+  const verifyAt = (spot, extracted) => verifyCaption(
+    { ...trace.decisions[spots.indexOf(spot)], claims: toVerifiableClaims(spot, extracted) },
+    observedFor(match, spot.trigger),
+  ).claims;
+  const windowOf = spot => match.events.filter(e => e.seq <= spot.trigger.seq && e.period === spot.trigger.period && e.t >= spot.trigger.t - 120);
+
+  // A blocked shot inside some moment's window: "X's shot is blocked by Y" and "X's chance is blocked".
+  const spot = spots.find(s => windowOf(s).some(e => e.type === 'block' && windowOf(s).some(x => x.id === e.shot_id)));
+  const block = windowOf(spot).find(e => e.type === 'block' && windowOf(spot).some(x => x.id === e.shot_id));
+  const shot = match.events.find(e => e.id === block.shot_id);
+  const [byBlocker, byShooter, shotByOther] = verifyAt(spot, [
+    { kind: 'recent_action', span: 'a', action: 'shot', player_id: shot.player_id, other_player_id: block.player_id },
+    { kind: 'recent_action', span: 'b', action: 'block', player_id: shot.player_id },
+    { kind: 'recent_action', span: 'c', action: 'block', player_id: block.player_id, other_player_id: shot.player_id },
+  ]);
+  assert.equal(byBlocker.status, 'supported');
+  assert.equal(byShooter.status, 'supported');
+  assert.equal(shotByOther.status, 'supported');
+
+  // A run with the ball, and a giveaway.
+  const carrySpot = spots.find(s => windowOf(s).some(e => e.type === 'carry'));
+  const carry = windowOf(carrySpot).filter(e => e.type === 'carry').at(-1);
+  const giveawaySpot = spots.find(s => windowOf(s).some(e => e.type === 'pass' && !e.successful));
+  const lost = windowOf(giveawaySpot).filter(e => e.type === 'pass' && !e.successful).at(-1);
+  assert.equal(verifyAt(carrySpot, [{ kind: 'recent_action', span: 'x', action: 'carry', player_id: carry.player_id }])[0].status, 'supported');
+  assert.equal(verifyAt(giveawaySpot, [{ kind: 'recent_action', span: 'x', action: 'giveaway', player_id: lost.player_id }])[0].status, 'supported');
+});
+
+test('a distance mislabelled as a speed is still checked as a distance', async () => {
+  const { spotMoments } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const spot = spotMoments(match).find(s => s.moment.type === 'milestone');
+  const [claim] = toVerifiableClaims(spot, [{ kind: 'top_speed', span: 'x', player_id: spot.trigger.player_id, number: spot.trigger.milestone_km }]);
+  assert.equal(claim.kind, 'distance');
+  assert.equal(claim.role, 'core');
+});
+
+test('the save or block of the captioned shot is visible to the check, later events are not', async () => {
+  const { spotMoments, observedFor } = await import('./narrator.js');
+  const chance = spotMoments(match).find(s => s.moment.type === 'chance' && ['saved', 'blocked'].includes(s.trigger.outcome));
+  const seen = observedFor(match, chance.trigger);
+  const after = seen.filter(e => e.seq > chance.trigger.seq);
+  assert.ok(after.length >= 1);
+  assert.ok(after.every(e => e.shot_id === chance.trigger.id));
 });
