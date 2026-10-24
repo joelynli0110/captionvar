@@ -275,3 +275,36 @@ test('"booked for a foul on X" links the booking to the foul before it', async (
   const someoneElse = match.squads[foul.side === 'home' ? 'away' : 'home'].players.find(p => p.id !== foul.fouled_id).id;
   assert.equal(check(someoneElse), 'contradicted');
 });
+
+test('a stated percentage must be the actual value rounded down or up', async () => {
+  const { spotMoments, observedFor } = await import('./narrator.js');
+  const { toVerifiableClaims } = await import('./extracted.js');
+  const { possessionShare } = await import('../sim/stats.js');
+  const spots = spotMoments(match);
+  const spot = spots.find(s => s.moment.type === 'stat');
+  const seen = observedFor(match, spot.trigger);
+  const share = possessionShare(seen).home;
+  const check = pct => verifyCaption(
+    { ...trace.decisions[spots.indexOf(spot)], claims: toVerifiableClaims(spot, [{ kind: 'possession', span: 'x', side: 'home', number: pct }]) },
+    seen,
+  ).claims[0].status;
+  assert.equal(check(Math.floor(share)), 'supported');
+  assert.equal(check(Math.ceil(share)), 'supported');
+  // The miss seen in a Foundry run: actual 61.0%, caption said 62%.
+  assert.equal(check(Math.ceil(share) + 1), 'contradicted');
+  assert.equal(check(Math.floor(share) - 1), 'contradicted');
+});
+
+test('a caption that drops the fact its moment exists to report is withheld', async () => {
+  const { checkMomentCovered } = await import('./verify.js');
+  // "Pell's tackle ... Reyes races forward" for a sprint moment: true details, no top speed.
+  const truthful = { status: 'VERIFY', claims: [{ id: 'a', kind: 'recent_action', role: 'context', status: 'supported' }] };
+  const v = checkMomentCovered('sprint', truthful);
+  assert.equal(v.status, 'WITHHOLD');
+  assert.match(v.claims.at(-1).note, /top speed/);
+  // With the key fact present, nothing changes; a wrong key fact is left to the core check.
+  const withKey = { status: 'VERIFY', claims: [{ id: 's', kind: 'top_speed', role: 'core', status: 'supported' }] };
+  assert.equal(checkMomentCovered('sprint', withKey), withKey);
+  const wrongKey = { status: 'WITHHOLD', claims: [{ id: 's', kind: 'top_speed', role: 'core', status: 'contradicted' }] };
+  assert.equal(checkMomentCovered('sprint', wrongKey).claims.length, 1);
+});

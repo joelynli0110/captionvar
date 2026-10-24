@@ -15,7 +15,10 @@
  */
 import { possessionShare, teamStats } from '../sim/stats.js';
 
-const TOLERANCE = { pct: 1.5, kmh: 0.2, xg: 0.015 };
+const TOLERANCE = { kmh: 0.2, xg: 0.015 };
+
+/** A whole-number percentage is right only if it is the actual value rounded down or up. */
+const pctMatches = (stated, actual) => stated >= Math.floor(actual) && stated <= Math.ceil(actual);
 
 export function verifyCaption(caption, observed) {
   const byId = new Map(observed.map(e => [e.id, e]));
@@ -124,7 +127,7 @@ function checkClaim(claim, observed, byId) {
       const seen = observed.filter(e => e.seq <= claim.params.until_seq);
       const share = possessionShare(seen);
       const actual = { side: a.side, pct: Math.round(share[a.side]) };
-      return Math.abs(share[a.side] - a.pct) <= TOLERANCE.pct
+      return pctMatches(a.pct, share[a.side])
         ? supported(actual, [], `On-ball share ${share[a.side]}%.`)
         : contradicted({ side: share.home >= share.away ? 'home' : 'away', pct: Math.round(Math.max(share.home, share.away)) }, [], `${a.side === 'home' ? 'Home' : 'Away'} share is ${share[a.side]}%.`);
     }
@@ -132,7 +135,7 @@ function checkClaim(claim, observed, byId) {
     case 'pass_accuracy': {
       const seen = observed.filter(e => e.seq <= claim.params.until_seq);
       const acc = teamStats(seen, a.side).pass_accuracy;
-      return Math.abs(acc - a.pct) <= TOLERANCE.pct
+      return pctMatches(a.pct, acc)
         ? supported({ side: a.side, pct: Math.round(acc) }, [], `Pass accuracy ${acc}%.`)
         : contradicted({ side: a.side, pct: Math.round(acc) }, [], `Pass accuracy is ${acc}%.`);
     }
@@ -267,5 +270,39 @@ export function checkNamedPlayers(text, verdict, players) {
     ...verdict,
     status: verdict.status === 'VERIFY' ? 'QUALIFY' : verdict.status,
     claims: [...verdict.claims, ...extra],
+  };
+}
+
+/**
+ * The fact each kind of moment exists to report. A caption that drops it (an
+ * editor rewrite that removes the scorer, or "Northbridge hit 12 km" for one
+ * player's distance) is true but does not report the moment, so it is withheld
+ * and the moment airs from the data instead.
+ */
+const KEY_FACT = {
+  goal: { kinds: ['goal_scorer'], what: 'who scored' },
+  chance: { kinds: ['shot_player'], what: 'who had the chance' },
+  card: { kinds: ['card_player'], what: 'who was booked' },
+  sub: { kinds: ['substitution'], what: 'who came on and off' },
+  sprint: { kinds: ['top_speed'], what: 'the top speed and who reached it' },
+  milestone: { kinds: ['distance'], what: 'the distance and who covered it' },
+  press: { kinds: ['window_count'], what: 'how many times the ball was won back' },
+  stat: { kinds: ['possession'], what: 'the possession figure' },
+};
+
+export function checkMomentCovered(type, verdict) {
+  const key = KEY_FACT[type];
+  if (!key) return verdict;
+  const covered = verdict.claims.some(c => key.kinds.includes(c.kind) && c.role === 'core' && c.status === 'supported');
+  const statedButWrong = verdict.claims.some(c => key.kinds.includes(c.kind) && c.role === 'core');
+  if (covered || statedButWrong) return verdict; // a wrong key fact is already a core failure
+  return {
+    ...verdict,
+    status: 'WITHHOLD',
+    claims: [...verdict.claims, {
+      id: 'moment', kind: 'moment_missing', role: 'core', span: null, asserted: true,
+      status: 'contradicted', actual: null, evidence: [],
+      note: `Does not report the moment: it never says ${key.what}.`,
+    }],
   };
 }

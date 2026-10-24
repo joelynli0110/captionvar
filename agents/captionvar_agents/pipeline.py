@@ -233,6 +233,11 @@ class RefereeExecutor(Executor):
             "text": item.draft.text,
             "status": result["verdict"]["status"],
             "extracted": item.claims,
+            # Why this version did not pass, so a reviewer can see what each rewrite fixed.
+            "flags": [
+                {"span": c.get("span"), "status": c["status"], "note": c.get("note")}
+                for c in result["verdict"]["claims"] if c["status"] != "supported"
+            ],
         })
         await ctx.send_message(Checked(item.draft, result))
 
@@ -365,5 +370,5 @@ async def assemble_decision(index: int, out: dict, factbox: Factbox) -> dict:
         "verdict": checked["verdict"],
         "planted_error": {"kind": out["plant"]} if out["plant"] else None,
         "aired": out["aired"],
-        "attempts": [{k: h[k] for k in ("attempt", "author", "text", "status")} for h in out["history"]],
+        "attempts": [{k: h.get(k) for k in ("attempt", "author", "text", "status", "flags")} for h in out["history"]],
     }
