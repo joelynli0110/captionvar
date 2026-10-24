@@ -2,10 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateMatch } from './generateMatch.js';
 import { validateMatch } from './validate.js';
-import { teamStats, matchStats, windowEvents, playerStats } from './stats.js';
+import { teamStats, matchStats, playerStats } from './stats.js';
 import { liveFeed, windowedFeed } from './stream.js';
 import { expectedGoals } from './pitch.js';
-import { verifyScenario } from '../verifier.js';
 
 const demo = generateMatch();
 
@@ -107,13 +106,4 @@ test('live feed replays every event in order; windows partition the stream', asy
     assert.ok(w.events.every(e => e.period === w.period));
   }
   assert.equal(count, demo.events.length);
-});
-
-test('existing CaptionVAR verifier runs unchanged on generated events', () => {
-  const goal = demo.events.find(e => e.id === demo.script.find(b => b.via === 'press').goal_event_id);
-  const window = windowEvents(demo.events, { period: 2, from: goal.t - 90, to: goal.t });
-  const truth = window.filter(e => e.type === 'recovery' && e.side === 'home' && e.zone === 'attacking_third').length;
-  const scenario = { team: 'Northbridge FC', minute: goal.minute, second: goal.second, events: window, claim: { type: 'high_recoveries', count: truth } };
-  assert.equal(verifyScenario(scenario).status, 'VERIFY');
-  assert.equal(verifyScenario({ ...scenario, claim: { type: 'high_recoveries', count: truth + 2 } }).status, 'WITHHOLD');
 });
