@@ -16,6 +16,9 @@ Options:
     --rpm R          max model requests per minute (default 30); match your deployment's limit
     --concurrency C  moments processed in parallel (default 1)
     --fresh          ignore saved progress and start again
+    --trace          send OpenTelemetry traces to the Application Insights resource
+                     connected to the Foundry project (see docs/AGENTS.md); one trace per caption
+    --trace-content  also record prompts and model replies in the traces
 
 Progress is saved after every moment to <out>.partial.jsonl. If a run stops
 (rate limits, network), run the same command again and it resumes.
@@ -52,6 +55,14 @@ def foundry_client():
     return FoundryChatClient(credential=AzureCliCredential())
 
 
+def flush_traces() -> None:
+    """Send buffered spans before the process exits (the exporter batches them)."""
+    from opentelemetry import trace
+    flush = getattr(trace.get_tracer_provider(), "force_flush", None)
+    if flush:
+        flush()
+
+
 async def main(args: argparse.Namespace) -> None:
     started = time.time()
     async with Factbox(seed=args.match_seed) as factbox:
@@ -70,6 +81,9 @@ async def main(args: argparse.Namespace) -> None:
         else:
             client = foundry_client()
             model = os.environ["FOUNDRY_MODEL"]
+            if args.trace:
+                await client.configure_azure_monitor(enable_sensitive_data=args.trace_content)
+                print("tracing to the Application Insights resource connected to the Foundry project")
         agents = make_agents(client)
         usage = Usage()
         if args.offline:
@@ -125,6 +139,7 @@ async def main(args: argparse.Namespace) -> None:
 
         await asyncio.gather(*(one(p) for p in todo))
 
+    flush_traces()
     if failed:
         print(f"\n{len(failed)} moment(s) did not finish; {len(done)}/{len(packets)} are saved in {partial}.")
         print("Run the same command again to resume. If this keeps happening, lower --rpm or raise the deployment's rate limit.")
@@ -183,4 +198,6 @@ if __name__ == "__main__":
     ap.add_argument("--concurrency", type=int, default=1)
     ap.add_argument("--rpm", type=float, default=30)
     ap.add_argument("--fresh", action="store_true")
+    ap.add_argument("--trace", action="store_true")
+    ap.add_argument("--trace-content", action="store_true")
     asyncio.run(main(ap.parse_args()))

@@ -132,3 +132,30 @@ def test_own_errors_are_told_apart_from_planted_ones():
     assert sb.is_own({"kind": "possession", "status": "contradicted"}, {"planted": None, "type": "stat"})
     assert sb.carries_plant([{"kind": "card_player", "status": "contradicted"}], "wrong_player")
     assert not sb.carries_plant([{"kind": "named_player", "status": "unverifiable"}], "wrong_player")
+
+
+def test_each_caption_is_one_trace_with_the_verdict_on_the_referee_span(tmp_path):
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+    from agent_framework.observability import enable_instrumentation
+
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    trace.set_tracer_provider(provider)
+    enable_instrumentation(enable_sensitive_data=False)
+    run(tmp_path, limit=3)
+
+    spans = [s for s in exporter.get_finished_spans()]
+    captions = [s for s in spans if s.name.startswith("caption ")]
+    assert len(captions) == 3
+    for cap in captions:
+        inside = [s for s in spans if s.context.trace_id == cap.context.trace_id]
+        names = {s.name for s in inside}
+        assert {"workflow.run", "executor.process referee"} <= names
+        assert any(n.startswith("invoke_agent") for n in names)
+        referee = [s for s in inside if s.name == "executor.process referee"]
+        assert all(s.attributes["captionvar.verdict"] in {"VERIFY", "QUALIFY", "WITHHOLD"} for s in referee)
+        assert cap.attributes["captionvar.aired_by"] in {"narrator", "editor", "template"}

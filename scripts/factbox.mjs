@@ -22,7 +22,7 @@
 import { createInterface } from 'node:readline';
 import { generateMatch } from '../src/sim/generateMatch.js';
 import { spotMoments, captionHeader, indexPeople, narrate, observedFor } from '../src/broadcast/narrator.js';
-import { verifyCaption, checkNamedPlayers, checkMomentCovered } from '../src/broadcast/verify.js';
+import { verifyCaption, checkNamedPlayers, checkMomentCovered, checkSweepingClaims } from '../src/broadcast/verify.js';
 import { renderCaption } from '../src/broadcast/render.js';
 import { toVerifiableClaims, segmentsFromSpans } from '../src/broadcast/extracted.js';
 import { narratorPacket, extractorPacket, editorPacket } from '../src/broadcast/packets.js';
@@ -86,6 +86,7 @@ const OPS = {
     const header = captionHeader(spot.trigger, spot.moment);
     let verdict = verifyCaption({ ...header, claims }, observedFor(match, spot.trigger));
     verdict = checkNamedPlayers(text, verdict, [...people.players.values()]);
+    verdict = checkSweepingClaims(text, verdict);
     verdict = checkMomentCovered(spot.moment.type, verdict);
     // A caption with no checkable claim at all must not air unchecked.
     if (!claims.length) {

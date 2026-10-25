@@ -26,6 +26,7 @@ Design choices that matter for trust:
 - **Build-up details are checked, not just trimmed.** "After Morita won it back", "a foul on Whitcombe" or "pressing from Vence" become `recent_action` claims, verified against the events of the same half in the two minutes before the moment. The event record is complete, so a named action that is not there is reported as false, with the player who actually did it. These are always detail claims: a failure trims that phrase, it never withholds the whole caption. Actions covered: foul, winning the ball, pressing, a pass, a run with the ball, losing the ball, a shot, a save, a block and a tackle; a shot is linked to the block or save that stopped it, and a caption about a shot can cite that save or block even though it is recorded a second later.
 - **Every named player must be backed.** After the claim checks, code scans the caption for every player name in the squads. A name that no passing statement is about is flagged as unconfirmed, so a wrong name left in prose the extractor skipped (seen in a Foundry run: "Reyes sprints … Marsh recorded 34.9 km/h") cannot air. This applies to editor rewrites as much as to the narrator's first draft.
 - **Every caption must report its moment.** A rewrite can be true in every word and still miss the point ("Pell's tackle … Reyes races forward" for Marsh's 34.9 km/h sprint, or "Northbridge hit 12 km" for one player's distance). Each moment type has a key fact (scorer, shooter, booked player, substitution, top speed, distance, recovery count, possession) that must be stated and verified; otherwise the caption is withheld and the moment airs from the data.
+- **No comparisons beyond the match.** "The best strike of the season" or "finest save in league history" cannot be checked against match data. Code flags such phrases even when the extractor misses them (seen in a Foundry run), so they are trimmed rather than aired.
 - **Percentages are not rounded generously.** A whole-number percentage must equal the actual value rounded down or up (61.0% allows only 61%; 62.6% allows 62% or 63%).
 - **No future data.** The referee only sees events with `seq` up to the moment being captioned.
 - **Red team.** A seeded plan tells the narrator to plant one specific kind of error in about a third of captions (wrong player, invented goal, inflated number, wrong score, invented cause, unverifiable superlative). Only the plan knows; the extractor and referee do not. The trace reports how many were caught, and separately how many other captions were flagged (these may be genuine narrator mistakes and are listed for review rather than scored).
@@ -61,6 +62,29 @@ python agents\run_match.py --out public\traces\foundry-demo.json
 **Rate limits.** Model calls are spaced to `--rpm` requests per minute (default 30), `429` responses are retried after the server's `Retry-After`, and progress is saved after every moment to `<out>.partial.jsonl`: if a run stops, run the same command again and it resumes. Each call uses about 1,500 tokens, so keep `--rpm` below both the deployment's requests-per-minute and its tokens-per-minute divided by 1,500 (see the deployment's rate limit in the Foundry portal).
 
 If a call fails with `401`/`403 PermissionDenied`, give your account the **Azure AI User** role on the Foundry resource (Access control (IAM) in the Azure portal) and run `az login` again.
+
+## Trace it in Foundry
+
+Each caption becomes one OpenTelemetry trace. The caption span is the root. Under it come the workflow run, each executor (narrator, extractor, referee, editor, publisher) and every model call. The referee's verdict is written onto its own span.
+
+| Span | Attributes |
+|---|---|
+| `caption 77' goal` | `captionvar.red_team`, `captionvar.first_draft_verdict`, `captionvar.rewrites`, `captionvar.aired_by`, `captionvar.aired_text` |
+| `executor.process referee` | `captionvar.attempt`, `captionvar.author`, `captionvar.verdict`, `captionvar.claims`, `captionvar.claims_false`, `captionvar.claims_unchecked`, `captionvar.evidence` |
+| `invoke_agent …` / `chat …` | Model, token counts and latency, from Agent Framework |
+
+One-time setup: connect an Application Insights resource to the Foundry project. The Foundry portal's menus change often; look for a **Tracing** or **Traces** page with a **Connect** button, or add it as a connected resource of the project (**Connected resources → Add connection → Application Insights**). You can pick an existing resource or create a new one. To read traces you need the **Log Analytics Reader** role on that resource.
+
+```powershell
+pip install -r agents\requirements.txt        # adds azure-monitor-opentelemetry
+python agents\run_match.py --limit 5 --trace --out public\traces\trace-test.json
+```
+
+The script reads the connection string from the project, so nothing else needs configuring.
+
+To read a trace, open the Application Insights resource in the Azure portal and go to **Investigate → Transaction search**. Traces arrive after 2–5 minutes. Search for `caption` (or a minute, such as `caption 7'`) and open a result: **End-to-end transaction details** shows the caption as one timeline, with the narrator, extractor, referee and editor calls in order, and the attributes above on each span. Selecting the `executor.process referee` span shows that attempt's verdict and evidence IDs. Depending on the portal version, the same traces may also appear on the Foundry project's tracing page.
+
+`--trace-content` also records prompts and replies; leave it off unless you need them. A five-caption run sends a few hundred spans, well inside the Application Insights free allowance.
 
 ## Run it offline (no model)
 

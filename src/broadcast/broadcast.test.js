@@ -308,3 +308,20 @@ test('a caption that drops the fact its moment exists to report is withheld', as
   const wrongKey = { status: 'WITHHOLD', claims: [{ id: 's', kind: 'top_speed', role: 'core', status: 'contradicted' }] };
   assert.equal(checkMomentCovered('sprint', wrongKey).claims.length, 1);
 });
+
+test('a comparison beyond the match is flagged even when the extractor misses it', async () => {
+  const { checkSweepingClaims } = await import('./verify.js');
+  const clean = { status: 'VERIFY', claims: [] };
+  const missed = "Strand’s off-target big chance could’ve been the best strike attempt of the entire league season, but it just drifts wide!";
+  const v = checkSweepingClaims(missed, clean);
+  assert.equal(v.status, 'QUALIFY');
+  assert.equal(v.claims.at(-1).status, 'unverifiable');
+  assert.equal(checkSweepingClaims("best possession stats seen in the entire league's history", clean).status, 'QUALIFY');
+  // Ordinary broadcast language is left alone.
+  for (const ok of ['Collymore sprints at 35.9 km/h, his best burst of the night.', 'Fresh legs coming on at 75 minutes.', 'A big chance, brilliantly saved!']) {
+    assert.equal(checkSweepingClaims(ok, clean).status, 'VERIFY', ok);
+  }
+  // Already flagged by the extractor: not counted twice.
+  const flagged = { status: 'QUALIFY', claims: [{ status: 'unverifiable', span: 'their finest opportunity all season' }] };
+  assert.equal(checkSweepingClaims('Reyes off target, their finest opportunity all season.', flagged), flagged);
+});
