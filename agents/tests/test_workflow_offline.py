@@ -23,7 +23,7 @@ def run(tmp_path: Path, **kw) -> dict:
     args = argparse.Namespace(out=str(out), offline=True, match_seed="captionvar-demo-6", red_team=0.35, rpm=None, fresh=True,
                               red_team_seed="red-1", limit=kw.get("limit"), from_minute=kw.get("from_minute"), concurrency=4)
     asyncio.run(run_match.main(args))
-    return json.loads(out.read_text())
+    return json.loads(out.read_text(encoding="utf-8"))
 
 
 def untimed(value):
@@ -78,7 +78,7 @@ def test_referee_rejects_a_caption_with_no_checkable_claim():
 
 
 def test_extractor_kinds_match_the_javascript_vocabulary():
-    js = (ROOT.parent / "src" / "broadcast" / "extracted.js").read_text()
+    js = (ROOT.parent / "src" / "broadcast" / "extracted.js").read_text(encoding="utf-8")
     for kind in pipeline.KIND_DOCS:
         assert f"  {kind}:" in js, kind
 
@@ -102,9 +102,9 @@ def test_a_failed_run_resumes_without_redoing_finished_moments(tmp_path, monkeyp
     with pytest.raises(SystemExit):
         asyncio.run(run_match.main(argparse.Namespace(**base, fresh=True)))
     partial = Path(str(out) + ".partial.jsonl")
-    assert len(partial.read_text().splitlines()) == 4 and not out.exists()
+    assert len(partial.read_text(encoding="utf-8").splitlines()) == 4 and not out.exists()
     asyncio.run(run_match.main(argparse.Namespace(**base, fresh=False)))
-    trace = json.loads(out.read_text())
+    trace = json.loads(out.read_text(encoding="utf-8"))
     assert [d["id"] for d in trace["decisions"]] == [f"CAP-{i:03d}" for i in range(1, 6)]
     assert not partial.exists()
 
