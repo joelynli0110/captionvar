@@ -18,6 +18,11 @@ function Detail({ decision, people, view, aired, onInspect }) {
         <p className="own-note"><span className="vr-origin is-own">Narrator's own</span> {decision.planted_error ? 'Besides the planted error, the narrator got a detail wrong on its own.' : 'The narrator got this wrong on its own.'} Checked by hand against the events: {decision.own_error}</p>
       )}
       <Attempts decision={decision} />
+      {decision.timing && (
+        <p className="timing">
+          On air {decision.timing.time_to_air_s.toFixed(1)} s after the moment · {decision.timing.model_calls} model call{decision.timing.model_calls === 1 ? '' : 's'} · referee {decision.timing.referee_ms.toFixed(0)} ms
+        </p>
+      )}
       <ul className="claims" aria-label="Claims checked">
         {decision.verdict.claims.map(c => (
           <li key={c.id} className={`claim claim-${c.status}`}>
@@ -112,7 +117,8 @@ function sourceLine(source) {
   if (!t) return 'Test narrator with deliberate mistakes. The checks are real.';
   if (t.source !== 'foundry-agents') return 'Agent workflow run offline, no model.';
   const cost = t.usage?.estimated_cost_usd;
-  return `Foundry agents · ${t.model}${cost != null ? ` · $${cost.toFixed(2)} for the whole match` : ''}`;
+  const air = t.summary?.time_to_air;
+  return `Foundry agents · ${t.model}${cost != null ? ` · $${cost.toFixed(2)} for the whole match` : ''}${air ? ` · ${air.p50_s.toFixed(1)} s median to air` : ''}`;
 }
 
 export default function VarRoom({ decisions, liveId, selectedId, onSelect, summary, people, view, renderAired, onInspect, source, onExplain }) {

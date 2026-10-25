@@ -49,7 +49,13 @@ export async function loadAgentTrace(match, url = `${import.meta.env.BASE_URL}tr
     const trace = await res.json();
     if (trace.match_id !== match.meta.match_id || !Array.isArray(trace.decisions)) return null;
     const seed = trace.settings?.match_seed;
-    trace.decisions = trace.decisions.map(d => ({ ...d, g: globalT(d) + 2, own_error: ownError(seed, d.id) }));
+    // Each caption airs as late as it did in the recorded run, when the run
+    // measured it; older traces fall back to a fixed two seconds.
+    trace.decisions = trace.decisions.map(d => ({
+      ...d,
+      g: globalT(d) + (d.timing?.time_to_air_s ?? 2),
+      own_error: ownError(seed, d.id),
+    }));
     return trace;
   } catch {
     return null;

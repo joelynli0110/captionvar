@@ -258,6 +258,7 @@ button { cursor: pointer; }
 .vr-origin.is-planted { color: var(--mute); background: #ffffff0d; }
 .vr-origin.is-own { color: var(--night); background: var(--var); }
 .kpis .kpi-own dd { color: var(--var); }
+.timing { margin: 8px 0 0; font-size: 0.75rem; color: var(--faint); font-variant-numeric: tabular-nums; }
 .own-note { margin: 8px 0 0; font-size: var(--step--1); line-height: 1.45; color: var(--mute); }
 .own-note .vr-origin { margin-right: 6px; }
 .vr-legend { margin: 10px 0 0; font-size: 0.75rem; color: var(--faint); display: flex; flex-wrap: wrap; gap: 6px 14px; }

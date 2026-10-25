@@ -159,3 +159,18 @@ def test_each_caption_is_one_trace_with_the_verdict_on_the_referee_span(tmp_path
         referee = [s for s in inside if s.name == "executor.process referee"]
         assert all(s.attributes["captionvar.verdict"] in {"VERIFY", "QUALIFY", "WITHHOLD"} for s in referee)
         assert cap.attributes["captionvar.aired_by"] in {"narrator", "editor", "template"}
+
+
+def test_each_caption_records_its_time_to_air(tmp_path):
+    trace = run(tmp_path, limit=6)
+    for d in trace["decisions"]:
+        t = d["timing"]
+        assert t["time_to_air_s"] >= 0 and t["model_calls"] >= 2 and t["referee_ms"] > 0
+    lat = trace["summary"]["time_to_air"]
+    assert lat["captions_timed"] == 6 and lat["p50_s"] <= lat["p95_s"] <= lat["max_s"]
+
+
+def test_percentile_is_nearest_rank():
+    assert run_match.percentile([5, 1, 4, 2, 3], 0.5) == 3
+    assert run_match.percentile(list(range(1, 41)), 0.95) == 38
+    assert run_match.percentile([7], 0.95) == 7

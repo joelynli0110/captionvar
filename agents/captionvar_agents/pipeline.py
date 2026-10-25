@@ -21,6 +21,7 @@ One workflow run per captioned moment:
 import asyncio
 import json
 import random
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -86,6 +87,12 @@ class Usage:
     output_tokens: int = 0
     throttled: int = 0
     by_agent: dict = field(default_factory=dict)
+    # Seconds spent in model calls, in the referee, and waiting on our own rate
+    # limiter or a 429 back-off. The last is an artefact of a small deployment
+    # quota, so time-to-air leaves it out.
+    model_s: float = 0.0
+    referee_s: float = 0.0
+    throttle_s: float = 0.0
 
     def merge(self, other: "Usage | dict") -> None:
         o = other if isinstance(other, dict) else other.as_dict()
@@ -93,6 +100,9 @@ class Usage:
         self.input_tokens += o["input_tokens"]
         self.output_tokens += o["output_tokens"]
         self.throttled += o.get("throttled", 0)
+        self.model_s += o.get("model_s", 0.0)
+        self.referee_s += o.get("referee_s", 0.0)
+        self.throttle_s += o.get("throttle_s", 0.0)
         for name, a in o.get("by_agent", {}).items():
             mine = self.by_agent.setdefault(name, {"calls": 0, "input_tokens": 0, "output_tokens": 0})
             for k in mine:
@@ -100,7 +110,8 @@ class Usage:
 
     def as_dict(self) -> dict:
         return {"calls": self.calls, "input_tokens": self.input_tokens, "output_tokens": self.output_tokens,
-                "throttled": self.throttled, "by_agent": self.by_agent}
+                "throttled": self.throttled, "by_agent": self.by_agent,
+                "model_s": round(self.model_s, 3), "referee_s": round(self.referee_s, 4), "throttle_s": round(self.throttle_s, 3)}
 
     def add(self, agent: str, response: Any) -> None:
         u = getattr(response, "usage_details", None) or {}
@@ -170,9 +181,13 @@ def retry_after_seconds(exc: BaseException) -> float | None:
 async def ask(agent: Agent, usage: Usage, payload: Any, **options: Any) -> Any:
     prompt = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False, indent=1)
     for attempt in range(MAX_RETRIES + 1):
+        waited = time.perf_counter()
         await LIMITER.wait()
+        usage.throttle_s += time.perf_counter() - waited
+        started = time.perf_counter()
         try:
             response = await agent.run(prompt, options=options or None)
+            usage.model_s += time.perf_counter() - started
             break
         except Exception as exc:  # noqa: BLE001 - only rate limits are retried
             if not is_rate_limited(exc) or attempt == MAX_RETRIES:
@@ -180,6 +195,8 @@ async def ask(agent: Agent, usage: Usage, payload: Any, **options: Any) -> Any:
             wait = retry_after_seconds(exc) or min(60.0, RETRY_BASE_S * 2 ** attempt)
             usage.throttled += 1
             print(f"    rate limited ({agent.name}); waiting {wait:.0f}s, retry {attempt + 1}/{MAX_RETRIES}", flush=True)
+            # The failed call's own time counts as throttling too.
+            usage.throttle_s += time.perf_counter() - started + wait
             await asyncio.sleep(wait)
     usage.add(agent.name, response)
     return response
@@ -227,13 +244,15 @@ class ExtractorExecutor(Executor):
 class RefereeExecutor(Executor):
     """The VAR check. Deterministic code, not a model."""
 
-    def __init__(self, factbox: Factbox) -> None:
+    def __init__(self, factbox: Factbox, usage: Usage) -> None:
         super().__init__(id="referee")
-        self.factbox = factbox
+        self.factbox, self.usage = factbox, usage
 
     @handler
     async def check(self, item: Extracted, ctx: WorkflowContext[Checked]) -> None:
+        started = time.perf_counter()
         result = await self.factbox.call("verify", index=item.draft.index, text=item.draft.text, extracted=item.claims)
+        self.usage.referee_s += time.perf_counter() - started
         claims = result["verdict"]["claims"]
         trace.get_current_span().set_attributes({
             "captionvar.attempt": item.draft.attempt,
@@ -299,7 +318,7 @@ def ready_to_air(msg: Any) -> bool:
 def build_workflow(narrator: Agent, extractor: Agent, editor: Agent, factbox: Factbox, usage: Usage):
     n = NarratorExecutor(narrator, usage)
     x = ExtractorExecutor(extractor, factbox, usage)
-    r = RefereeExecutor(factbox)
+    r = RefereeExecutor(factbox, usage)
     e = EditorExecutor(editor, factbox, usage)
     p = PublisherExecutor(factbox)
     return (

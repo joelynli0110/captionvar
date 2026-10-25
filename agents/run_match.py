@@ -26,6 +26,7 @@ Progress is saved after every moment to <out>.partial.jsonl. If a run stops
 import argparse
 import asyncio
 import json
+import math
 import os
 import sys
 import time
@@ -61,6 +62,47 @@ def flush_traces() -> None:
     flush = getattr(trace.get_tracer_provider(), "force_flush", None)
     if flush:
         flush()
+
+
+def timing(wall: float, u: Usage) -> dict:
+    """How long a caption took from its moment to air, without our own rate-limit waits.
+
+    Moments are captioned one at a time, so nothing else competes for the time
+    measured here: it is the model calls, the referee and the workflow itself.
+    """
+    return {
+        "time_to_air_s": round(max(0.0, wall - u.throttle_s), 2),
+        "model_s": round(u.model_s, 2),
+        "referee_ms": round(u.referee_s * 1000, 1),
+        "model_calls": u.calls,
+        "throttle_s": round(u.throttle_s, 2),
+    }
+
+
+def percentile(values: list[float], q: float) -> float:
+    """Nearest-rank percentile."""
+    ranked = sorted(values)
+    return ranked[max(0, math.ceil(q * len(ranked)) - 1)]
+
+
+def latency_summary(decisions: list[dict]) -> dict | None:
+    times = [d["timing"]["time_to_air_s"] for d in decisions if d.get("timing")]
+    if not times:
+        return None
+    by_rewrites: dict[str, list[float]] = {}
+    for d in decisions:
+        if d.get("timing"):
+            by_rewrites.setdefault(str(len(d["attempts"]) - 1), []).append(d["timing"]["time_to_air_s"])
+    referee = [d["timing"]["referee_ms"] for d in decisions if d.get("timing")]
+    return {
+        "captions_timed": len(times),
+        "p50_s": percentile(times, 0.5),
+        "p95_s": percentile(times, 0.95),
+        "max_s": max(times),
+        "median_by_rewrites_s": {k: percentile(v, 0.5) for k, v in sorted(by_rewrites.items())},
+        "referee_p50_ms": percentile(referee, 0.5),
+        "note": "Per caption, from the moment's events to the caption that airs. Rate-limit waits are excluded.",
+    }
 
 
 async def main(args: argparse.Namespace) -> None:
@@ -121,9 +163,12 @@ async def main(args: argparse.Namespace) -> None:
         async def one(p: dict) -> None:
             async with sem:
                 moment_usage = Usage()
+                started = time.perf_counter()
                 try:
                     out = await run_moment(p["index"], p, plan.get(p["index"]), agents, factbox, moment_usage)
+                    wall = time.perf_counter() - started
                     decision = await assemble_decision(p["index"], out, factbox)
+                    decision["timing"] = timing(wall, moment_usage)
                 except Exception as exc:  # noqa: BLE001 - report and keep going; the rerun resumes
                     failed.append((p["index"], str(exc).splitlines()[0][:160]))
                     print(f"  {p['minute']:>6} FAILED: {failed[-1][1]}", flush=True)
@@ -147,6 +192,7 @@ async def main(args: argparse.Namespace) -> None:
     decisions = [done[p["index"]] for p in packets]
 
     decisions.sort(key=lambda d: d["seq"])
+    latency = latency_summary(decisions)
     planted = [d for d in decisions if d["planted_error"]]
     unplanted_flagged = [d for d in decisions if not d["planted_error"] and d["verdict"]["status"] != "VERIFY"]
     price = PRICE_PER_M.get(model)
@@ -167,6 +213,7 @@ async def main(args: argparse.Namespace) -> None:
             "caught": sum(d["verdict"]["status"] != "VERIFY" for d in planted),
             "flagged_without_plant": len(unplanted_flagged),
             "aired_by": {k: sum(d["aired"]["by"] == k for d in decisions) for k in ("narrator", "editor", "template")},
+            "time_to_air": latency,
         },
         "usage": {"llm_calls": usage.calls, "input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens,
                   "rate_limited_retries": usage.throttled,
@@ -183,6 +230,9 @@ async def main(args: argparse.Namespace) -> None:
     print(f"\nplanted errors caught: {s['caught']}/{s['planted_errors']}; other captions flagged: {s['flagged_without_plant']}")
     print(f"aired by narrator {s['aired_by']['narrator']}, editor {s['aired_by']['editor']}, template {s['aired_by']['template']}")
     print(f"LLM calls {usage.calls}, tokens in/out {usage.input_tokens}/{usage.output_tokens}, est. cost {cost if cost is not None else 'n/a'} USD")
+    if latency:
+        print(f"time to air: median {latency['p50_s']} s, p95 {latency['p95_s']} s, max {latency['max_s']} s "
+              f"(rate-limit waits excluded)")
     print(f"wrote {out}")
 
 
