@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { VERDICT, firstDraft } from './data.js';
-import { Draft } from './Broadcast.jsx';
+import { Draft, LineDraft } from './Broadcast.jsx';
 import { overlayRecord } from '../broadcast/trace.js';
 
 const STATUS_MARK = { supported: '✓', contradicted: '✕', unverifiable: '?' };
@@ -33,6 +33,7 @@ function Detail({ decision, people, view, aired, onInspect }) {
           </li>
         ))}
       </ul>
+      {decision.insight && <InsightDetail line={decision.insight} />}
       {decision.verdict.evidence.length > 0 && (
         <div className="evidence">
           <span>Evidence</span>
@@ -45,6 +46,54 @@ function Detail({ decision, people, view, aired, onInspect }) {
         {showData ? 'Hide overlay data' : 'Show overlay data'}
       </button>
       {showData && <pre className="overlay-json">{JSON.stringify(overlayRecord(decision, people, view), null, 2)}</pre>}
+    </div>
+  );
+}
+
+const AUTHOR = { narrator: 'Narrator', editor: 'Editor', analyst: 'Analyst', line_editor: 'Line editor', recap_writer: 'Recap writer' };
+
+/** The Analyst's line on why the moment matters: what it wrote, how the check judged it, what aired. */
+function InsightDetail({ line }) {
+  const changed = line.verdict.status !== 'VERIFY';
+  return (
+    <section className="insight-detail" aria-label="Why it matters">
+      <p className="detail-label">Why it matters{line.planted_error ? ' · planted' : ''}</p>
+      <LineDraft line={line} />
+      {changed && (line.aired
+        ? <p className="aired"><span>On air after one rewrite</span>{line.aired.text}</p>
+        : <p className="aired is-cut"><span>Cut</span>Still failed after one rewrite, so no line aired.</p>)}
+      <ul className="claims" aria-label="Claims in the line">
+        {line.verdict.claims.map(c => (
+          <li key={c.id} className={`claim claim-${c.framing ? 'framing' : c.status}`}>
+            <span className="claim-mark" aria-hidden="true">{c.framing ? '~' : STATUS_MARK[c.status]}</span>
+            <span className="claim-body"><strong>{c.framing ? 'Framing' : STATUS_TEXT[c.status]}</strong> {c.note}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** Half-time and full-time recaps, sentence by sentence. */
+function RecapList({ recaps }) {
+  if (!recaps.length) return <p className="vr-empty">The half-time recap appears at the break.</p>;
+  return (
+    <div className="vr-recaps">
+      {[...recaps].reverse().map(r => (
+        <section key={r.id} className="vr-recap" aria-label={r.recap === 'HT' ? 'Half-time recap' : 'Full-time recap'}>
+          <h3>{r.recap === 'HT' ? 'Half-time recap' : 'Full-time recap'} <span>{r.sentences.filter(x => x.aired).length}/{r.sentences.length} sentences aired</span></h3>
+          <ol>
+            {r.sentences.map((x, i) => (
+              <li key={i} className={x.aired ? 'is-aired' : 'is-cut'}>
+                {x.aired && x.attempts.length === 1 ? <p className="candidate">{x.aired.text}</p> : <LineDraft line={x} />}
+                {x.aired && x.attempts.length > 1 && <p className="aired"><span>On air after one rewrite</span>{x.aired.text}</p>}
+                {!x.aired && <p className="recap-why">Cut: {x.attempts[0].flags[0]?.note ?? 'did not pass the check'}</p>}
+                {x.planted_error && <span className="vr-origin is-planted">Planted</span>}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
     </div>
   );
 }
@@ -68,8 +117,15 @@ function Attempts({ decision }) {
   );
 }
 
+const lineFlagged = d => Boolean(d.insight) && d.insight.verdict.status !== 'VERIFY';
+const isCall = d => d.verdict.status !== 'VERIFY' || lineFlagged(d);
+
 /** One line per caption: what the check objected to, or what aired. */
 function Gist({ decision, aired }) {
+  if (decision.verdict.status === 'VERIFY' && lineFlagged(decision)) {
+    const flag = decision.insight.attempts[0].flags[0];
+    if (flag?.span) return <span className="vr-gist"><span className={`seg seg-${flag.status}`}>{flag.span}</span></span>;
+  }
   if (decision.verdict.status === 'VERIFY') return <span className="vr-gist">{aired}</span>;
   const flag = firstDraft(decision).flags[0];
   if (!flag) return <span className="vr-gist">{aired}</span>;
@@ -88,20 +144,21 @@ function Gist({ decision, aired }) {
 function Origin({ decision }) {
   return (
     <>
-      {decision.planted_error && <span className="vr-origin is-planted" title="The red team planted this error on purpose to test the check">Planted</span>}
+      {(decision.planted_error || decision.insight?.planted_error) && <span className="vr-origin is-planted" title="The red team planted this error on purpose to test the check">Planted</span>}
       {decision.own_error && <span className="vr-origin is-own" title="An error the narrator made unprompted, checked by hand against the events">Narrator's own</span>}
+      {lineFlagged(decision) && <span className="vr-origin is-line" title="The line on why it matters failed the check">{decision.insight.aired ? 'Why: fixed' : 'Why: cut'}</span>}
     </>
   );
 }
 
 /** Three numbers at most: VAR calls are counted on the tab when space is short. */
-function Kpis({ summary, own }) {
-  const calls = summary.qualified + summary.withheld;
+function Kpis({ summary, own, lines, calls }) {
+  const planted = summary.planted_errors + lines.planted;
   return (
     <dl className="kpis">
-      {summary.planted_errors > 0 && (
+      {planted > 0 && (
         <div className="kpi-main">
-          <dd>{summary.caught}<small>/{summary.planted_errors}</small></dd>
+          <dd>{summary.caught + lines.caught}<small>/{planted}</small></dd>
           <dt>planted errors caught</dt>
         </div>
       )}
@@ -121,10 +178,19 @@ function sourceLine(source) {
   return `Foundry agents · ${t.model}${cost != null ? ` · $${cost.toFixed(2)} for the whole match` : ''}${air ? ` · ${air.p50_s.toFixed(1)} s median to air` : ''}`;
 }
 
-export default function VarRoom({ decisions, liveId, selectedId, onSelect, summary, people, view, renderAired, onInspect, source, onExplain }) {
+/** Red-team score over lines of context and recap sentences aired so far. */
+function lineScore(decisions, recaps) {
+  const lines = [...decisions.map(d => d.insight).filter(Boolean), ...recaps.flatMap(r => r.sentences)];
+  const planted = lines.filter(l => l.planted_error);
+  return { planted: planted.length, caught: planted.filter(l => l.verdict.status !== 'VERIFY').length };
+}
+
+export default function VarRoom({ decisions, recaps = [], liveId, selectedId, onSelect, summary, people, view, renderAired, onInspect, source, onExplain }) {
   const [filter, setFilter] = useState('calls');
-  const calls = decisions.filter(d => d.verdict.status !== 'VERIFY');
+  const calls = decisions.filter(isCall);
   const shown = filter === 'calls' ? calls : decisions;
+  const tabs = [['calls', `VAR calls · ${calls.length}`], ['all', `All captions · ${decisions.length}`]];
+  if (recaps.length) tabs.push(['recaps', `Recaps · ${recaps.length}`]);
   return (
     <section className="var-room" aria-label="VAR room">
       <header className="vr-head">
@@ -132,24 +198,25 @@ export default function VarRoom({ decisions, liveId, selectedId, onSelect, summa
           <h2>VAR room</h2>
           <button type="button" className="link" onClick={onExplain}>How it works</button>
         </div>
-        <Kpis summary={summary} own={decisions.filter(d => d.own_error && d.verdict.status !== 'VERIFY').length} />
+        <Kpis summary={summary} own={decisions.filter(d => d.own_error && d.verdict.status !== 'VERIFY').length} lines={lineScore(decisions, recaps)} calls={calls.length} />
         <p className="vr-source">{sourceLine(source)}</p>
         <div className="vr-tabs" role="tablist" aria-label="Captions to show">
-          {[['calls', `VAR calls · ${calls.length}`], ['all', `All captions · ${decisions.length}`]].map(([value, label]) => (
+          {tabs.map(([value, label]) => (
             <button key={value} type="button" role="tab" aria-selected={filter === value} className={filter === value ? 'on' : ''} onClick={() => setFilter(value)}>{label}</button>
           ))}
         </div>
-        {calls.some(d => d.planted_error) && (
+        {filter !== 'recaps' && calls.some(d => d.planted_error || d.insight?.planted_error) && (
           <p className="vr-legend">
             <span><span className="vr-origin is-planted">Planted</span> by the red team</span>
             {calls.some(d => d.own_error) && <span><span className="vr-origin is-own">Narrator's own</span> unprompted, checked by hand</span>}
           </p>
         )}
       </header>
-      {shown.length === 0 && (
+      {filter === 'recaps' && <RecapList recaps={recaps} />}
+      {filter !== 'recaps' && shown.length === 0 && (
         <p className="vr-empty">{decisions.length === 0 ? 'Captions appear here as the narrator writes them.' : 'No VAR calls yet: every caption so far checked out.'}</p>
       )}
-      <ol className="vr-list">
+      {filter !== 'recaps' && <ol className="vr-list">
         {shown.map(d => {
           const v = VERDICT[d.verdict.status];
           const open = d.id === selectedId;
@@ -168,7 +235,7 @@ export default function VarRoom({ decisions, liveId, selectedId, onSelect, summa
             </li>
           );
         })}
-      </ol>
+      </ol>}
     </section>
   );
 }

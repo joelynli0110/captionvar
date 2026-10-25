@@ -70,7 +70,7 @@ export function ReviewCard({ decision, text }) {
   );
 }
 
-export function LowerThird({ decision, text, lang, phase }) {
+export function LowerThird({ decision, text, lang, phase, insight }) {
   if (!decision || phase === 'review') return null;
   const v = VERDICT[decision.verdict.status];
   const checking = phase === 'checking';
@@ -81,10 +81,53 @@ export function LowerThird({ decision, text, lang, phase }) {
         {checking ? 'VAR check' : v.air}
         <span className="lt-minute">{decision.display_minute}</span>
       </div>
-      <p className="lt-text">
-        {checking ? `Checking ${claims} claim${claims === 1 ? '' : 's'} against the match data` : text}
-      </p>
+      <div className="lt-body">
+        <p className="lt-text">
+          {checking ? `Checking ${claims} claim${claims === 1 ? '' : 's'} against the match data` : text}
+        </p>
+        {!checking && insight && (
+          <p className="lt-why" lang="en"><span>Why it matters</span>{insight}</p>
+        )}
+      </div>
       {checking && <span className="lt-scan" aria-hidden="true" />}
+    </div>
+  );
+}
+
+/** A line of context or recap sentence as first written, with what the check rejected marked. */
+export function LineDraft({ line, className = 'candidate' }) {
+  const status = Object.fromEntries(line.verdict.claims.map(c => [c.id, c.framing ? 'framing' : c.status]));
+  return (
+    <p className={className}>
+      {line.segments.map((s, i) => (
+        <span key={i} className={s.claim ? `seg seg-${status[s.claim]}` : 'seg'}>{s.text}</span>
+      ))}
+    </p>
+  );
+}
+
+/**
+ * The recap at half-time and full time: the sentences that passed, and the
+ * ones the check cut, struck through with the reason.
+ */
+export function RecapCard({ recap, onClose }) {
+  const cut = recap.sentences.filter(s => !s.aired);
+  return (
+    <div className="recap-card" role="status" aria-live="polite">
+      <div className="rc-head">
+        <span className="rc-var">VAR</span>
+        <span className="rc-decision recap-title">{recap.recap === 'HT' ? 'Half-time recap' : 'Full-time recap'}</span>
+        <span className="rc-minute">{recap.sentences.length - cut.length}/{recap.sentences.length} checked</span>
+        {onClose && <button type="button" className="recap-close" onClick={onClose} aria-label="Close recap">×</button>}
+      </div>
+      <ol className="recap-lines">
+        {recap.sentences.map((s, i) => (
+          <li key={i} className={s.aired ? 'is-aired' : 'is-cut'}>
+            {s.aired ? <span>{s.aired.text}</span> : <LineDraft line={s} className="recap-cut" />}
+            {!s.aired && <span className="recap-why">Cut: {s.attempts[0].flags[0]?.note ?? 'did not pass the check'}</span>}
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

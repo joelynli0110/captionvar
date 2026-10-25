@@ -42,21 +42,45 @@ export function firstDraft(decision) {
  * Load a trace produced by the agent pipeline (agents/run_match.py) if one is
  * published with the site. Returns null when absent or for a different match.
  */
-export async function loadAgentTrace(match, url = `${import.meta.env.BASE_URL}traces/foundry-demo.json`) {
+/** ?trace=<file> replays another trace from public/traces (for example an offline run). */
+function traceUrl() {
+  let name = 'foundry-demo.json';
+  try {
+    const asked = new URLSearchParams(window.location.search).get('trace');
+    if (asked && /^[\w.-]+\.json$/.test(asked)) name = asked;
+  } catch { /* no window */ }
+  return `${import.meta.env.BASE_URL}traces/${name}`;
+}
+
+/**
+ * When lines of context and recaps air on the replay clock: as late as they did
+ * in the recorded run. The full-time recap airs at the final whistle, where
+ * playback stops.
+ */
+export function placeLines(trace, endG) {
+  for (const d of trace.decisions) {
+    if (d.insight) d.insight.g = globalT(d) + (d.insight.timing?.time_to_air_s ?? 6);
+  }
+  for (const r of trace.recaps ?? []) {
+    r.g = Math.min(endG, globalT(r) + (r.timing?.time_to_air_s ?? 4));
+  }
+  return trace;
+}
+
+export async function loadAgentTrace(match, endG, url = traceUrl()) {
   try {
     const res = await fetch(url, { cache: 'no-cache' });
     if (!res.ok) return null;
     const trace = await res.json();
     if (trace.match_id !== match.meta.match_id || !Array.isArray(trace.decisions)) return null;
-    const seed = trace.settings?.match_seed;
     // Each caption airs as late as it did in the recorded run, when the run
     // measured it; older traces fall back to a fixed two seconds.
     trace.decisions = trace.decisions.map(d => ({
       ...d,
       g: globalT(d) + (d.timing?.time_to_air_s ?? 2),
-      own_error: ownError(seed, d.id),
+      own_error: ownError(trace, d.id),
     }));
-    return trace;
+    return placeLines(trace, endG);
   } catch {
     return null;
   }
@@ -67,8 +91,14 @@ export async function loadAgentTrace(match, url = `${import.meta.env.BASE_URL}tr
  * against the raw events (docs/eval-adjudication.json). Only cases judged
  * "real" count; extractor mix-ups the referee flagged are false alarms.
  */
-function ownError(seed, id) {
-  const entry = seed ? adjudication[`${seed} ${id}`] : null;
+// The runs the hand check covers. A new run of the same match has different
+// drafts, so its captions are not tagged until it is checked again.
+const ADJUDICATED_RUNS = { 'captionvar-demo-6': '2026-10-24T22:13:30Z' };
+
+function ownError(trace, id) {
+  const seed = trace.settings?.match_seed;
+  if (trace.source !== 'foundry-agents' || ADJUDICATED_RUNS[seed] !== trace.generated_at) return null;
+  const entry = adjudication[`${seed} ${id}`];
   return entry?.[0] === 'real' ? entry[1] : null;
 }
 
@@ -79,13 +109,30 @@ export function loadBroadcast() {
   const eventG = events.map(globalT);
   const byId = new Map(events.map(e => [e.id, e]));
   const endG = eventG.at(-1);
+  placeLines(trace, endG);
   const halfG = { start2: globalT({ period: 2, t: 2700 }), end1: eventG[events.findIndex(e => e.type === 'period_end')] };
   const moments = events.filter(e => e.type === 'goal' || e.type === 'card');
   return {
     match, trace, events, eventG, byId, endG, halfG, moments,
-    startG: globalT(DEMO.startAt),
+    startG: startAt(halfG, endG),
     teams: match.squads,
   };
+}
+
+/**
+ * Where playback starts: the demo default, or ?at=<minute>, ?at=HT (the break)
+ * or ?at=FT (just before the final whistle), for recording or linking a moment.
+ */
+function startAt(halfG, endG) {
+  let at = null;
+  try { at = new URLSearchParams(window.location.search).get('at'); } catch { /* no window */ }
+  if (at === 'HT') return halfG.end1 + 1;
+  if (at === 'FT') return endG - 20;
+  const minute = Number(at);
+  if (at && Number.isFinite(minute) && minute >= 0 && minute <= 95) {
+    return globalT(minute < 45 ? { period: 1, t: minute * 60 } : { period: 2, t: minute * 60 });
+  }
+  return globalT(DEMO.startAt);
 }
 
 /** Index of the last event at or before global time g. */
