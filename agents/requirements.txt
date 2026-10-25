@@ -4,5 +4,7 @@ agent-framework-foundry==1.15.0
 azure-identity>=1.26
 # Tracing to Application Insights (run_match.py --trace)
 azure-monitor-opentelemetry>=1.8.10,<2
+# The referee is reached over MCP (scripts/referee-mcp.mjs)
+mcp>=1.20,<3
 pydantic>=2.8
 pytest>=8

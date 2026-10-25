@@ -174,3 +174,19 @@ def test_percentile_is_nearest_rank():
     assert run_match.percentile([5, 1, 4, 2, 3], 0.5) == 3
     assert run_match.percentile(list(range(1, 41)), 0.95) == 38
     assert run_match.percentile([7], 0.95) == 7
+
+
+def test_referee_is_served_over_mcp_and_matches_the_jsonl_fallback(tmp_path, monkeypatch):
+    from captionvar_agents.factbox import OP_TO_TOOL
+
+    async def tools() -> set:
+        async with Factbox() as fb:
+            assert fb.transport == "mcp"
+            return {t.name for t in (await fb._session.list_tools()).tools}
+
+    assert set(OP_TO_TOOL.values()) <= asyncio.run(tools())
+    over_mcp = run(tmp_path / "mcp", limit=8)
+    monkeypatch.setenv("CAPTIONVAR_FACTBOX", "jsonl")
+    over_jsonl = run(tmp_path / "jsonl", limit=8)
+    strip = lambda t: [{k: v for k, v in d.items() if k != "timing"} for d in t["decisions"]]  # noqa: E731
+    assert strip(over_mcp) == strip(over_jsonl)

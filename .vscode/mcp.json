@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "captionvar-referee": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/scripts/referee-mcp.mjs", "--seed", "captionvar-demo-6"]
+    }
+  }
+}

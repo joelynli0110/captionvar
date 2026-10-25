@@ -11,8 +11,9 @@ One workflow run per captioned moment:
              the red team to plant one specific error).
 * Extractor  turns the caption into structured claims. It never sees the
              facts, so it reports what was said, not what is true.
-* Referee    deterministic VAR check in the factbox: each claim against only
-             the events observed so far. Not a model.
+* Referee    deterministic VAR check, called as the `check_caption` tool of
+             the referee MCP server (scripts/referee-mcp.mjs): each claim
+             against only the events observed so far. Not a model.
 * Editor     rewrites a failed caption from the verdict and the true facts;
              the rewrite goes back through Extractor and Referee.
 * Publisher  airs the first version that passes. If none does within the
