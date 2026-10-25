@@ -11,3 +11,4 @@ __pycache__/
 public/traces/smoke.json
 public/traces/offline-demo.json
 .pytest_cache/
+public/traces/trace-test.json

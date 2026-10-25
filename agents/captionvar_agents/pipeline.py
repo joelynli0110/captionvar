@@ -25,12 +25,19 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agent_framework import Agent, Executor, WorkflowBuilder, WorkflowContext, handler
+from opentelemetry import trace
 from typing_extensions import Never
 
 from . import prompts
 from .factbox import Factbox
 
 MAX_EDITS = 2
+
+# OpenTelemetry. A no-op unless run_match.py --trace sets up an exporter, in
+# which case each caption becomes one trace in Foundry: the caption span holds
+# the workflow, its executors and every model call, and the referee's verdict
+# is recorded on its executor span.
+TRACER = trace.get_tracer("captionvar")
 
 
 # ------------------------------------------------------------------ messages
@@ -227,6 +234,16 @@ class RefereeExecutor(Executor):
     @handler
     async def check(self, item: Extracted, ctx: WorkflowContext[Checked]) -> None:
         result = await self.factbox.call("verify", index=item.draft.index, text=item.draft.text, extracted=item.claims)
+        claims = result["verdict"]["claims"]
+        trace.get_current_span().set_attributes({
+            "captionvar.attempt": item.draft.attempt,
+            "captionvar.author": item.draft.author,
+            "captionvar.verdict": result["verdict"]["status"],
+            "captionvar.claims": len(claims),
+            "captionvar.claims_false": sum(c["status"] == "contradicted" for c in claims),
+            "captionvar.claims_unchecked": sum(c["status"] == "unverifiable" for c in claims),
+            "captionvar.evidence": ",".join(result["verdict"].get("evidence", [])),
+        })
         item.draft.history.append({
             "attempt": item.draft.attempt,
             "author": item.draft.author,
@@ -349,12 +366,26 @@ def plan_red_team(packets: list[dict], rate: float, seed: str) -> dict[int, str]
 
 
 async def run_moment(index: int, packet: dict, plant: str | None, agents: tuple, factbox: Factbox, usage: Usage) -> dict:
-    workflow = build_workflow(*agents, factbox, usage)
-    events = await workflow.run(MomentTask(index, packet, plant))
-    outputs = events.get_outputs()
-    if not outputs:
-        raise RuntimeError(f"moment {index}: workflow produced no output")
-    return outputs[-1]
+    with TRACER.start_as_current_span(f"caption {packet['minute']} {packet['moment_type']}") as span:
+        span.set_attributes({
+            "captionvar.moment_index": index,
+            "captionvar.minute": packet["minute"],
+            "captionvar.moment_type": packet["moment_type"],
+            "captionvar.red_team": plant or "none",
+        })
+        workflow = build_workflow(*agents, factbox, usage)
+        events = await workflow.run(MomentTask(index, packet, plant))
+        outputs = events.get_outputs()
+        if not outputs:
+            raise RuntimeError(f"moment {index}: workflow produced no output")
+        out = outputs[-1]
+        span.set_attributes({
+            "captionvar.first_draft_verdict": out["history"][0]["status"],
+            "captionvar.rewrites": len(out["history"]) - 1,
+            "captionvar.aired_by": out["aired"]["by"],
+            "captionvar.aired_text": out["aired"]["text"],
+        })
+        return out
 
 
 async def assemble_decision(index: int, out: dict, factbox: Factbox) -> dict:

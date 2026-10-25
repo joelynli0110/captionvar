@@ -127,7 +127,7 @@ $env:FOUNDRY_MODEL = "gpt-4.1-mini"
 python agents\run_match.py --out public\traces\foundry-demo.json --rpm 30
 ```
 
-`--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 7 workflow tests the same way.
+Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. You can then step through every agent call and the referee's verdict in the portal ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 7 workflow tests the same way.
 
 ## Repository layout
 
