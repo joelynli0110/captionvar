@@ -79,6 +79,8 @@ export function toVerifiableClaims(spot, extracted) {
     // the record, and a two-minute build-up window does not apply.
     if (type === 'recap') {
       if (kind === 'card_player') kind = 'card_event';
+      // An assist belongs to an earlier goal, never to the build-up window.
+      if (kind === 'goal_assist') kind = 'goal_event_assist';
       if (kind === 'recent_action' || kind === 'shot_player' || kind === 'shot_outcome') {
         x = { ...x, kind: 'other_fact' };
         kind = 'other_fact';
@@ -97,11 +99,17 @@ export function toVerifiableClaims(spot, extracted) {
       x = { ...x, kind: 'recent_action', action: 'card' };
       kind = 'recent_action';
     }
+    // Possession "over the last 10 minutes" or "in this spell" is the recent window, not the match.
+    if (kind === 'possession' && RECENT_WORDING.test(x.span ?? '')) kind = 'recent_possession';
     // Speed and distance readings are easy to confuse; the moment decides which one it is.
     if (type === 'milestone' && kind === 'top_speed') kind = 'distance';
     if (type === 'sprint' && kind === 'distance') kind = 'top_speed';
     // In a missed-chance moment, "X scores" asserts that the shot went in.
     if (type === 'chance' && kind === 'goal_scorer') kind = 'shot_outcome';
+    if (kind === 'goal_event_assist') {
+      x = { ...x, kind: 'goal_event', other_player_id: x.player_id, player_id: null };
+      kind = 'goal_event';
+    }
     const claim = mapClaim(kind, x, trigger, moment);
     const base = ID_FOR[kind];
     const n = (used.get(base) || 0) + 1;
@@ -114,7 +122,26 @@ export function toVerifiableClaims(spot, extracted) {
       ...claim,
     });
   }
+  if (type === 'recap') pairAssists(claims);
   return claims;
+}
+
+const RECENT_WORDING = /\b(?:last|past)\s+(?:10|ten)\b|\bspell\b|\brecent(?:ly)?\b/i;
+
+/**
+ * "Strand scored in the 24th minute, assisted by Benedetti" is one goal: the
+ * assist is checked together with the scorer and minute stated before it, so
+ * an assist from a different goal does not pass.
+ */
+function pairAssists(claims) {
+  let scorer = null;
+  for (const c of claims) {
+    if (c.kind !== 'goal_event') continue;
+    if (c.asserted.scorer) scorer = c;
+    else if (c.asserted.assist && scorer) {
+      c.asserted = { ...c.asserted, scorer: scorer.asserted.scorer, minute: c.asserted.minute ?? scorer.asserted.minute };
+    }
+  }
 }
 
 function mapClaim(kind, x, trigger, moment) {

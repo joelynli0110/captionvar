@@ -52,8 +52,15 @@ Rules:
   are recent_action. For a team-level action without a named player, give side instead.
   If several players are named for one action, list one claim per player.
 - Running counts so far in the match ("their fifth shot", "1.4 xG", "Strand's third shot") are
-  team_total or player_total; "the first shot on target in 20 minutes" is minutes_since.
+  team_total or player_total.
+- Time since a team's last shot, shot on target or goal is minutes_since, in any wording:
+  "the first shot on target in 20 minutes", "ends a 44.5-minute drought", "breaks a 12-minute deadlock".
+- Possession "over the last 10 minutes" or "in this spell" is recent_possession, not possession.
+- A scoreline in any wording ("trailing 0-1", "level at 1-1", "lead 2-1 at half-time") is score.
+- A count stated as none ("none straight after pressing", "no shots on target") is that kind with number 0.
 - An earlier goal ("after Strand's opener in the 24th minute") is goal_event, with the minute as number.
+- In a line of analysis, what the numbers are said to show ("highlight their control",
+  "show their dominance", "the press is paying off") is opinion.
 - Superlatives, comparisons with other matches or seasons, and judgements about how a team
   is playing ("dominating", "struggling to keep control") are "opinion".
 - Any other factual statement you cannot map to a kind is "other_fact"."""

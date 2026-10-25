@@ -372,7 +372,10 @@ export function checkNamedPlayers(text, verdict, players) {
  * the entire league season" aired unflagged). Words already inside a flagged
  * claim are not counted twice.
  */
-const SWEEPING = /\b(?:(?:the|their|his|its|our|a)\s+(?:best|greatest|finest|worst|biggest|fiercest|most\s+\w+)\b[^.!?]{0,40}?\b(?:season|history|career|decade|ever|all[- ]time|league)|season[- ]best|all[- ]time|of all time|ever\s+(?:seen|made|witnessed|scored)|in\s+(?:a\s+)?decade|(?:league|club)(?:'s|’s)?\s+history|record[- ]breaking)\b/i;
+const SWEEPING = /\b(?:(?:the|their|his|its|our|a)\s+(?:best|greatest|finest|worst|biggest|fiercest|most\s+\w+)\b[^.!?]{0,40}?\b(?:season|history|career|decade|ever|all[- ]time|league)|(?:rarely|never|seldom|not)\s+(?:been\s+)?seen\b[^.!?]{0,40}?\b(?:season|league|year|decade|history)|season[- ]best|all[- ]time|of all time|ever\s+(?:seen|made|witnessed|scored)|in\s+(?:a\s+)?decade|(?:league|club)(?:'s|’s)?\s+history|record[- ]breaking)\b/i;
+
+/** Words that take a remark beyond this match, for lines of context (statements.js). */
+export const BEYOND_MATCH = /\b(?:season|league|history|ever|all[- ]time|decade|career|record|year)\b/i;
 
 export function checkSweepingClaims(text, verdict) {
   const m = SWEEPING.exec(text);

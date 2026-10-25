@@ -385,3 +385,28 @@ test('minutes since the previous shot on target is measured on the match clock',
   assert.equal(verifyStatement(ctxMatch, spot, text(Math.round(mins)), claim(Math.round(mins)), ctxPeople).verdict.status, 'VERIFY');
   assert.equal(verifyStatement(ctxMatch, spot, text(Math.round(mins) + 5), claim(Math.round(mins) + 5), ctxPeople).verdict.status, 'WITHHOLD');
 });
+
+test('found in a Foundry run: a comparison beyond the match is never framing, and recap assists belong to their goal', () => {
+  const spot = insightSpots.find(s => s.moment.type === 'press');
+  const base = simulateInsight(ctxMatch, spot);
+  const text = `${base.text} A pressing intensity rarely seen this season.`;
+  const v = verifyStatement(ctxMatch, spot, text, [...base.extracted, { kind: 'opinion', span: 'A pressing intensity rarely seen this season' }], ctxPeople);
+  assert.notEqual(v.verdict.status, 'VERIFY');
+
+  // "possession in the last 10 minutes" is checked against the window even if the extractor says possession.
+  const recent = contextFacts(ctxMatch, spot).possession_pct_last_10_min[ctxPeople.teams[spot.moment.side].name];
+  const pct = Math.round(recent);
+  const r = verifyStatement(ctxMatch, spot, `${pct}% possession in the last 10 minutes.`, [{ kind: 'possession', span: `${pct}% possession in the last 10 minutes`, side: spot.moment.side, number: pct }], ctxPeople);
+  assert.equal(r.verdict.status, 'VERIFY');
+
+  const goal = ctxMatch.events.find(e => e.type === 'goal' && e.assist_id);
+  const other = ctxMatch.events.find(e => e.type === 'goal' && e.assist_id && e.assist_id !== goal.assist_id && e.id !== goal.id);
+  const n = id => ctxPeople.name(id);
+  const sentence = assist => [`${n(goal.scorer_id)} scored, assisted by ${n(assist)}.`, [
+    { kind: 'goal_scorer', span: `${n(goal.scorer_id)} scored`, player_id: goal.scorer_id },
+    { kind: 'goal_assist', span: `assisted by ${n(assist)}`, player_id: assist },
+  ]];
+  const ft = recapSpot(ctxMatch, 'FT');
+  assert.equal(verifyStatement(ctxMatch, ft, ...sentence(goal.assist_id), ctxPeople).verdict.status, 'VERIFY');
+  if (other) assert.equal(verifyStatement(ctxMatch, ft, ...sentence(other.assist_id), ctxPeople).verdict.status, 'WITHHOLD');
+});

@@ -13,7 +13,7 @@
  *   - The usual guards apply: every named player must be backed, and nothing
  *     after the moment (or the end of the half, for a recap) is visible.
  */
-import { verifyCaption, checkNamedPlayers, checkSweepingClaims } from './verify.js';
+import { verifyCaption, checkNamedPlayers, checkSweepingClaims, BEYOND_MATCH } from './verify.js';
 import { toVerifiableClaims, segmentsFromSpans } from './extracted.js';
 import { observedFor } from './narrator.js';
 
@@ -26,10 +26,14 @@ export function verifyStatement(match, spot, text, extracted, people) {
   verdict = checkNamedPlayers(text, verdict, [...people.players.values()]);
   verdict = checkSweepingClaims(text, verdict);
 
-  // Judgements from the extractor are framing; the sweeping-comparison guard's are not.
-  verdict.claims = verdict.claims.map(c => (c.kind === 'opinion' && c.id !== 'sweeping' && c.status === 'unverifiable'
-    ? { ...c, framing: true, note: 'Interpretation of the facts. Allowed, not checked.' }
-    : c));
+  // Judgements from the extractor are framing; the sweeping-comparison guard's
+  // are not, and neither is a judgement that reaches beyond this match ("a
+  // pressing intensity rarely seen this season", seen in a Foundry run).
+  verdict.claims = verdict.claims.map(c => {
+    if (c.kind !== 'opinion' || c.id === 'sweeping' || c.status !== 'unverifiable') return c;
+    if (c.span && BEYOND_MATCH.test(c.span)) return { ...c, note: 'A comparison beyond this match cannot be checked against the match data.' };
+    return { ...c, framing: true, note: 'Interpretation of the facts. Allowed, not checked.' };
+  });
   const facts = verdict.claims.filter(c => !c.framing);
   const checked = facts.filter(c => c.status === 'supported' && c.kind !== 'named_player');
   if (facts.some(c => c.status === 'contradicted')) verdict.status = 'WITHHOLD';

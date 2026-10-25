@@ -133,7 +133,7 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ```bash
 npm install
-npm test          # 36 tests: simulator, referee, context lines and recaps, rendering
+npm test          # 37 tests: simulator, referee, context lines and recaps, rendering
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
 
