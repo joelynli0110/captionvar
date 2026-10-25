@@ -71,6 +71,35 @@ python -m pytest agents\tests
 
 The scripted client answers as the three agents using the test narrator, so the full workflow — agents, executors, conditional edges, the edit loop and the fallback — runs without any cloud resources.
 
+## Baselines: what the multi-agent design adds
+
+```powershell
+python agents\run_baselines.py --trace public\traces\foundry-demo.json --out public\traces\baselines.json --rpm 30
+```
+
+Starting from the **same narrator drafts** as the published run (red-team errors included), it compares four set-ups:
+
+| Set-up | Who checks the draft |
+|---|---|
+| `narrator_only` | Nobody; the draft airs |
+| `self_check` | The same model, given its draft back with the facts |
+| `llm_judge` | A second LLM judges the draft against the facts; an LLM editor fixes it from the judge's problems (at most twice); if the judge still objects, nothing airs |
+| `captionvar` | Blind extractor + code referee + editor (the published run) |
+
+Every caption that would air is measured the same way: a fresh claim extraction and the code referee. Reported per set-up: planted errors still on air, captions with a false statement, captions with a statement the data cannot back, and captions that did not air. The planted errors are known ground truth; the other counts come from the referee, so they share its coverage limits. About 250 model calls, roughly $0.15 with gpt-4.1-mini; it resumes like `run_match.py`.
+
+To compare over several matches, run both scripts per match seed and combine the reports:
+
+```powershell
+foreach ($seed in "eval-1","eval-2","eval-3","eval-4") {
+  python agents\run_match.py --match-seed $seed --out public\traces\eval\$seed.trace.json --rpm 30
+  python agents\run_baselines.py --trace public\traces\eval\$seed.trace.json --out public\traces\eval\$seed.baselines.json --rpm 30
+}
+python agents\summarise_baselines.py "public\traces\eval\*.baselines.json" --out public\traces\baselines-summary.json
+```
+
+The summary separates **planted** errors (the red team's, known ground truth) from the narrator's **own** errors (false statements it made unasked, mostly build-up details such as who pressed whom), and lists every own-error case and every CaptionVAR caption the re-measurement flagged, for manual review.
+
 ## Trace format
 
 Each decision in the trace carries the narrator's original caption split into claim segments, the verdict on every claim with its evidence event IDs, the red-team label (if any), each attempt (narrator, editor rewrites) with its status, and what aired (`aired.text`, `aired.by`). `usage` records model calls, tokens and the estimated cost of the run.

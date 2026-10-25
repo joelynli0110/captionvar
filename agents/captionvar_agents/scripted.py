@@ -25,6 +25,7 @@ class ScriptedChatClient(BaseChatClient):
         self.factbox = factbox
         self.narrator_seed = narrator_seed
         self.texts: dict[int, str] = {}
+        self.all_known = False
 
     async def _inner_get_response(self, *, messages: Any, stream: bool, options: Any, **kwargs: Any) -> ChatResponse:
         if stream:
@@ -38,7 +39,13 @@ class ScriptedChatClient(BaseChatClient):
         if index in ScriptedChatClient.fail_moments_once:
             ScriptedChatClient.fail_moments_once.discard(index)
             raise RuntimeError(f"simulated outage on moment {index}")
-        if "moment" in user:
+        if "caption_to_check" in user:  # baseline judge: accepts everything
+            reply = json.dumps({"ok": True, "problems": []})
+        elif "your_caption" in user:  # baseline self-check: changes nothing
+            reply = user["your_caption"]
+        elif "problems" in user:  # baseline judge editor
+            reply = user["caption"]
+        elif "moment" in user:
             reply = await self._narrate(user)
         elif "roster" in user:
             reply = await self._extract(user)
@@ -56,6 +63,12 @@ class ScriptedChatClient(BaseChatClient):
     async def _extract(self, user: dict) -> str:
         caption = user["caption"]
         index = next((i for i, t in self.texts.items() if t == caption), None)
+        if index is None and not self.all_known:
+            # A caption this client did not narrate (e.g. a baseline re-check): learn every test caption.
+            for i in range((await self.factbox.call("info"))["moments"]):
+                self.texts.setdefault(i, (await self.factbox.call("simulated", index=i, seed=self.narrator_seed))["text"])
+            self.all_known = True
+            index = next((i for i, t in self.texts.items() if t == caption), None)
         if index is None:
             return json.dumps({"claims": []})  # edited text: handled by the template path below
         sim = await self.factbox.call("simulated", index=index, seed=self.narrator_seed)

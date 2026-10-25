@@ -98,3 +98,37 @@ def test_a_failed_run_resumes_without_redoing_finished_moments(tmp_path, monkeyp
     trace = json.loads(out.read_text())
     assert [d["id"] for d in trace["decisions"]] == [f"CAP-{i:03d}" for i in range(1, 6)]
     assert not partial.exists()
+
+
+def test_baselines_measure_every_setup_on_the_same_drafts(tmp_path):
+    import run_baselines
+    trace_path = tmp_path / "trace.json"
+    run(tmp_path, from_minute=70)
+    out = tmp_path / "baselines.json"
+    asyncio.run(run_baselines.main(argparse.Namespace(trace=str(trace_path), out=str(out), offline=True, rpm=None, fresh=True)))
+    report = json.loads(out.read_text(encoding="utf-8"))
+    setups = report["setups"]
+    assert set(setups) == set(run_baselines.SETUPS)
+    drafts = {s: [r["draft"] for r in v["captions"]] for s, v in setups.items()}
+    assert len({tuple(d) for d in drafts.values()}) == 1  # identical starting drafts
+    # The scripted baselines change nothing, so every planted error the drafts carry still airs ...
+    raw = setups["narrator_only"]["summary"]
+    assert raw["planted_errors"] > 0 and raw["planted_errors_on_air"] == raw["planted_errors"]
+    assert setups["llm_judge"]["summary"]["planted_errors_on_air"] == raw["planted_errors"]
+    # ... while what CaptionVAR aired measures clean.
+    ours = setups["captionvar"]["summary"]
+    assert ours["planted_errors_on_air"] == 0 and ours["captions_with_false_fact"] == 0
+
+
+def test_own_errors_are_told_apart_from_planted_ones():
+    import summarise_baselines as sb
+    card = {"planted": "wrong_player", "type": "card"}
+    foul = {"kind": "recent_action", "status": "contradicted", "action": "foul", "actor": "RVU-10"}
+    press = {"kind": "recent_action", "status": "contradicted", "action": "pressure", "actor": "RVU-05"}
+    assert not sb.is_own(foul, card)  # the foul behind a wrong booking is part of the plant
+    assert sb.is_own(press, card)
+    colour = {"kind": "recent_action", "status": "contradicted", "action": "pressure", "actor": None}
+    assert not sb.is_own(colour, {"planted": None, "type": "press"})
+    assert sb.is_own({"kind": "possession", "status": "contradicted"}, {"planted": None, "type": "stat"})
+    assert sb.carries_plant([{"kind": "card_player", "status": "contradicted"}], "wrong_player")
+    assert not sb.carries_plant([{"kind": "named_player", "status": "unverifiable"}], "wrong_player")

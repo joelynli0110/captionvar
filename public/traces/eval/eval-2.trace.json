@@ -1,0 +1,8302 @@
+{
+ "version": "1.0",
+ "match_id": "SYN-NBR-RVU-eval-2",
+ "source": "foundry-agents",
+ "model": "gpt-4.1-mini",
+ "generated_at": "2026-10-24T23:46:48Z",
+ "settings": {
+  "red_team_rate": 0.35,
+  "max_edits": 2,
+  "match_seed": "eval-2"
+ },
+ "summary": {
+  "captions": 41,
+  "verified": 17,
+  "qualified": 15,
+  "withheld": 9,
+  "planted_errors": 13,
+  "caught": 13,
+  "flagged_without_plant": 11,
+  "aired_by": {
+   "narrator": 17,
+   "editor": 23,
+   "template": 1
+  }
+ },
+ "usage": {
+  "llm_calls": 144,
+  "input_tokens": 226329,
+  "output_tokens": 14485,
+  "rate_limited_retries": 0,
+  "estimated_cost_usd": 0.1137,
+  "by_agent": {
+   "narrator": {
+    "calls": 41,
+    "input_tokens": 21858,
+    "output_tokens": 1227
+   },
+   "extractor": {
+    "calls": 72,
+    "input_tokens": 190542,
+    "output_tokens": 12523
+   },
+   "editor": {
+    "calls": 31,
+    "input_tokens": 13929,
+    "output_tokens": 735
+   }
+  },
+  "wall_seconds": 303.8
+ },
+ "decisions": [
+  {
+   "id": "CAP-001",
+   "trigger_event_id": "CD-0077",
+   "seq": 77,
+   "period": 1,
+   "t": 165.8,
+   "display_minute": "3'",
+   "type": "card",
+   "side": "home",
+   "facts": {
+    "booked": "NBR-06"
+   },
+   "segments": [
+    {
+     "text": "Early yellow card for Kofi Mensah-Reid (Northbridge FC)",
+     "claim": "booked"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "a foul on Morita (Riverside United)",
+     "claim": "action"
+    },
+    {
+     "text": " following ",
+     "claim": null
+    },
+    {
+     "text": "Riverside’s quick passing",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "booked",
+     "role": "core",
+     "span": "Early yellow card for Kofi Mensah-Reid (Northbridge FC)",
+     "extracted_kind": "card_player",
+     "kind": "card_player",
+     "ref": "CD-0077",
+     "asserted": "NBR-02"
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "a foul on Morita (Riverside United)",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "foul",
+      "actor": "NBR-02",
+      "other": "RVU-08",
+      "side": "home",
+      "until_seq": 77,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Riverside’s quick passing",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": null,
+      "other": null,
+      "side": "away",
+      "until_seq": 77,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "booked",
+      "role": "core",
+      "span": "Early yellow card for Kofi Mensah-Reid (Northbridge FC)",
+      "extracted_kind": "card_player",
+      "kind": "card_player",
+      "ref": "CD-0077",
+      "asserted": "NBR-02",
+      "status": "contradicted",
+      "actual": "NBR-06",
+      "evidence": [
+       "CD-0077"
+      ],
+      "note": "The event names a different player."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "a foul on Morita (Riverside United)",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "foul",
+       "actor": "NBR-02",
+       "other": "RVU-08",
+       "side": "home",
+       "until_seq": 77,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "F-0076"
+      ],
+      "note": "No foul by that player in the last 2 minutes; the latest was by Ruairi Doyle (F-0076)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Riverside’s quick passing",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": null,
+       "other": null,
+       "side": "away",
+       "until_seq": 77,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0053",
+       "P-0069",
+       "P-0070"
+      ],
+      "note": "Recorded at 3' (P-0070)."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Mensah-Reid",
+      "params": {
+       "player": "NBR-02"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Kofi Mensah-Reid, but no checked statement about him holds."
+     },
+     {
+      "id": "name-2",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Morita",
+      "params": {
+       "player": "RVU-08"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Kenji Morita, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "CD-0077",
+     "F-0076",
+     "P-0053",
+     "P-0069",
+     "P-0070"
+    ]
+   },
+   "planted_error": {
+    "kind": "wrong_player"
+   },
+   "aired": {
+    "text": "Early yellow card for Ruairi Doyle (Northbridge FC) following Riverside’s quick passing.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Early yellow card for Kofi Mensah-Reid (Northbridge FC) after a foul on Morita (Riverside United) following Riverside’s quick passing.",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": "Early yellow card for Kofi Mensah-Reid (Northbridge FC)",
+       "status": "contradicted",
+       "note": "The event names a different player."
+      },
+      {
+       "span": "a foul on Morita (Riverside United)",
+       "status": "contradicted",
+       "note": "No foul by that player in the last 2 minutes; the latest was by Ruairi Doyle (F-0076)."
+      },
+      {
+       "span": "Mensah-Reid",
+       "status": "unverifiable",
+       "note": "Names Kofi Mensah-Reid, but no checked statement about him holds."
+      },
+      {
+       "span": "Morita",
+       "status": "unverifiable",
+       "note": "Names Kenji Morita, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Early yellow card for Ruairi Doyle (Northbridge FC) following Riverside’s quick passing.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-002",
+   "trigger_event_id": "R-0170",
+   "seq": 170,
+   "period": 1,
+   "t": 513.9,
+   "display_minute": "9'",
+   "type": "press",
+   "side": "away",
+   "facts": {
+    "count": 3,
+    "pressed": 1
+   },
+   "segments": [
+    {
+     "text": "Riverside United in a pressing spell, ",
+     "claim": null
+    },
+    {
+     "text": "making three final third recoveries in five minutes",
+     "claim": "count"
+    },
+    {
+     "text": " as ",
+     "claim": null
+    },
+    {
+     "text": "Sow presses Doyle",
+     "claim": "action"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "leading to a turnover from Hale",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "count",
+     "role": "core",
+     "span": "making three final third recoveries in five minutes",
+     "extracted_kind": "final_third_recoveries",
+     "kind": "window_count",
+     "params": {
+      "side": "away",
+      "metric": "attacking_third_recoveries",
+      "window_s": 300,
+      "until_seq": 170
+     },
+     "asserted": 3
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Sow presses Doyle",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "RVU-05",
+      "other": "NBR-06",
+      "side": null,
+      "until_seq": 170,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "leading to a turnover from Hale",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "giveaway",
+      "actor": "NBR-01",
+      "other": null,
+      "side": null,
+      "until_seq": 170,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "count",
+      "role": "core",
+      "span": "making three final third recoveries in five minutes",
+      "extracted_kind": "final_third_recoveries",
+      "kind": "window_count",
+      "params": {
+       "side": "away",
+       "metric": "attacking_third_recoveries",
+       "window_s": 300,
+       "until_seq": 170
+      },
+      "asserted": 3,
+      "status": "supported",
+      "actual": 3,
+      "evidence": [
+       "R-0133",
+       "R-0139",
+       "R-0170"
+      ],
+      "note": "3 matching recoveries in the window."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Sow presses Doyle",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "RVU-05",
+       "other": "NBR-06",
+       "side": null,
+       "until_seq": 170,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "PR-0166"
+      ],
+      "note": "Recorded at 9' (PR-0166)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "leading to a turnover from Hale",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "giveaway",
+       "actor": "NBR-01",
+       "other": null,
+       "side": null,
+       "until_seq": 170,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0169"
+      ],
+      "note": "Recorded at 9' (P-0169)."
+     }
+    ],
+    "evidence": [
+     "R-0133",
+     "R-0139",
+     "R-0170",
+     "PR-0166",
+     "P-0169"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United in a pressing spell, making three final third recoveries in five minutes as Sow presses Doyle, leading to a turnover from Hale.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United in a pressing spell, making three final third recoveries in five minutes as Sow presses Doyle, leading to a turnover from Hale.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-003",
+   "trigger_event_id": "S-0171",
+   "seq": 171,
+   "period": 1,
+   "t": 515.1,
+   "display_minute": "9'",
+   "type": "chance",
+   "side": "away",
+   "facts": {
+    "shooter": "RVU-09",
+    "outcome": "blocked",
+    "xg": 0.57
+   },
+   "segments": [
+    {
+     "text": "Strand wins the ball back",
+     "claim": "action"
+    },
+    {
+     "text": " and ",
+     "claim": null
+    },
+    {
+     "text": "fires a fierce effort",
+     "claim": "action-2"
+    },
+    {
+     "text": ", but Riverside’s big chance is ",
+     "claim": null
+    },
+    {
+     "text": "blocked by Northbridge’s defence",
+     "claim": "outcome"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Strand wins the ball back",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "RVU-09",
+      "other": null,
+      "side": null,
+      "until_seq": 171,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "fires a fierce effort",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "shot",
+      "actor": "RVU-09",
+      "other": null,
+      "side": null,
+      "until_seq": 171,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "outcome",
+     "role": "core",
+     "span": "blocked by Northbridge’s defence",
+     "extracted_kind": "shot_outcome",
+     "kind": "shot_outcome",
+     "ref": "S-0171",
+     "asserted": "blocked"
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Strand wins the ball back",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "RVU-09",
+       "other": null,
+       "side": null,
+       "until_seq": 171,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "R-0170"
+      ],
+      "note": "Recorded at 9' (R-0170)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "fires a fierce effort",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "shot",
+       "actor": "RVU-09",
+       "other": null,
+       "side": null,
+       "until_seq": 171,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "S-0171"
+      ],
+      "note": "Recorded at 9' (S-0171)."
+     },
+     {
+      "id": "outcome",
+      "role": "core",
+      "span": "blocked by Northbridge’s defence",
+      "extracted_kind": "shot_outcome",
+      "kind": "shot_outcome",
+      "ref": "S-0171",
+      "asserted": "blocked",
+      "status": "supported",
+      "actual": "blocked",
+      "evidence": [
+       "S-0171",
+       "B-0172"
+      ],
+      "note": "Shot outcome: blocked."
+     },
+     {
+      "id": "moment",
+      "kind": "moment_missing",
+      "role": "core",
+      "span": null,
+      "asserted": true,
+      "status": "contradicted",
+      "actual": null,
+      "evidence": [],
+      "note": "Does not report the moment: it never says who had the chance."
+     }
+    ],
+    "evidence": [
+     "R-0170",
+     "S-0171",
+     "B-0172"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Strand wins the ball back and fires a fierce effort, but Viktor Strand’s big chance for Riverside United is blocked.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Strand wins the ball back and fires a fierce effort, but Riverside’s big chance is blocked by Northbridge’s defence.",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": null,
+       "status": "contradicted",
+       "note": "Does not report the moment: it never says who had the chance."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Strand wins the ball back and fires a fierce effort, but Viktor Strand’s big chance for Riverside United is blocked.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-004",
+   "trigger_event_id": "SP-0216",
+   "seq": 216,
+   "period": 1,
+   "t": 642.8,
+   "display_minute": "11'",
+   "type": "sprint",
+   "side": "away",
+   "facts": {
+    "speed": {
+     "player": "RVU-11",
+     "kmh": 34.4
+    }
+   },
+   "segments": [
+    {
+     "text": "Haddad sprints at 34.4 km/h",
+     "claim": "speed"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Whitcombe's interception for Riverside United",
+     "claim": "action"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "pressing Northbridge’s Reyes in midfield",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "speed",
+     "role": "core",
+     "span": "Haddad sprints at 34.4 km/h",
+     "extracted_kind": "top_speed",
+     "kind": "top_speed",
+     "ref": "SP-0216",
+     "asserted": {
+      "player": "RVU-11",
+      "kmh": 34.4
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Whitcombe's interception for Riverside United",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "RVU-06",
+      "other": null,
+      "side": "away",
+      "until_seq": 216,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "pressing Northbridge’s Reyes in midfield",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "RVU-11",
+      "other": "NBR-09",
+      "side": null,
+      "until_seq": 216,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "speed",
+      "role": "core",
+      "span": "Haddad sprints at 34.4 km/h",
+      "extracted_kind": "top_speed",
+      "kind": "top_speed",
+      "ref": "SP-0216",
+      "asserted": {
+       "player": "RVU-11",
+       "kmh": 34.4
+      },
+      "status": "supported",
+      "actual": {
+       "player": "RVU-11",
+       "kmh": 34.4
+      },
+      "evidence": [
+       "SP-0216"
+      ],
+      "note": "Matches the speed reading."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Whitcombe's interception for Riverside United",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "RVU-06",
+       "other": null,
+       "side": "away",
+       "until_seq": 216,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "I-0209",
+       "R-0210"
+      ],
+      "note": "Recorded at 11' (R-0210)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "pressing Northbridge’s Reyes in midfield",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "RVU-11",
+       "other": "NBR-09",
+       "side": null,
+       "until_seq": 216,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "PR-0195"
+      ],
+      "note": "No press by that player in the last 2 minutes; the latest was by Pablo Ferrán (PR-0195)."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Reyes",
+      "params": {
+       "player": "NBR-09"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Callum Reyes, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "SP-0216",
+     "I-0209",
+     "R-0210",
+     "PR-0195"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Haddad sprints at 34.4 km/h after Whitcombe's interception.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Haddad sprints at 34.4 km/h after Whitcombe's interception for Riverside United, pressing Northbridge’s Reyes in midfield.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "pressing Northbridge’s Reyes in midfield",
+       "status": "contradicted",
+       "note": "No press by that player in the last 2 minutes; the latest was by Pablo Ferrán (PR-0195)."
+      },
+      {
+       "span": "Reyes",
+       "status": "unverifiable",
+       "note": "Names Callum Reyes, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Haddad sprints at 34.4 km/h after Whitcombe's interception for Riverside United.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "for Riverside United",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data."
+      }
+     ]
+    },
+    {
+     "attempt": 2,
+     "author": "editor",
+     "text": "Haddad sprints at 34.4 km/h after Whitcombe's interception.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-005",
+   "trigger_event_id": "S-0259",
+   "seq": 259,
+   "period": 1,
+   "t": 786.1,
+   "display_minute": "14'",
+   "type": "chance",
+   "side": "away",
+   "facts": {
+    "shooter": "RVU-11",
+    "outcome": "saved",
+    "keeper": true
+   },
+   "segments": [
+    {
+     "text": "Haddad’s shot",
+     "claim": "shooter"
+    },
+    {
+     "text": " for Riverside United ",
+     "claim": null
+    },
+    {
+     "text": "smothered by the keeper",
+     "claim": "outcome"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Benedetti’s slick pass",
+     "claim": "action"
+    },
+    {
+     "text": ", a big chance saved!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "shooter",
+     "role": "core",
+     "span": "Haddad’s shot",
+     "extracted_kind": "shot_player",
+     "kind": "shot_player",
+     "ref": "S-0259",
+     "asserted": "RVU-11"
+    },
+    {
+     "id": "outcome",
+     "role": "core",
+     "span": "smothered by the keeper",
+     "extracted_kind": "shot_outcome",
+     "kind": "shot_outcome",
+     "ref": "S-0259",
+     "asserted": "saved"
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Benedetti’s slick pass",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-10",
+      "other": "RVU-11",
+      "side": "away",
+      "until_seq": 259,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Benedetti’s slick pass",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-10",
+      "other": "RVU-11",
+      "side": "away",
+      "until_seq": 259,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "shooter",
+      "role": "core",
+      "span": "Haddad’s shot",
+      "extracted_kind": "shot_player",
+      "kind": "shot_player",
+      "ref": "S-0259",
+      "asserted": "RVU-11",
+      "status": "supported",
+      "actual": "RVU-11",
+      "evidence": [
+       "S-0259"
+      ],
+      "note": "Event names this player."
+     },
+     {
+      "id": "outcome",
+      "role": "core",
+      "span": "smothered by the keeper",
+      "extracted_kind": "shot_outcome",
+      "kind": "shot_outcome",
+      "ref": "S-0259",
+      "asserted": "saved",
+      "status": "supported",
+      "actual": "saved",
+      "evidence": [
+       "S-0259",
+       "SV-0260"
+      ],
+      "note": "Shot outcome: saved."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Benedetti’s slick pass",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-10",
+       "other": "RVU-11",
+       "side": "away",
+       "until_seq": 259,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0258"
+      ],
+      "note": "Recorded at 14' (P-0258)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Benedetti’s slick pass",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-10",
+       "other": "RVU-11",
+       "side": "away",
+       "until_seq": 259,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0258"
+      ],
+      "note": "Recorded at 14' (P-0258)."
+     }
+    ],
+    "evidence": [
+     "S-0259",
+     "SV-0260",
+     "P-0258"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Haddad’s shot for Riverside United smothered by the keeper after Benedetti’s slick pass, a big chance saved!",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Haddad’s shot for Riverside United smothered by the keeper after Benedetti’s slick pass, a big chance saved!",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-006",
+   "trigger_event_id": "C-0311",
+   "seq": 311,
+   "period": 1,
+   "t": 900.1,
+   "display_minute": "16'",
+   "type": "stat",
+   "side": "away",
+   "facts": {
+    "possession": {
+     "side": "away",
+     "pct": 55
+    },
+    "accuracy": {
+     "side": "away",
+     "pct": 88
+    }
+   },
+   "segments": [
+    {
+     "text": "Riverside United hold 56% possession",
+     "claim": "possession"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "with 88% pass accuracy",
+     "claim": "accuracy"
+    },
+    {
+     "text": " as ",
+     "claim": null
+    },
+    {
+     "text": "Whitcombe links up well",
+     "claim": "action"
+    },
+    {
+     "text": " before ",
+     "claim": null
+    },
+    {
+     "text": "Morita's rare giveaway gifts Northbridge FC the ball back",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "possession",
+     "role": "core",
+     "span": "Riverside United hold 56% possession",
+     "extracted_kind": "possession",
+     "kind": "possession",
+     "params": {
+      "until_seq": 311
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 56
+     }
+    },
+    {
+     "id": "accuracy",
+     "role": "context",
+     "span": "with 88% pass accuracy",
+     "extracted_kind": "pass_accuracy",
+     "kind": "pass_accuracy",
+     "params": {
+      "until_seq": 311
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 88
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Whitcombe links up well",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-06",
+      "other": null,
+      "side": "away",
+      "until_seq": 311,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Morita's rare giveaway gifts Northbridge FC the ball back",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "giveaway",
+      "actor": "RVU-08",
+      "other": null,
+      "side": "away",
+      "until_seq": 311,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "possession",
+      "role": "core",
+      "span": "Riverside United hold 56% possession",
+      "extracted_kind": "possession",
+      "kind": "possession",
+      "params": {
+       "until_seq": 311
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 56
+      },
+      "status": "contradicted",
+      "actual": {
+       "side": "away",
+       "pct": 55
+      },
+      "evidence": [],
+      "note": "Away share is 54.8%."
+     },
+     {
+      "id": "accuracy",
+      "role": "context",
+      "span": "with 88% pass accuracy",
+      "extracted_kind": "pass_accuracy",
+      "kind": "pass_accuracy",
+      "params": {
+       "until_seq": 311
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 88
+      },
+      "status": "supported",
+      "actual": {
+       "side": "away",
+       "pct": 88
+      },
+      "evidence": [],
+      "note": "Pass accuracy 87.8%."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Whitcombe links up well",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-06",
+       "other": null,
+       "side": "away",
+       "until_seq": 311,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0282",
+       "P-0289",
+       "P-0307"
+      ],
+      "note": "Recorded at 15' (P-0307)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Morita's rare giveaway gifts Northbridge FC the ball back",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "giveaway",
+       "actor": "RVU-08",
+       "other": null,
+       "side": "away",
+       "until_seq": 311,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0308"
+      ],
+      "note": "Recorded at 15' (P-0308)."
+     }
+    ],
+    "evidence": [
+     "P-0282",
+     "P-0289",
+     "P-0307",
+     "P-0308"
+    ]
+   },
+   "planted_error": {
+    "kind": "inflated_number"
+   },
+   "aired": {
+    "text": "Riverside United hold 55% possession with 88% pass accuracy as Whitcombe links up well before Morita's rare giveaway gifts Northbridge FC the ball back.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United hold 56% possession with 88% pass accuracy as Whitcombe links up well before Morita's rare giveaway gifts Northbridge FC the ball back.",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": "Riverside United hold 56% possession",
+       "status": "contradicted",
+       "note": "Away share is 54.8%."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Riverside United hold 55% possession with 88% pass accuracy as Whitcombe links up well before Morita's rare giveaway gifts Northbridge FC the ball back.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-007",
+   "trigger_event_id": "CD-0513",
+   "seq": 513,
+   "period": 1,
+   "t": 1406.3,
+   "display_minute": "24'",
+   "type": "card",
+   "side": "away",
+   "facts": {
+    "booked": "RVU-05"
+   },
+   "segments": [
+    {
+     "text": "Sow picks up a yellow for that foul on Mensah-Reid",
+     "claim": "booked"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "intense pressing from both sides",
+     "claim": "action-2"
+    },
+    {
+     "text": " early in the 24th minute.",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "booked",
+     "role": "core",
+     "span": "Sow picks up a yellow for that foul on Mensah-Reid",
+     "extracted_kind": "card_player",
+     "kind": "card_player",
+     "ref": "CD-0513",
+     "asserted": "RVU-05"
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "foul on Mensah-Reid",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "foul",
+      "actor": "RVU-05",
+      "other": "NBR-02",
+      "side": null,
+      "until_seq": 513,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "intense pressing from both sides",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "NBR-07",
+      "other": null,
+      "side": "home",
+      "until_seq": 513,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-3",
+     "role": "context",
+     "span": "intense pressing from both sides",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "NBR-08",
+      "other": null,
+      "side": "home",
+      "until_seq": 513,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "booked",
+      "role": "core",
+      "span": "Sow picks up a yellow for that foul on Mensah-Reid",
+      "extracted_kind": "card_player",
+      "kind": "card_player",
+      "ref": "CD-0513",
+      "asserted": "RVU-05",
+      "status": "supported",
+      "actual": "RVU-05",
+      "evidence": [
+       "CD-0513"
+      ],
+      "note": "Event names this player."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "foul on Mensah-Reid",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "foul",
+       "actor": "RVU-05",
+       "other": "NBR-02",
+       "side": null,
+       "until_seq": 513,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "F-0512"
+      ],
+      "note": "Recorded at 24' (F-0512)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "intense pressing from both sides",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "NBR-07",
+       "other": null,
+       "side": "home",
+       "until_seq": 513,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "PR-0461"
+      ],
+      "note": "Recorded at 22' (PR-0461)."
+     },
+     {
+      "id": "action-3",
+      "role": "context",
+      "span": "intense pressing from both sides",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "NBR-08",
+       "other": null,
+       "side": "home",
+       "until_seq": 513,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "PR-0511"
+      ],
+      "note": "No press by that player in the last 2 minutes; the latest was by Ibrahima Sow (PR-0511)."
+     }
+    ],
+    "evidence": [
+     "CD-0513",
+     "F-0512",
+     "PR-0461",
+     "PR-0511"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Ibrahima Sow of Riverside United picks up a yellow card early in the 24th minute.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Sow picks up a yellow for that foul on Mensah-Reid after intense pressing from both sides early in the 24th minute.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "intense pressing from both sides",
+       "status": "contradicted",
+       "note": "No press by that player in the last 2 minutes; the latest was by Ibrahima Sow (PR-0511)."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Ibrahima Sow of Riverside United picks up a yellow for a foul on Mensah-Reid early in the 24th minute.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Mensah-Reid",
+       "status": "unverifiable",
+       "note": "Names Kofi Mensah-Reid, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 2,
+     "author": "editor",
+     "text": "Ibrahima Sow of Riverside United picks up a yellow card early in the 24th minute.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-008",
+   "trigger_event_id": "G-0538",
+   "seq": 538,
+   "period": 1,
+   "t": 1471.6,
+   "display_minute": "25'",
+   "type": "goal",
+   "side": "away",
+   "facts": {
+    "scorer": "RVU-09",
+    "score": {
+     "home": 0,
+     "away": 1
+    },
+    "assist": "RVU-10",
+    "cause": true
+   },
+   "segments": [
+    {
+     "text": "Benedetti sets up Haddad",
+     "claim": "assist"
+    },
+    {
+     "text": " who fires home for Riverside United, ",
+     "claim": null
+    },
+    {
+     "text": "putting them 1-0 up against Northbridge FC",
+     "claim": "score"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "after a slick team move started with a high press",
+     "claim": "cause"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "assist",
+     "role": "context",
+     "span": "Benedetti sets up Haddad",
+     "extracted_kind": "goal_assist",
+     "kind": "goal_assist",
+     "ref": "G-0538",
+     "asserted": "RVU-10"
+    },
+    {
+     "id": "scorer",
+     "role": "core",
+     "span": "Haddad who fires home for Riverside United",
+     "extracted_kind": "goal_scorer",
+     "kind": "goal_scorer",
+     "ref": "G-0538",
+     "asserted": "RVU-11"
+    },
+    {
+     "id": "score",
+     "role": "core",
+     "span": "putting them 1-0 up against Northbridge FC",
+     "extracted_kind": "score",
+     "kind": "score",
+     "asserted": {
+      "home": 0,
+      "away": 1
+     }
+    },
+    {
+     "id": "cause",
+     "role": "context",
+     "span": "after a slick team move started with a high press",
+     "extracted_kind": "goal_from_press",
+     "kind": "goal_from_press",
+     "ref": "G-0538",
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "assist",
+      "role": "context",
+      "span": "Benedetti sets up Haddad",
+      "extracted_kind": "goal_assist",
+      "kind": "goal_assist",
+      "ref": "G-0538",
+      "asserted": "RVU-10",
+      "status": "supported",
+      "actual": "RVU-10",
+      "evidence": [
+       "G-0538"
+      ],
+      "note": "Goal event names this assist."
+     },
+     {
+      "id": "scorer",
+      "role": "core",
+      "span": "Haddad who fires home for Riverside United",
+      "extracted_kind": "goal_scorer",
+      "kind": "goal_scorer",
+      "ref": "G-0538",
+      "asserted": "RVU-11",
+      "status": "contradicted",
+      "actual": "RVU-09",
+      "evidence": [
+       "G-0538",
+       "S-0537"
+      ],
+      "note": "The goal event names a different scorer."
+     },
+     {
+      "id": "score",
+      "role": "core",
+      "span": "putting them 1-0 up against Northbridge FC",
+      "extracted_kind": "score",
+      "kind": "score",
+      "asserted": {
+       "home": 0,
+       "away": 1
+      },
+      "status": "supported",
+      "actual": {
+       "home": 0,
+       "away": 1
+      },
+      "evidence": [
+       "G-0538"
+      ],
+      "note": "Score matches the goal events so far."
+     },
+     {
+      "id": "cause",
+      "role": "context",
+      "span": "after a slick team move started with a high press",
+      "extracted_kind": "goal_from_press",
+      "kind": "goal_from_press",
+      "ref": "G-0538",
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "PR-0521",
+       "R-0523",
+       "S-0537",
+       "G-0538"
+      ],
+      "note": "The move began with a recovery made within 5 s of a pressure."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Haddad",
+      "params": {
+       "player": "RVU-11"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Faris Haddad, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "G-0538",
+     "S-0537",
+     "PR-0521",
+     "R-0523"
+    ]
+   },
+   "planted_error": {
+    "kind": "wrong_player"
+   },
+   "aired": {
+    "text": "Benedetti sets up Viktor Strand who fires home for Riverside United, putting them 1-0 up against Northbridge FC after a slick team move started with a high press.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Benedetti sets up Haddad who fires home for Riverside United, putting them 1-0 up against Northbridge FC after a slick team move started with a high press.",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": "Haddad who fires home for Riverside United",
+       "status": "contradicted",
+       "note": "The goal event names a different scorer."
+      },
+      {
+       "span": "Haddad",
+       "status": "unverifiable",
+       "note": "Names Faris Haddad, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Benedetti sets up Viktor Strand who fires home for Riverside United, putting them 1-0 up against Northbridge FC after a slick team move started with a high press.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-009",
+   "trigger_event_id": "SP-0547",
+   "seq": 547,
+   "period": 1,
+   "t": 1561,
+   "display_minute": "27'",
+   "type": "sprint",
+   "side": "away",
+   "facts": {
+    "speed": {
+     "player": "RVU-07",
+     "kmh": 35.7
+    }
+   },
+   "segments": [
+    {
+     "text": "Collymore sprints at 35.7 km/h",
+     "claim": "speed"
+    },
+    {
+     "text": " for Riverside United, powering forward after ",
+     "claim": null
+    },
+    {
+     "text": "Haddad's pressing win",
+     "claim": "action"
+    },
+    {
+     "text": " and pass.",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "speed",
+     "role": "core",
+     "span": "Collymore sprints at 35.7 km/h",
+     "extracted_kind": "top_speed",
+     "kind": "top_speed",
+     "ref": "SP-0547",
+     "asserted": {
+      "player": "RVU-07",
+      "kmh": 35.7
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Haddad's pressing win",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "RVU-11",
+      "other": null,
+      "side": "away",
+      "until_seq": 547,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Haddad's pressing win and pass",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-11",
+      "other": "RVU-07",
+      "side": "away",
+      "until_seq": 547,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "speed",
+      "role": "core",
+      "span": "Collymore sprints at 35.7 km/h",
+      "extracted_kind": "top_speed",
+      "kind": "top_speed",
+      "ref": "SP-0547",
+      "asserted": {
+       "player": "RVU-07",
+       "kmh": 35.7
+      },
+      "status": "supported",
+      "actual": {
+       "player": "RVU-07",
+       "kmh": 35.7
+      },
+      "evidence": [
+       "SP-0547"
+      ],
+      "note": "Matches the speed reading."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Haddad's pressing win",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "RVU-11",
+       "other": null,
+       "side": "away",
+       "until_seq": 547,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "R-0544"
+      ],
+      "note": "Recorded at 26' (R-0544)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Haddad's pressing win and pass",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-11",
+       "other": "RVU-07",
+       "side": "away",
+       "until_seq": 547,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0545"
+      ],
+      "note": "Recorded at 26' (P-0545)."
+     }
+    ],
+    "evidence": [
+     "SP-0547",
+     "R-0544",
+     "P-0545"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Collymore sprints at 35.7 km/h for Riverside United, powering forward after Haddad's pressing win and pass.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Collymore sprints at 35.7 km/h for Riverside United, powering forward after Haddad's pressing win and pass.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-010",
+   "trigger_event_id": "S-0569",
+   "seq": 569,
+   "period": 1,
+   "t": 1599.7,
+   "display_minute": "27'",
+   "type": "chance",
+   "side": "away",
+   "facts": {
+    "shooter": "RVU-09",
+    "outcome": "blocked"
+   },
+   "segments": [
+    {
+     "text": "Strand's big chance",
+     "claim": "shooter"
+    },
+    {
+     "text": " for Riverside United ",
+     "claim": null
+    },
+    {
+     "text": "blocked",
+     "claim": "outcome"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Sow's pressing win",
+     "claim": "action"
+    },
+    {
+     "text": " and ",
+     "claim": null
+    },
+    {
+     "text": "quick pass forward",
+     "claim": "action-3"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "denying them an opening moment",
+     "claim": "other"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Sow's pressing win",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "RVU-05",
+      "other": null,
+      "side": null,
+      "until_seq": 569,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Sow's pressing win",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "RVU-05",
+      "other": null,
+      "side": null,
+      "until_seq": 569,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-3",
+     "role": "context",
+     "span": "quick pass forward",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-05",
+      "other": null,
+      "side": null,
+      "until_seq": 569,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "shooter",
+     "role": "core",
+     "span": "Strand's big chance",
+     "extracted_kind": "shot_player",
+     "kind": "shot_player",
+     "ref": "S-0569",
+     "asserted": "RVU-09"
+    },
+    {
+     "id": "outcome",
+     "role": "core",
+     "span": "blocked",
+     "extracted_kind": "shot_outcome",
+     "kind": "shot_outcome",
+     "ref": "S-0569",
+     "asserted": "blocked"
+    },
+    {
+     "id": "other",
+     "role": "context",
+     "span": "denying them an opening moment",
+     "extracted_kind": "other_fact",
+     "kind": "other_fact",
+     "asserted": "denying them an opening moment"
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Sow's pressing win",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "RVU-05",
+       "other": null,
+       "side": null,
+       "until_seq": 569,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "R-0567"
+      ],
+      "note": "Recorded at 27' (R-0567)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Sow's pressing win",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "RVU-05",
+       "other": null,
+       "side": null,
+       "until_seq": 569,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "PR-0565"
+      ],
+      "note": "No press by that player in the last 2 minutes; the latest was by Pablo Ferrán (PR-0565)."
+     },
+     {
+      "id": "action-3",
+      "role": "context",
+      "span": "quick pass forward",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-05",
+       "other": null,
+       "side": null,
+       "until_seq": 569,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0568"
+      ],
+      "note": "Recorded at 27' (P-0568)."
+     },
+     {
+      "id": "shooter",
+      "role": "core",
+      "span": "Strand's big chance",
+      "extracted_kind": "shot_player",
+      "kind": "shot_player",
+      "ref": "S-0569",
+      "asserted": "RVU-09",
+      "status": "supported",
+      "actual": "RVU-09",
+      "evidence": [
+       "S-0569"
+      ],
+      "note": "Event names this player."
+     },
+     {
+      "id": "outcome",
+      "role": "core",
+      "span": "blocked",
+      "extracted_kind": "shot_outcome",
+      "kind": "shot_outcome",
+      "ref": "S-0569",
+      "asserted": "blocked",
+      "status": "supported",
+      "actual": "blocked",
+      "evidence": [
+       "S-0569",
+       "B-0570"
+      ],
+      "note": "Shot outcome: blocked."
+     },
+     {
+      "id": "other",
+      "role": "context",
+      "span": "denying them an opening moment",
+      "extracted_kind": "other_fact",
+      "kind": "other_fact",
+      "asserted": "denying them an opening moment",
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "No rule can check this statement against the match data."
+     }
+    ],
+    "evidence": [
+     "R-0567",
+     "PR-0565",
+     "P-0568",
+     "S-0569",
+     "B-0570"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Strand's big chance for Riverside United blocked after a quick pass forward.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Strand's big chance for Riverside United blocked after Sow's pressing win and quick pass forward, denying them an opening moment.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Sow's pressing win",
+       "status": "contradicted",
+       "note": "No press by that player in the last 2 minutes; the latest was by Pablo Ferrán (PR-0565)."
+      },
+      {
+       "span": "denying them an opening moment",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Strand's big chance for Riverside United blocked after a quick pass forward.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-011",
+   "trigger_event_id": "R-0592",
+   "seq": 592,
+   "period": 1,
+   "t": 1704.8,
+   "display_minute": "29'",
+   "type": "press",
+   "side": "away",
+   "facts": {
+    "count": 3,
+    "pressed": 1
+   },
+   "segments": [
+    {
+     "text": "Riverside United’s intense pressing spell sees Strand, Benedetti and ",
+     "claim": null
+    },
+    {
+     "text": "Whitcombe combine brilliantly",
+     "claim": "action-3"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "recovering three final-third balls",
+     "claim": "count"
+    },
+    {
+     "text": " – ",
+     "claim": null
+    },
+    {
+     "text": "the fiercest press Northbridge have faced all season",
+     "claim": "opinion"
+    },
+    {
+     "text": "!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Strand combine brilliantly",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-09",
+      "other": null,
+      "side": null,
+      "until_seq": 592,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Benedetti combine brilliantly",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-10",
+      "other": null,
+      "side": null,
+      "until_seq": 592,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-3",
+     "role": "context",
+     "span": "Whitcombe combine brilliantly",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-06",
+      "other": null,
+      "side": null,
+      "until_seq": 592,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "count",
+     "role": "core",
+     "span": "recovering three final-third balls",
+     "extracted_kind": "final_third_recoveries",
+     "kind": "window_count",
+     "params": {
+      "side": "away",
+      "metric": "attacking_third_recoveries",
+      "window_s": 300,
+      "until_seq": 592
+     },
+     "asserted": 3
+    },
+    {
+     "id": "opinion",
+     "role": "context",
+     "span": "the fiercest press Northbridge have faced all season",
+     "extracted_kind": "opinion",
+     "kind": "opinion",
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Strand combine brilliantly",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-09",
+       "other": null,
+       "side": null,
+       "until_seq": 592,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0585",
+       "P-0588"
+      ],
+      "note": "Recorded at 29' (P-0588)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Benedetti combine brilliantly",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-10",
+       "other": null,
+       "side": null,
+       "until_seq": 592,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0587"
+      ],
+      "note": "Recorded at 29' (P-0587)."
+     },
+     {
+      "id": "action-3",
+      "role": "context",
+      "span": "Whitcombe combine brilliantly",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-06",
+       "other": null,
+       "side": null,
+       "until_seq": 592,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0589"
+      ],
+      "note": "Recorded at 29' (P-0589)."
+     },
+     {
+      "id": "count",
+      "role": "core",
+      "span": "recovering three final-third balls",
+      "extracted_kind": "final_third_recoveries",
+      "kind": "window_count",
+      "params": {
+       "side": "away",
+       "metric": "attacking_third_recoveries",
+       "window_s": 300,
+       "until_seq": 592
+      },
+      "asserted": 3,
+      "status": "supported",
+      "actual": 3,
+      "evidence": [
+       "R-0567",
+       "R-0579",
+       "R-0592"
+      ],
+      "note": "3 matching recoveries in the window."
+     },
+     {
+      "id": "opinion",
+      "role": "context",
+      "span": "the fiercest press Northbridge have faced all season",
+      "extracted_kind": "opinion",
+      "kind": "opinion",
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+     }
+    ],
+    "evidence": [
+     "P-0585",
+     "P-0588",
+     "P-0587",
+     "P-0589",
+     "R-0567",
+     "R-0579",
+     "R-0592"
+    ]
+   },
+   "planted_error": {
+    "kind": "unverifiable_superlative"
+   },
+   "aired": {
+    "text": "Riverside United’s intense pressing spell sees Whitcombe combine brilliantly, recovering three final-third balls.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United’s intense pressing spell sees Strand, Benedetti and Whitcombe combine brilliantly, recovering three final-third balls – the fiercest press Northbridge have faced all season!",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "the fiercest press Northbridge have faced all season",
+       "status": "unverifiable",
+       "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Riverside United’s intense pressing spell sees Strand, Benedetti and Whitcombe combine brilliantly, recovering three final-third balls.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Strand combine brilliantly",
+       "status": "contradicted",
+       "note": "No press by that player in the last 2 minutes; the latest was by Mateo Quiroga (PR-0584)."
+      },
+      {
+       "span": "Benedetti combine brilliantly",
+       "status": "contradicted",
+       "note": "No press by that player in the last 2 minutes; the latest was by Mateo Quiroga (PR-0584)."
+      },
+      {
+       "span": "Benedetti",
+       "status": "unverifiable",
+       "note": "Names Luca Benedetti, but no checked statement about him holds."
+      },
+      {
+       "span": "Strand",
+       "status": "unverifiable",
+       "note": "Names Viktor Strand, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 2,
+     "author": "editor",
+     "text": "Riverside United’s intense pressing spell sees Whitcombe combine brilliantly, recovering three final-third balls.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-012",
+   "trigger_event_id": "P-0695",
+   "seq": 695,
+   "period": 1,
+   "t": 1921.9,
+   "display_minute": "33'",
+   "type": "stat",
+   "side": "away",
+   "facts": {
+    "possession": {
+     "side": "away",
+     "pct": 70
+    },
+    "accuracy": {
+     "side": "away",
+     "pct": 92
+    }
+   },
+   "segments": [
+    {
+     "text": "Riverside United boss 70% possession",
+     "claim": "possession"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "with 92% pass accuracy",
+     "claim": "accuracy"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "Collymore linking up well",
+     "claim": "action"
+    },
+    {
+     "text": " before ",
+     "claim": null
+    },
+    {
+     "text": "Sow’s latest touch on the break",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "possession",
+     "role": "core",
+     "span": "Riverside United boss 70% possession",
+     "extracted_kind": "possession",
+     "kind": "possession",
+     "params": {
+      "until_seq": 695
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 70
+     }
+    },
+    {
+     "id": "accuracy",
+     "role": "context",
+     "span": "with 92% pass accuracy",
+     "extracted_kind": "pass_accuracy",
+     "kind": "pass_accuracy",
+     "params": {
+      "until_seq": 695
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 92
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Collymore linking up well",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-07",
+      "other": null,
+      "side": null,
+      "until_seq": 695,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Sow’s latest touch on the break",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "carry",
+      "actor": "RVU-05",
+      "other": null,
+      "side": null,
+      "until_seq": 695,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "possession",
+      "role": "core",
+      "span": "Riverside United boss 70% possession",
+      "extracted_kind": "possession",
+      "kind": "possession",
+      "params": {
+       "until_seq": 695
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 70
+      },
+      "status": "supported",
+      "actual": {
+       "side": "away",
+       "pct": 70
+      },
+      "evidence": [],
+      "note": "On-ball share 70%."
+     },
+     {
+      "id": "accuracy",
+      "role": "context",
+      "span": "with 92% pass accuracy",
+      "extracted_kind": "pass_accuracy",
+      "kind": "pass_accuracy",
+      "params": {
+       "until_seq": 695
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 92
+      },
+      "status": "supported",
+      "actual": {
+       "side": "away",
+       "pct": 92
+      },
+      "evidence": [],
+      "note": "Pass accuracy 92%."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Collymore linking up well",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-07",
+       "other": null,
+       "side": null,
+       "until_seq": 695,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-0667",
+       "P-0682",
+       "P-0689"
+      ],
+      "note": "Recorded at 32' (P-0689)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Sow’s latest touch on the break",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "carry",
+       "actor": "RVU-05",
+       "other": null,
+       "side": null,
+       "until_seq": 695,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "C-0692"
+      ],
+      "note": "No run with the ball by that player in the last 2 minutes; the latest was by Kenji Morita (C-0692)."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Sow",
+      "params": {
+       "player": "RVU-05"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Ibrahima Sow, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "P-0667",
+     "P-0682",
+     "P-0689",
+     "C-0692"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United boss 70% possession with 92% pass accuracy, Collymore linking up well.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United boss 70% possession with 92% pass accuracy, Collymore linking up well before Sow’s latest touch on the break.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Sow’s latest touch on the break",
+       "status": "contradicted",
+       "note": "No run with the ball by that player in the last 2 minutes; the latest was by Kenji Morita (C-0692)."
+      },
+      {
+       "span": "Sow",
+       "status": "unverifiable",
+       "note": "Names Ibrahima Sow, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Riverside United boss 70% possession with 92% pass accuracy, Collymore linking up well.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-013",
+   "trigger_event_id": "R-0708",
+   "seq": 708,
+   "period": 1,
+   "t": 1961.6,
+   "display_minute": "33'",
+   "type": "press",
+   "side": "away",
+   "facts": {
+    "count": 4
+   },
+   "segments": [
+    {
+     "text": "Riverside United on a relentless pressing spell",
+     "claim": "action"
+    },
+    {
+     "text": ", with ",
+     "claim": null
+    },
+    {
+     "text": "Collymore’s interception",
+     "claim": "action-2"
+    },
+    {
+     "text": " marking the ",
+     "claim": null
+    },
+    {
+     "text": "best final third recovery spree of the entire league’s history",
+     "claim": "count"
+    },
+    {
+     "text": "!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Riverside United on a relentless pressing spell",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": null,
+      "other": null,
+      "side": "away",
+      "until_seq": 708,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Collymore’s interception",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "RVU-07",
+      "other": null,
+      "side": null,
+      "until_seq": 708,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "count",
+     "role": "core",
+     "span": "best final third recovery spree of the entire league’s history",
+     "extracted_kind": "final_third_recoveries",
+     "kind": "window_count",
+     "params": {
+      "side": "away",
+      "metric": "attacking_third_recoveries",
+      "window_s": 300,
+      "until_seq": 708
+     },
+     "asserted": 0
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Riverside United on a relentless pressing spell",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": null,
+       "other": null,
+       "side": "away",
+       "until_seq": 708,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [],
+      "note": "No matching press in the last 2 minutes of play."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Collymore’s interception",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "RVU-07",
+       "other": null,
+       "side": null,
+       "until_seq": 708,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "I-0707",
+       "R-0708"
+      ],
+      "note": "Recorded at 33' (R-0708)."
+     },
+     {
+      "id": "count",
+      "role": "core",
+      "span": "best final third recovery spree of the entire league’s history",
+      "extracted_kind": "final_third_recoveries",
+      "kind": "window_count",
+      "params": {
+       "side": "away",
+       "metric": "attacking_third_recoveries",
+       "window_s": 300,
+       "until_seq": 708
+      },
+      "asserted": 0,
+      "status": "contradicted",
+      "actual": 4,
+      "evidence": [
+       "R-0579",
+       "R-0592",
+       "R-0646",
+       "R-0708"
+      ],
+      "note": "The window contains 4, not 0."
+     }
+    ],
+    "evidence": [
+     "I-0707",
+     "R-0708",
+     "R-0579",
+     "R-0592",
+     "R-0646"
+    ]
+   },
+   "planted_error": {
+    "kind": "unverifiable_superlative"
+   },
+   "aired": {
+    "text": "Collymore’s interception recorded at 33 minutes during Riverside United’s final third recoveries, which total four in the last five minutes.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United on a relentless pressing spell, with Collymore’s interception marking the best final third recovery spree of the entire league’s history!",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": "Riverside United on a relentless pressing spell",
+       "status": "contradicted",
+       "note": "No matching press in the last 2 minutes of play."
+      },
+      {
+       "span": "best final third recovery spree of the entire league’s history",
+       "status": "contradicted",
+       "note": "The window contains 4, not 0."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Collymore’s interception recorded at 33 minutes during Riverside United’s final third recoveries, which total four in the last five minutes.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-014",
+   "trigger_event_id": "END-1023",
+   "seq": 1023,
+   "period": 1,
+   "t": 2790.8,
+   "display_minute": "45+2'",
+   "type": "stat",
+   "side": "away",
+   "facts": {
+    "possession": {
+     "side": "away",
+     "pct": 64
+    },
+    "accuracy": {
+     "side": "away",
+     "pct": 91
+    }
+   },
+   "segments": [
+    {
+     "text": "Half-time stats: ",
+     "claim": null
+    },
+    {
+     "text": "Riverside United with 66% possession",
+     "claim": "possession"
+    },
+    {
+     "text": " and ",
+     "claim": null
+    },
+    {
+     "text": "91% pass accuracy",
+     "claim": "accuracy"
+    },
+    {
+     "text": ", despite ",
+     "claim": null
+    },
+    {
+     "text": "Northbridge’s slick passing involving Pell",
+     "claim": "action"
+    },
+    {
+     "text": ", Okafor, and Mensah-Reid.",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "possession",
+     "role": "core",
+     "span": "Riverside United with 66% possession",
+     "extracted_kind": "possession",
+     "kind": "possession",
+     "params": {
+      "until_seq": 1023
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 66
+     }
+    },
+    {
+     "id": "accuracy",
+     "role": "context",
+     "span": "91% pass accuracy",
+     "extracted_kind": "pass_accuracy",
+     "kind": "pass_accuracy",
+     "params": {
+      "until_seq": 1023
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 91
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Northbridge’s slick passing involving Pell",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "NBR-04",
+      "other": null,
+      "side": "home",
+      "until_seq": 1023,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Northbridge’s slick passing involving Okafor",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "NBR-08",
+      "other": null,
+      "side": "home",
+      "until_seq": 1023,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-3",
+     "role": "context",
+     "span": "Northbridge’s slick passing involving Mensah-Reid",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "NBR-02",
+      "other": null,
+      "side": "home",
+      "until_seq": 1023,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "possession",
+      "role": "core",
+      "span": "Riverside United with 66% possession",
+      "extracted_kind": "possession",
+      "kind": "possession",
+      "params": {
+       "until_seq": 1023
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 66
+      },
+      "status": "contradicted",
+      "actual": {
+       "side": "away",
+       "pct": 64
+      },
+      "evidence": [],
+      "note": "Away share is 63.7%."
+     },
+     {
+      "id": "accuracy",
+      "role": "context",
+      "span": "91% pass accuracy",
+      "extracted_kind": "pass_accuracy",
+      "kind": "pass_accuracy",
+      "params": {
+       "until_seq": 1023
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 91
+      },
+      "status": "supported",
+      "actual": {
+       "side": "away",
+       "pct": 91
+      },
+      "evidence": [],
+      "note": "Pass accuracy 90.7%."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Northbridge’s slick passing involving Pell",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "NBR-04",
+       "other": null,
+       "side": "home",
+       "until_seq": 1023,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1015",
+       "P-1020",
+       "P-1022"
+      ],
+      "note": "Recorded at 45+2' (P-1022)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Northbridge’s slick passing involving Okafor",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "NBR-08",
+       "other": null,
+       "side": "home",
+       "until_seq": 1023,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1013",
+       "P-1019",
+       "P-1021"
+      ],
+      "note": "Recorded at 45+2' (P-1021)."
+     },
+     {
+      "id": "action-3",
+      "role": "context",
+      "span": "Northbridge’s slick passing involving Mensah-Reid",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "NBR-02",
+       "other": null,
+       "side": "home",
+       "until_seq": 1023,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1011",
+       "P-1014",
+       "P-1018"
+      ],
+      "note": "Recorded at 45+2' (P-1018)."
+     }
+    ],
+    "evidence": [
+     "P-1015",
+     "P-1020",
+     "P-1022",
+     "P-1013",
+     "P-1019",
+     "P-1021",
+     "P-1011",
+     "P-1014",
+     "P-1018"
+    ]
+   },
+   "planted_error": {
+    "kind": "inflated_number"
+   },
+   "aired": {
+    "text": "Half-time stats: Riverside United with 64% possession and 91% pass accuracy, despite Northbridge’s slick passing involving Pell, Okafor, and Mensah-Reid.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Half-time stats: Riverside United with 66% possession and 91% pass accuracy, despite Northbridge’s slick passing involving Pell, Okafor, and Mensah-Reid.",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": "Riverside United with 66% possession",
+       "status": "contradicted",
+       "note": "Away share is 63.7%."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Half-time stats: Riverside United with 64% possession and 91% pass accuracy, despite Northbridge’s slick passing involving Pell, Okafor, and Mensah-Reid.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-015",
+   "trigger_event_id": "SP-1250",
+   "seq": 1250,
+   "period": 2,
+   "t": 3264.8,
+   "display_minute": "55'",
+   "type": "sprint",
+   "side": "away",
+   "facts": {
+    "speed": {
+     "player": "RVU-07",
+     "kmh": 34.4
+    }
+   },
+   "segments": [
+    {
+     "text": "Collymore sprints at 34.4 km/h",
+     "claim": "speed"
+    },
+    {
+     "text": " as he charges forward for Riverside United after ",
+     "claim": null
+    },
+    {
+     "text": "Benedetti’s quick regain and pass",
+     "claim": "action"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "speed",
+     "role": "core",
+     "span": "Collymore sprints at 34.4 km/h",
+     "extracted_kind": "top_speed",
+     "kind": "top_speed",
+     "ref": "SP-1250",
+     "asserted": {
+      "player": "RVU-07",
+      "kmh": 34.4
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Benedetti’s quick regain and pass",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "RVU-10",
+      "other": "RVU-07",
+      "side": "away",
+      "until_seq": 1250,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Benedetti’s quick regain and pass",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-10",
+      "other": "RVU-07",
+      "side": "away",
+      "until_seq": 1250,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "speed",
+      "role": "core",
+      "span": "Collymore sprints at 34.4 km/h",
+      "extracted_kind": "top_speed",
+      "kind": "top_speed",
+      "ref": "SP-1250",
+      "asserted": {
+       "player": "RVU-07",
+       "kmh": 34.4
+      },
+      "status": "supported",
+      "actual": {
+       "player": "RVU-07",
+       "kmh": 34.4
+      },
+      "evidence": [
+       "SP-1250"
+      ],
+      "note": "Matches the speed reading."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Benedetti’s quick regain and pass",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "RVU-10",
+       "other": "RVU-07",
+       "side": "away",
+       "until_seq": 1250,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "R-1247"
+      ],
+      "note": "Recorded at 55' (R-1247)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Benedetti’s quick regain and pass",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-10",
+       "other": "RVU-07",
+       "side": "away",
+       "until_seq": 1250,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1248"
+      ],
+      "note": "Recorded at 55' (P-1248)."
+     }
+    ],
+    "evidence": [
+     "SP-1250",
+     "R-1247",
+     "P-1248"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Collymore sprints at 34.4 km/h as he charges forward for Riverside United after Benedetti’s quick regain and pass.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Collymore sprints at 34.4 km/h as he charges forward for Riverside United after Benedetti’s quick regain and pass.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-016",
+   "trigger_event_id": "SUB-1319",
+   "seq": 1319,
+   "period": 2,
+   "t": 3427,
+   "display_minute": "58'",
+   "type": "sub",
+   "side": "home",
+   "facts": {
+    "change": {
+     "on": "NBR-14",
+     "off": "NBR-04"
+    }
+   },
+   "segments": [
+    {
+     "text": "Northbridge FC make a change, ",
+     "claim": null
+    },
+    {
+     "text": "Albertsen on for Pell",
+     "claim": "change"
+    },
+    {
+     "text": " as play continues after ",
+     "claim": null
+    },
+    {
+     "text": "Hale’s loose pass",
+     "claim": "action"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "change",
+     "role": "core",
+     "span": "Albertsen on for Pell",
+     "extracted_kind": "substitution",
+     "kind": "substitution",
+     "ref": "SUB-1319",
+     "asserted": {
+      "on": "NBR-14",
+      "off": "NBR-04"
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Hale’s loose pass",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "giveaway",
+      "actor": "NBR-01",
+      "other": null,
+      "side": null,
+      "until_seq": 1319,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "change",
+      "role": "core",
+      "span": "Albertsen on for Pell",
+      "extracted_kind": "substitution",
+      "kind": "substitution",
+      "ref": "SUB-1319",
+      "asserted": {
+       "on": "NBR-14",
+       "off": "NBR-04"
+      },
+      "status": "supported",
+      "actual": {
+       "on": "NBR-14",
+       "off": "NBR-04"
+      },
+      "evidence": [
+       "SUB-1319"
+      ],
+      "note": "Matches the substitution."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Hale’s loose pass",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "giveaway",
+       "actor": "NBR-01",
+       "other": null,
+       "side": null,
+       "until_seq": 1319,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1318"
+      ],
+      "note": "Recorded at 58' (P-1318)."
+     }
+    ],
+    "evidence": [
+     "SUB-1319",
+     "P-1318"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Northbridge FC make a change, Albertsen on for Pell as play continues after Hale’s loose pass.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Northbridge FC make a change, Albertsen on for Pell as play continues after Hale’s loose pass.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-017",
+   "trigger_event_id": "S-1348",
+   "seq": 1348,
+   "period": 2,
+   "t": 3511.5,
+   "display_minute": "59'",
+   "type": "chance",
+   "side": "home",
+   "facts": {
+    "shooter": "NBR-09",
+    "outcome": "off_target",
+    "xg": 0.23
+   },
+   "segments": [
+    {
+     "text": "Callum Reyes fires in a brilliant strike for Northbridge FC",
+     "claim": "outcome"
+    },
+    {
+     "text": "! What a turnaround after ",
+     "claim": null
+    },
+    {
+     "text": "Albertsen’s crucial ball recovery",
+     "claim": "action"
+    },
+    {
+     "text": "!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "outcome",
+     "role": "core",
+     "span": "Callum Reyes fires in a brilliant strike for Northbridge FC",
+     "extracted_kind": "goal_scorer",
+     "kind": "shot_outcome",
+     "ref": "S-1348",
+     "asserted": "goal"
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Albertsen’s crucial ball recovery",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "NBR-14",
+      "other": null,
+      "side": null,
+      "until_seq": 1348,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "outcome",
+      "role": "core",
+      "span": "Callum Reyes fires in a brilliant strike for Northbridge FC",
+      "extracted_kind": "goal_scorer",
+      "kind": "shot_outcome",
+      "ref": "S-1348",
+      "asserted": "goal",
+      "status": "contradicted",
+      "actual": "off_target",
+      "evidence": [
+       "S-1348"
+      ],
+      "note": "No goal: the shot was off target."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Albertsen’s crucial ball recovery",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "NBR-14",
+       "other": null,
+       "side": null,
+       "until_seq": 1348,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "R-1343"
+      ],
+      "note": "Recorded at 59' (R-1343)."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Reyes",
+      "params": {
+       "player": "NBR-09"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Callum Reyes, but no checked statement about him holds."
+     },
+     {
+      "id": "moment",
+      "kind": "moment_missing",
+      "role": "core",
+      "span": null,
+      "asserted": true,
+      "status": "contradicted",
+      "actual": null,
+      "evidence": [],
+      "note": "Does not report the moment: it never says who had the chance."
+     }
+    ],
+    "evidence": [
+     "S-1348",
+     "R-1343"
+    ]
+   },
+   "planted_error": {
+    "kind": "invented_goal"
+   },
+   "aired": {
+    "text": "Albertsen’s crucial ball recovery leads to a shot by Callum Reyes for Northbridge FC, but the attempt goes off target.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Callum Reyes fires in a brilliant strike for Northbridge FC! What a turnaround after Albertsen’s crucial ball recovery!",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": "Callum Reyes fires in a brilliant strike for Northbridge FC",
+       "status": "contradicted",
+       "note": "No goal: the shot was off target."
+      },
+      {
+       "span": "Reyes",
+       "status": "unverifiable",
+       "note": "Names Callum Reyes, but no checked statement about him holds."
+      },
+      {
+       "span": null,
+       "status": "contradicted",
+       "note": "Does not report the moment: it never says who had the chance."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Albertsen’s crucial ball recovery leads to a big chance for Northbridge FC, but Callum Reyes’ shot goes off target.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "a big chance for Northbridge FC",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data."
+      }
+     ]
+    },
+    {
+     "attempt": 2,
+     "author": "editor",
+     "text": "Albertsen’s crucial ball recovery leads to a shot by Callum Reyes for Northbridge FC, but the attempt goes off target.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-018",
+   "trigger_event_id": "G-1368",
+   "seq": 1368,
+   "period": 2,
+   "t": 3574.7,
+   "display_minute": "60'",
+   "type": "goal",
+   "side": "away",
+   "facts": {
+    "scorer": "RVU-09",
+    "score": {
+     "home": 0,
+     "away": 2
+    },
+    "assist": "RVU-03",
+    "tally": 2
+   },
+   "segments": [
+    {
+     "text": "Strand doubles Riverside United’s lead",
+     "claim": "scorer"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Ferrán’s strong run and assist",
+     "claim": "assist"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "making it 2-0 against Northbridge FC",
+     "claim": "score"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "scorer",
+     "role": "core",
+     "span": "Strand doubles Riverside United’s lead",
+     "extracted_kind": "goal_scorer",
+     "kind": "goal_scorer",
+     "ref": "G-1368",
+     "asserted": "RVU-09"
+    },
+    {
+     "id": "assist",
+     "role": "context",
+     "span": "Ferrán’s strong run and assist",
+     "extracted_kind": "goal_assist",
+     "kind": "goal_assist",
+     "ref": "G-1368",
+     "asserted": "RVU-03"
+    },
+    {
+     "id": "score",
+     "role": "core",
+     "span": "making it 2-0 against Northbridge FC",
+     "extracted_kind": "score",
+     "kind": "score",
+     "asserted": {
+      "home": 0,
+      "away": 2
+     }
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "scorer",
+      "role": "core",
+      "span": "Strand doubles Riverside United’s lead",
+      "extracted_kind": "goal_scorer",
+      "kind": "goal_scorer",
+      "ref": "G-1368",
+      "asserted": "RVU-09",
+      "status": "supported",
+      "actual": "RVU-09",
+      "evidence": [
+       "G-1368",
+       "S-1367"
+      ],
+      "note": "Goal event names this scorer."
+     },
+     {
+      "id": "assist",
+      "role": "context",
+      "span": "Ferrán’s strong run and assist",
+      "extracted_kind": "goal_assist",
+      "kind": "goal_assist",
+      "ref": "G-1368",
+      "asserted": "RVU-03",
+      "status": "supported",
+      "actual": "RVU-03",
+      "evidence": [
+       "G-1368"
+      ],
+      "note": "Goal event names this assist."
+     },
+     {
+      "id": "score",
+      "role": "core",
+      "span": "making it 2-0 against Northbridge FC",
+      "extracted_kind": "score",
+      "kind": "score",
+      "asserted": {
+       "home": 0,
+       "away": 2
+      },
+      "status": "supported",
+      "actual": {
+       "home": 0,
+       "away": 2
+      },
+      "evidence": [
+       "G-0538",
+       "G-1368"
+      ],
+      "note": "Score matches the goal events so far."
+     }
+    ],
+    "evidence": [
+     "G-1368",
+     "S-1367",
+     "G-0538"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Strand doubles Riverside United’s lead after Ferrán’s strong run and assist, making it 2-0 against Northbridge FC.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Strand doubles Riverside United’s lead after Ferrán’s strong run and assist, making it 2-0 against Northbridge FC.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-019",
+   "trigger_event_id": "SUB-1369",
+   "seq": 1369,
+   "period": 2,
+   "t": 3574.7,
+   "display_minute": "60'",
+   "type": "sub",
+   "side": "home",
+   "facts": {
+    "change": {
+     "on": "NBR-19",
+     "off": "NBR-07"
+    }
+   },
+   "segments": [
+    {
+     "text": "Northbridge FC make a change as ",
+     "claim": null
+    },
+    {
+     "text": "Yusuf Darby replaces Dario Vence",
+     "claim": "change"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Strand’s strike for Riverside United",
+     "claim": "scorer"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "change",
+     "role": "core",
+     "span": "Yusuf Darby replaces Dario Vence",
+     "extracted_kind": "substitution",
+     "kind": "substitution",
+     "ref": "SUB-1369",
+     "asserted": {
+      "on": "NBR-19",
+      "off": "NBR-07"
+     }
+    },
+    {
+     "id": "scorer",
+     "role": "context",
+     "span": "Strand’s strike for Riverside United",
+     "extracted_kind": "goal_scorer",
+     "kind": "other_fact",
+     "asserted": "Strand’s strike for Riverside United",
+     "note_hint": "refers to something outside this moment"
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "change",
+      "role": "core",
+      "span": "Yusuf Darby replaces Dario Vence",
+      "extracted_kind": "substitution",
+      "kind": "substitution",
+      "ref": "SUB-1369",
+      "asserted": {
+       "on": "NBR-19",
+       "off": "NBR-07"
+      },
+      "status": "supported",
+      "actual": {
+       "on": "NBR-19",
+       "off": "NBR-07"
+      },
+      "evidence": [
+       "SUB-1369"
+      ],
+      "note": "Matches the substitution."
+     },
+     {
+      "id": "scorer",
+      "role": "context",
+      "span": "Strand’s strike for Riverside United",
+      "extracted_kind": "goal_scorer",
+      "kind": "other_fact",
+      "asserted": "Strand’s strike for Riverside United",
+      "note_hint": "refers to something outside this moment",
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "No rule can check this statement against the match data (it refers to something outside this moment)."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Strand",
+      "params": {
+       "player": "RVU-09"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Viktor Strand, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "SUB-1369"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Northbridge FC make a change as Yusuf Darby replaces Dario Vence.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Northbridge FC make a change as Yusuf Darby replaces Dario Vence after Strand’s strike for Riverside United.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Strand’s strike for Riverside United",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data (it refers to something outside this moment)."
+      },
+      {
+       "span": "Strand",
+       "status": "unverifiable",
+       "note": "Names Viktor Strand, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Northbridge FC make a change as Yusuf Darby replaces Dario Vence.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-020",
+   "trigger_event_id": "SUB-1370",
+   "seq": 1370,
+   "period": 2,
+   "t": 3591.3,
+   "display_minute": "60'",
+   "type": "sub",
+   "side": "home",
+   "facts": {
+    "change": {
+     "on": "NBR-20",
+     "off": "NBR-19"
+    }
+   },
+   "segments": [
+    {
+     "text": "Northbridge FC make a change as ",
+     "claim": null
+    },
+    {
+     "text": "Owen Frisk replaces Yusuf Darby",
+     "claim": "change"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Strand’s goal for Riverside United",
+     "claim": "scorer"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "change",
+     "role": "core",
+     "span": "Owen Frisk replaces Yusuf Darby",
+     "extracted_kind": "substitution",
+     "kind": "substitution",
+     "ref": "SUB-1370",
+     "asserted": {
+      "on": "NBR-13",
+      "off": "NBR-19"
+     }
+    },
+    {
+     "id": "scorer",
+     "role": "context",
+     "span": "Strand’s goal for Riverside United",
+     "extracted_kind": "goal_scorer",
+     "kind": "other_fact",
+     "asserted": "Strand’s goal for Riverside United",
+     "note_hint": "refers to something outside this moment"
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "change",
+      "role": "core",
+      "span": "Owen Frisk replaces Yusuf Darby",
+      "extracted_kind": "substitution",
+      "kind": "substitution",
+      "ref": "SUB-1370",
+      "asserted": {
+       "on": "NBR-13",
+       "off": "NBR-19"
+      },
+      "status": "contradicted",
+      "actual": {
+       "on": "NBR-20",
+       "off": "NBR-19"
+      },
+      "evidence": [
+       "SUB-1370"
+      ],
+      "note": "Players coming on and off are the other way round."
+     },
+     {
+      "id": "scorer",
+      "role": "context",
+      "span": "Strand’s goal for Riverside United",
+      "extracted_kind": "goal_scorer",
+      "kind": "other_fact",
+      "asserted": "Strand’s goal for Riverside United",
+      "note_hint": "refers to something outside this moment",
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "No rule can check this statement against the match data (it refers to something outside this moment)."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Frisk",
+      "params": {
+       "player": "NBR-13"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Owen Frisk, but no checked statement about him holds."
+     },
+     {
+      "id": "name-2",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Darby",
+      "params": {
+       "player": "NBR-19"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Yusuf Darby, but no checked statement about him holds."
+     },
+     {
+      "id": "name-3",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Strand",
+      "params": {
+       "player": "RVU-09"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Viktor Strand, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "SUB-1370"
+    ]
+   },
+   "planted_error": {
+    "kind": "wrong_player"
+   },
+   "aired": {
+    "text": "Northbridge FC make a change as Bastien Kerr replaces Yusuf Darby.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Northbridge FC make a change as Owen Frisk replaces Yusuf Darby after Strand’s goal for Riverside United.",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": "Owen Frisk replaces Yusuf Darby",
+       "status": "contradicted",
+       "note": "Players coming on and off are the other way round."
+      },
+      {
+       "span": "Strand’s goal for Riverside United",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data (it refers to something outside this moment)."
+      },
+      {
+       "span": "Frisk",
+       "status": "unverifiable",
+       "note": "Names Owen Frisk, but no checked statement about him holds."
+      },
+      {
+       "span": "Darby",
+       "status": "unverifiable",
+       "note": "Names Yusuf Darby, but no checked statement about him holds."
+      },
+      {
+       "span": "Strand",
+       "status": "unverifiable",
+       "note": "Names Viktor Strand, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Northbridge FC make a change as Bastien Kerr replaces Yusuf Darby.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-021",
+   "trigger_event_id": "P-1371",
+   "seq": 1371,
+   "period": 2,
+   "t": 3606.6,
+   "display_minute": "61'",
+   "type": "stat",
+   "side": "away",
+   "facts": {
+    "possession": {
+     "side": "away",
+     "pct": 56
+    },
+    "accuracy": {
+     "side": "away",
+     "pct": 88
+    }
+   },
+   "segments": [
+    {
+     "text": "Riverside United hold 56% possession",
+     "claim": "possession"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "with 88% pass accuracy",
+     "claim": "accuracy"
+    },
+    {
+     "text": " at 61', as ",
+     "claim": null
+    },
+    {
+     "text": "Strand’s goal",
+     "claim": "scorer"
+    },
+    {
+     "text": " marks ",
+     "claim": null
+    },
+    {
+     "text": "one of the most spectacular strikes in league history",
+     "claim": "opinion"
+    },
+    {
+     "text": "!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "possession",
+     "role": "core",
+     "span": "Riverside United hold 56% possession",
+     "extracted_kind": "possession",
+     "kind": "possession",
+     "params": {
+      "until_seq": 1371
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 56
+     }
+    },
+    {
+     "id": "accuracy",
+     "role": "context",
+     "span": "with 88% pass accuracy",
+     "extracted_kind": "pass_accuracy",
+     "kind": "pass_accuracy",
+     "params": {
+      "until_seq": 1371
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 88
+     }
+    },
+    {
+     "id": "scorer",
+     "role": "context",
+     "span": "Strand’s goal",
+     "extracted_kind": "goal_scorer",
+     "kind": "other_fact",
+     "asserted": "Strand’s goal",
+     "note_hint": "refers to something outside this moment"
+    },
+    {
+     "id": "opinion",
+     "role": "context",
+     "span": "one of the most spectacular strikes in league history",
+     "extracted_kind": "opinion",
+     "kind": "opinion",
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "possession",
+      "role": "core",
+      "span": "Riverside United hold 56% possession",
+      "extracted_kind": "possession",
+      "kind": "possession",
+      "params": {
+       "until_seq": 1371
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 56
+      },
+      "status": "supported",
+      "actual": {
+       "side": "away",
+       "pct": 56
+      },
+      "evidence": [],
+      "note": "On-ball share 56%."
+     },
+     {
+      "id": "accuracy",
+      "role": "context",
+      "span": "with 88% pass accuracy",
+      "extracted_kind": "pass_accuracy",
+      "kind": "pass_accuracy",
+      "params": {
+       "until_seq": 1371
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 88
+      },
+      "status": "supported",
+      "actual": {
+       "side": "away",
+       "pct": 88
+      },
+      "evidence": [],
+      "note": "Pass accuracy 88.3%."
+     },
+     {
+      "id": "scorer",
+      "role": "context",
+      "span": "Strand’s goal",
+      "extracted_kind": "goal_scorer",
+      "kind": "other_fact",
+      "asserted": "Strand’s goal",
+      "note_hint": "refers to something outside this moment",
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "No rule can check this statement against the match data (it refers to something outside this moment)."
+     },
+     {
+      "id": "opinion",
+      "role": "context",
+      "span": "one of the most spectacular strikes in league history",
+      "extracted_kind": "opinion",
+      "kind": "opinion",
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Strand",
+      "params": {
+       "player": "RVU-09"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Viktor Strand, but no checked statement about him holds."
+     }
+    ],
+    "evidence": []
+   },
+   "planted_error": {
+    "kind": "unverifiable_superlative"
+   },
+   "aired": {
+    "text": "Riverside United hold 56% possession with 88% pass accuracy at 61'.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United hold 56% possession with 88% pass accuracy at 61', as Strand’s goal marks one of the most spectacular strikes in league history!",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Strand’s goal",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data (it refers to something outside this moment)."
+      },
+      {
+       "span": "one of the most spectacular strikes in league history",
+       "status": "unverifiable",
+       "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+      },
+      {
+       "span": "Strand",
+       "status": "unverifiable",
+       "note": "Names Viktor Strand, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Riverside United hold 56% possession with 88% pass accuracy at 61'.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-022",
+   "trigger_event_id": "R-1390",
+   "seq": 1390,
+   "period": 2,
+   "t": 3638.6,
+   "display_minute": "61'",
+   "type": "press",
+   "side": "away",
+   "facts": {
+    "count": 3
+   },
+   "segments": [
+    {
+     "text": "Riverside United on a pressing spell with ",
+     "claim": null
+    },
+    {
+     "text": "3 final third recoveries in 5 minutes",
+     "claim": "count"
+    },
+    {
+     "text": ", though ",
+     "claim": null
+    },
+    {
+     "text": "none led straight to chances",
+     "claim": "pressed"
+    },
+    {
+     "text": ". Northbridge FC fight back after ",
+     "claim": null
+    },
+    {
+     "text": "Quiroga’s giveaway",
+     "claim": "action"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "count",
+     "role": "core",
+     "span": "3 final third recoveries in 5 minutes",
+     "extracted_kind": "final_third_recoveries",
+     "kind": "window_count",
+     "params": {
+      "side": "away",
+      "metric": "attacking_third_recoveries",
+      "window_s": 300,
+      "until_seq": 1390
+     },
+     "asserted": 3
+    },
+    {
+     "id": "pressed",
+     "role": "context",
+     "span": "none led straight to chances",
+     "extracted_kind": "recoveries_after_press",
+     "kind": "window_count",
+     "params": {
+      "side": "away",
+      "metric": "attacking_third_recoveries_after_pressure",
+      "window_s": 300,
+      "until_seq": 1390
+     },
+     "asserted": 0
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Quiroga’s giveaway",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "giveaway",
+      "actor": "NBR-03",
+      "other": null,
+      "side": null,
+      "until_seq": 1390,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "count",
+      "role": "core",
+      "span": "3 final third recoveries in 5 minutes",
+      "extracted_kind": "final_third_recoveries",
+      "kind": "window_count",
+      "params": {
+       "side": "away",
+       "metric": "attacking_third_recoveries",
+       "window_s": 300,
+       "until_seq": 1390
+      },
+      "asserted": 3,
+      "status": "supported",
+      "actual": 3,
+      "evidence": [
+       "R-1280",
+       "R-1384",
+       "R-1390"
+      ],
+      "note": "3 matching recoveries in the window."
+     },
+     {
+      "id": "pressed",
+      "role": "context",
+      "span": "none led straight to chances",
+      "extracted_kind": "recoveries_after_press",
+      "kind": "window_count",
+      "params": {
+       "side": "away",
+       "metric": "attacking_third_recoveries_after_pressure",
+       "window_s": 300,
+       "until_seq": 1390
+      },
+      "asserted": 0,
+      "status": "supported",
+      "actual": 0,
+      "evidence": [],
+      "note": "0 matching recoveries in the window."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Quiroga’s giveaway",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "giveaway",
+       "actor": "NBR-03",
+       "other": null,
+       "side": null,
+       "until_seq": 1390,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1389"
+      ],
+      "note": "Recorded at 61' (P-1389)."
+     }
+    ],
+    "evidence": [
+     "R-1280",
+     "R-1384",
+     "R-1390",
+     "P-1389"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United on a pressing spell with 3 final third recoveries in 5 minutes, though none led straight to chances. Northbridge FC fight back after Quiroga’s giveaway.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United on a pressing spell with 3 final third recoveries in 5 minutes, though none led straight to chances. Northbridge FC fight back after Quiroga’s giveaway.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-023",
+   "trigger_event_id": "S-1392",
+   "seq": 1392,
+   "period": 2,
+   "t": 3639.7,
+   "display_minute": "61'",
+   "type": "chance",
+   "side": "away",
+   "facts": {
+    "shooter": "RVU-07",
+    "outcome": "saved",
+    "keeper": true
+   },
+   "segments": [
+    {
+     "text": "Collymore’s thunderous strike",
+     "claim": "shooter"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "denied by Nyman",
+     "claim": "outcome"
+    },
+    {
+     "text": " – ",
+     "claim": null
+    },
+    {
+     "text": "easily Riverside’s best chance this season",
+     "claim": "opinion"
+    },
+    {
+     "text": ", and ",
+     "claim": null
+    },
+    {
+     "text": "one of the finest saves Northbridge have ever made",
+     "claim": "opinion-2"
+    },
+    {
+     "text": "!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "shooter",
+     "role": "core",
+     "span": "Collymore’s thunderous strike",
+     "extracted_kind": "shot_player",
+     "kind": "shot_player",
+     "ref": "S-1392",
+     "asserted": "RVU-07"
+    },
+    {
+     "id": "outcome",
+     "role": "core",
+     "span": "denied by Nyman",
+     "extracted_kind": "shot_outcome",
+     "kind": "shot_outcome",
+     "ref": "S-1392",
+     "asserted": "saved"
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Nyman – easily Riverside’s best chance this season",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "save",
+      "actor": "RVU-18",
+      "other": null,
+      "side": "away",
+      "until_seq": 1392,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "opinion",
+     "role": "context",
+     "span": "easily Riverside’s best chance this season",
+     "extracted_kind": "opinion",
+     "kind": "opinion",
+     "asserted": true
+    },
+    {
+     "id": "opinion-2",
+     "role": "context",
+     "span": "one of the finest saves Northbridge have ever made",
+     "extracted_kind": "opinion",
+     "kind": "opinion",
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "shooter",
+      "role": "core",
+      "span": "Collymore’s thunderous strike",
+      "extracted_kind": "shot_player",
+      "kind": "shot_player",
+      "ref": "S-1392",
+      "asserted": "RVU-07",
+      "status": "supported",
+      "actual": "RVU-07",
+      "evidence": [
+       "S-1392"
+      ],
+      "note": "Event names this player."
+     },
+     {
+      "id": "outcome",
+      "role": "core",
+      "span": "denied by Nyman",
+      "extracted_kind": "shot_outcome",
+      "kind": "shot_outcome",
+      "ref": "S-1392",
+      "asserted": "saved",
+      "status": "supported",
+      "actual": "saved",
+      "evidence": [
+       "S-1392",
+       "SV-1393"
+      ],
+      "note": "Shot outcome: saved."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Nyman – easily Riverside’s best chance this season",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "save",
+       "actor": "RVU-18",
+       "other": null,
+       "side": "away",
+       "until_seq": 1392,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "SV-1393"
+      ],
+      "note": "No save by that player in the last 2 minutes; the latest was by Tomas Hale (SV-1393)."
+     },
+     {
+      "id": "opinion",
+      "role": "context",
+      "span": "easily Riverside’s best chance this season",
+      "extracted_kind": "opinion",
+      "kind": "opinion",
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+     },
+     {
+      "id": "opinion-2",
+      "role": "context",
+      "span": "one of the finest saves Northbridge have ever made",
+      "extracted_kind": "opinion",
+      "kind": "opinion",
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Nyman",
+      "params": {
+       "player": "RVU-18"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Oskar Nyman, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "S-1392",
+     "SV-1393"
+    ]
+   },
+   "planted_error": {
+    "kind": "unverifiable_superlative"
+   },
+   "aired": {
+    "text": "Ezra Collymore’s thunderous strike for Riverside United was saved.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Collymore’s thunderous strike denied by Nyman – easily Riverside’s best chance this season, and one of the finest saves Northbridge have ever made!",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Nyman – easily Riverside’s best chance this season",
+       "status": "contradicted",
+       "note": "No save by that player in the last 2 minutes; the latest was by Tomas Hale (SV-1393)."
+      },
+      {
+       "span": "easily Riverside’s best chance this season",
+       "status": "unverifiable",
+       "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+      },
+      {
+       "span": "one of the finest saves Northbridge have ever made",
+       "status": "unverifiable",
+       "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+      },
+      {
+       "span": "Nyman",
+       "status": "unverifiable",
+       "note": "Names Oskar Nyman, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Ezra Collymore’s thunderous strike for Riverside United was saved, denying a big chance.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "denying a big chance",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data."
+      }
+     ]
+    },
+    {
+     "attempt": 2,
+     "author": "editor",
+     "text": "Ezra Collymore’s thunderous strike for Riverside United was saved.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-024",
+   "trigger_event_id": "SUB-1425",
+   "seq": 1425,
+   "period": 2,
+   "t": 3710.1,
+   "display_minute": "62'",
+   "type": "sub",
+   "side": "away",
+   "facts": {
+    "change": {
+     "on": "RVU-17",
+     "off": "RVU-07"
+    }
+   },
+   "segments": [
+    {
+     "text": "Riverside United make a change, Tariq Bello on for Ezra Collymore",
+     "claim": "change"
+    },
+    {
+     "text": " as ",
+     "claim": null
+    },
+    {
+     "text": "Ashkenazi’s shot from Northbridge FC",
+     "claim": "action"
+    },
+    {
+     "text": " is brilliantly saved by Vollan.",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "change",
+     "role": "core",
+     "span": "Riverside United make a change, Tariq Bello on for Ezra Collymore",
+     "extracted_kind": "substitution",
+     "kind": "substitution",
+     "ref": "SUB-1425",
+     "asserted": {
+      "on": "RVU-17",
+      "off": "RVU-07"
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Ashkenazi’s shot from Northbridge FC",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "shot",
+      "actor": "NBR-16",
+      "other": null,
+      "side": "home",
+      "until_seq": 1425,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Ashkenazi’s shot from Northbridge FC is brilliantly saved by Vollan",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "shot",
+      "actor": "NBR-16",
+      "other": "RVU-01",
+      "side": "home",
+      "until_seq": 1425,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "change",
+      "role": "core",
+      "span": "Riverside United make a change, Tariq Bello on for Ezra Collymore",
+      "extracted_kind": "substitution",
+      "kind": "substitution",
+      "ref": "SUB-1425",
+      "asserted": {
+       "on": "RVU-17",
+       "off": "RVU-07"
+      },
+      "status": "supported",
+      "actual": {
+       "on": "RVU-17",
+       "off": "RVU-07"
+      },
+      "evidence": [
+       "SUB-1425"
+      ],
+      "note": "Matches the substitution."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Ashkenazi’s shot from Northbridge FC",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "shot",
+       "actor": "NBR-16",
+       "other": null,
+       "side": "home",
+       "until_seq": 1425,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "S-1423"
+      ],
+      "note": "Recorded at 62' (S-1423)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Ashkenazi’s shot from Northbridge FC is brilliantly saved by Vollan",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "shot",
+       "actor": "NBR-16",
+       "other": "RVU-01",
+       "side": "home",
+       "until_seq": 1425,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "S-1423"
+      ],
+      "note": "Recorded at 62' (S-1423)."
+     }
+    ],
+    "evidence": [
+     "SUB-1425",
+     "S-1423"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United make a change, Tariq Bello on for Ezra Collymore as Ashkenazi’s shot from Northbridge FC is brilliantly saved by Vollan.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United make a change, Tariq Bello on for Ezra Collymore as Ashkenazi’s shot from Northbridge FC is brilliantly saved by Vollan.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-025",
+   "trigger_event_id": "R-1475",
+   "seq": 1475,
+   "period": 2,
+   "t": 3865.9,
+   "display_minute": "65'",
+   "type": "press",
+   "side": "home",
+   "facts": {
+    "count": 3
+   },
+   "segments": [
+    {
+     "text": "Northbridge FC on a pressing streak with ",
+     "claim": null
+    },
+    {
+     "text": "three final-third recoveries in five minutes",
+     "claim": "count"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "Ashkenazi forces Riverside’s Haddad into a giveaway",
+     "claim": "action"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "count",
+     "role": "core",
+     "span": "three final-third recoveries in five minutes",
+     "extracted_kind": "final_third_recoveries",
+     "kind": "window_count",
+     "params": {
+      "side": "home",
+      "metric": "attacking_third_recoveries",
+      "window_s": 300,
+      "until_seq": 1475
+     },
+     "asserted": 3
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Ashkenazi forces Riverside’s Haddad into a giveaway",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "giveaway",
+      "actor": "NBR-16",
+      "other": "RVU-11",
+      "side": null,
+      "until_seq": 1475,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "count",
+      "role": "core",
+      "span": "three final-third recoveries in five minutes",
+      "extracted_kind": "final_third_recoveries",
+      "kind": "window_count",
+      "params": {
+       "side": "home",
+       "metric": "attacking_third_recoveries",
+       "window_s": 300,
+       "until_seq": 1475
+      },
+      "asserted": 3,
+      "status": "supported",
+      "actual": 3,
+      "evidence": [
+       "R-1431",
+       "R-1467",
+       "R-1475"
+      ],
+      "note": "3 matching recoveries in the window."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Ashkenazi forces Riverside’s Haddad into a giveaway",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "giveaway",
+       "actor": "NBR-16",
+       "other": "RVU-11",
+       "side": null,
+       "until_seq": 1475,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [],
+      "note": "No matching loss of possession in the last 2 minutes of play."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Ashkenazi",
+      "params": {
+       "player": "NBR-16"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Lior Ashkenazi, but no checked statement about him holds."
+     },
+     {
+      "id": "name-2",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Haddad",
+      "params": {
+       "player": "RVU-11"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Faris Haddad, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "R-1431",
+     "R-1467",
+     "R-1475"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Northbridge FC on a pressing streak with three final-third recoveries in five minutes.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Northbridge FC on a pressing streak with three final-third recoveries in five minutes, Ashkenazi forces Riverside’s Haddad into a giveaway.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Ashkenazi forces Riverside’s Haddad into a giveaway",
+       "status": "contradicted",
+       "note": "No matching loss of possession in the last 2 minutes of play."
+      },
+      {
+       "span": "Ashkenazi",
+       "status": "unverifiable",
+       "note": "Names Lior Ashkenazi, but no checked statement about him holds."
+      },
+      {
+       "span": "Haddad",
+       "status": "unverifiable",
+       "note": "Names Faris Haddad, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Northbridge FC on a pressing streak with three final-third recoveries in five minutes.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-026",
+   "trigger_event_id": "R-1486",
+   "seq": 1486,
+   "period": 2,
+   "t": 3884.3,
+   "display_minute": "65'",
+   "type": "press",
+   "side": "away",
+   "facts": {
+    "count": 4
+   },
+   "segments": [
+    {
+     "text": "Riverside United on a pressing spell with ",
+     "claim": null
+    },
+    {
+     "text": "four final-third recoveries in the last five minutes",
+     "claim": "count"
+    },
+    {
+     "text": ", despite some ",
+     "claim": null
+    },
+    {
+     "text": "give-and-go errors with Northbridge’s Mensah-Reid",
+     "claim": "action"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "count",
+     "role": "core",
+     "span": "four final-third recoveries in the last five minutes",
+     "extracted_kind": "final_third_recoveries",
+     "kind": "window_count",
+     "params": {
+      "side": "away",
+      "metric": "attacking_third_recoveries",
+      "window_s": 300,
+      "until_seq": 1486
+     },
+     "asserted": 4
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "give-and-go errors with Northbridge’s Mensah-Reid",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "giveaway",
+      "actor": "NBR-02",
+      "other": null,
+      "side": null,
+      "until_seq": 1486,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "count",
+      "role": "core",
+      "span": "four final-third recoveries in the last five minutes",
+      "extracted_kind": "final_third_recoveries",
+      "kind": "window_count",
+      "params": {
+       "side": "away",
+       "metric": "attacking_third_recoveries",
+       "window_s": 300,
+       "until_seq": 1486
+      },
+      "asserted": 4,
+      "status": "supported",
+      "actual": 4,
+      "evidence": [
+       "R-1384",
+       "R-1390",
+       "R-1395",
+       "R-1486"
+      ],
+      "note": "4 matching recoveries in the window."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "give-and-go errors with Northbridge’s Mensah-Reid",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "giveaway",
+       "actor": "NBR-02",
+       "other": null,
+       "side": null,
+       "until_seq": 1486,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1481",
+       "P-1485"
+      ],
+      "note": "Recorded at 65' (P-1485)."
+     }
+    ],
+    "evidence": [
+     "R-1384",
+     "R-1390",
+     "R-1395",
+     "R-1486",
+     "P-1481",
+     "P-1485"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United on a pressing spell with four final-third recoveries in the last five minutes, despite some give-and-go errors with Northbridge’s Mensah-Reid.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United on a pressing spell with four final-third recoveries in the last five minutes, despite some give-and-go errors with Northbridge’s Mensah-Reid.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-027",
+   "trigger_event_id": "SP-1539",
+   "seq": 1539,
+   "period": 2,
+   "t": 4010.9,
+   "display_minute": "67'",
+   "type": "sprint",
+   "side": "away",
+   "facts": {
+    "speed": {
+     "player": "RVU-11",
+     "kmh": 34.2
+    }
+   },
+   "segments": [
+    {
+     "text": "Haddad bursts forward at 34.2 km/h",
+     "claim": "speed"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "stealing the ball from Okafor",
+     "claim": "action"
+    },
+    {
+     "text": " and ",
+     "claim": null
+    },
+    {
+     "text": "charging upfield for Riverside United",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "speed",
+     "role": "core",
+     "span": "Haddad bursts forward at 34.2 km/h",
+     "extracted_kind": "top_speed",
+     "kind": "top_speed",
+     "ref": "SP-1539",
+     "asserted": {
+      "player": "RVU-11",
+      "kmh": 34.2
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "stealing the ball from Okafor",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "RVU-11",
+      "other": "NBR-08",
+      "side": null,
+      "until_seq": 1539,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "charging upfield for Riverside United",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "carry",
+      "actor": "RVU-11",
+      "other": null,
+      "side": "away",
+      "until_seq": 1539,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "speed",
+      "role": "core",
+      "span": "Haddad bursts forward at 34.2 km/h",
+      "extracted_kind": "top_speed",
+      "kind": "top_speed",
+      "ref": "SP-1539",
+      "asserted": {
+       "player": "RVU-11",
+       "kmh": 34.2
+      },
+      "status": "supported",
+      "actual": {
+       "player": "RVU-11",
+       "kmh": 34.2
+      },
+      "evidence": [
+       "SP-1539"
+      ],
+      "note": "Matches the speed reading."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "stealing the ball from Okafor",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "RVU-11",
+       "other": "NBR-08",
+       "side": null,
+       "until_seq": 1539,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "R-1537"
+      ],
+      "note": "Recorded at 67' (R-1537)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "charging upfield for Riverside United",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "carry",
+       "actor": "RVU-11",
+       "other": null,
+       "side": "away",
+       "until_seq": 1539,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "C-1538",
+       "SP-1539"
+      ],
+      "note": "Recorded at 67' (SP-1539)."
+     }
+    ],
+    "evidence": [
+     "SP-1539",
+     "R-1537",
+     "C-1538"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Haddad bursts forward at 34.2 km/h, stealing the ball from Okafor and charging upfield for Riverside United.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Haddad bursts forward at 34.2 km/h, stealing the ball from Okafor and charging upfield for Riverside United.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-028",
+   "trigger_event_id": "SUB-1609",
+   "seq": 1609,
+   "period": 2,
+   "t": 4161,
+   "display_minute": "70'",
+   "type": "sub",
+   "side": "home",
+   "facts": {
+    "change": {
+     "on": "NBR-15",
+     "off": "NBR-05"
+    }
+   },
+   "segments": [
+    {
+     "text": "Northbridge make a change, ",
+     "claim": null
+    },
+    {
+     "text": "Saul on for Brandt",
+     "claim": "change"
+    },
+    {
+     "text": " as Riverside's ",
+     "claim": null
+    },
+    {
+     "text": "Bello fires just wide",
+     "claim": "action"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "after a neat Strand pass",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "change",
+     "role": "core",
+     "span": "Saul on for Brandt",
+     "extracted_kind": "substitution",
+     "kind": "substitution",
+     "ref": "SUB-1609",
+     "asserted": {
+      "on": "NBR-15",
+      "off": "NBR-05"
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Bello fires just wide",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "shot",
+      "actor": "RVU-17",
+      "other": null,
+      "side": null,
+      "until_seq": 1609,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "after a neat Strand pass",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-09",
+      "other": "RVU-17",
+      "side": null,
+      "until_seq": 1609,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "change",
+      "role": "core",
+      "span": "Saul on for Brandt",
+      "extracted_kind": "substitution",
+      "kind": "substitution",
+      "ref": "SUB-1609",
+      "asserted": {
+       "on": "NBR-15",
+       "off": "NBR-05"
+      },
+      "status": "supported",
+      "actual": {
+       "on": "NBR-15",
+       "off": "NBR-05"
+      },
+      "evidence": [
+       "SUB-1609"
+      ],
+      "note": "Matches the substitution."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Bello fires just wide",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "shot",
+       "actor": "RVU-17",
+       "other": null,
+       "side": null,
+       "until_seq": 1609,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "S-1608"
+      ],
+      "note": "Recorded at 70' (S-1608)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "after a neat Strand pass",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-09",
+       "other": "RVU-17",
+       "side": null,
+       "until_seq": 1609,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1606"
+      ],
+      "note": "Recorded at 70' (P-1606)."
+     }
+    ],
+    "evidence": [
+     "SUB-1609",
+     "S-1608",
+     "P-1606"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Northbridge make a change, Saul on for Brandt as Riverside's Bello fires just wide after a neat Strand pass.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Northbridge make a change, Saul on for Brandt as Riverside's Bello fires just wide after a neat Strand pass.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-029",
+   "trigger_event_id": "SUB-1610",
+   "seq": 1610,
+   "period": 2,
+   "t": 4180.4,
+   "display_minute": "70'",
+   "type": "sub",
+   "side": "away",
+   "facts": {
+    "change": {
+     "on": "RVU-15",
+     "off": "RVU-05"
+    }
+   },
+   "segments": [
+    {
+     "text": "Riverside United make a change as ",
+     "claim": null
+    },
+    {
+     "text": "Remy Castell replaces Ibrahima Sow",
+     "claim": "change"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Bello’s off-target shot",
+     "claim": "action"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "change",
+     "role": "core",
+     "span": "Remy Castell replaces Ibrahima Sow",
+     "extracted_kind": "substitution",
+     "kind": "substitution",
+     "ref": "SUB-1610",
+     "asserted": {
+      "on": "RVU-15",
+      "off": "RVU-05"
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Bello’s off-target shot",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "shot",
+      "actor": "RVU-17",
+      "other": null,
+      "side": "away",
+      "until_seq": 1610,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "change",
+      "role": "core",
+      "span": "Remy Castell replaces Ibrahima Sow",
+      "extracted_kind": "substitution",
+      "kind": "substitution",
+      "ref": "SUB-1610",
+      "asserted": {
+       "on": "RVU-15",
+       "off": "RVU-05"
+      },
+      "status": "supported",
+      "actual": {
+       "on": "RVU-15",
+       "off": "RVU-05"
+      },
+      "evidence": [
+       "SUB-1610"
+      ],
+      "note": "Matches the substitution."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Bello’s off-target shot",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "shot",
+       "actor": "RVU-17",
+       "other": null,
+       "side": "away",
+       "until_seq": 1610,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "S-1608"
+      ],
+      "note": "Recorded at 70' (S-1608)."
+     }
+    ],
+    "evidence": [
+     "SUB-1610",
+     "S-1608"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United make a change as Remy Castell replaces Ibrahima Sow after Bello’s off-target shot.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United make a change as Remy Castell replaces Ibrahima Sow after Bello’s off-target shot.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-030",
+   "trigger_event_id": "S-1656",
+   "seq": 1656,
+   "period": 2,
+   "t": 4338.6,
+   "display_minute": "73'",
+   "type": "chance",
+   "side": "away",
+   "facts": {
+    "shooter": "RVU-09",
+    "outcome": "off_target",
+    "xg": 0.2
+   },
+   "segments": [
+    {
+     "text": "Strand’s big chance for Riverside United",
+     "claim": "shooter"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "goes off target",
+     "claim": "outcome"
+    },
+    {
+     "text": " despite ",
+     "claim": null
+    },
+    {
+     "text": "Benedetti’s clever pass",
+     "claim": "action"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "Albertsen’s pressure proving crucial for Northbridge FC",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "shooter",
+     "role": "core",
+     "span": "Strand’s big chance for Riverside United",
+     "extracted_kind": "shot_player",
+     "kind": "shot_player",
+     "ref": "S-1656",
+     "asserted": "RVU-09"
+    },
+    {
+     "id": "outcome",
+     "role": "core",
+     "span": "goes off target",
+     "extracted_kind": "shot_outcome",
+     "kind": "shot_outcome",
+     "ref": "S-1656",
+     "asserted": "off_target"
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Benedetti’s clever pass",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-10",
+      "other": "RVU-09",
+      "side": "away",
+      "until_seq": 1656,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Albertsen’s pressure proving crucial for Northbridge FC",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "NBR-14",
+      "other": null,
+      "side": "home",
+      "until_seq": 1656,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "shooter",
+      "role": "core",
+      "span": "Strand’s big chance for Riverside United",
+      "extracted_kind": "shot_player",
+      "kind": "shot_player",
+      "ref": "S-1656",
+      "asserted": "RVU-09",
+      "status": "supported",
+      "actual": "RVU-09",
+      "evidence": [
+       "S-1656"
+      ],
+      "note": "Event names this player."
+     },
+     {
+      "id": "outcome",
+      "role": "core",
+      "span": "goes off target",
+      "extracted_kind": "shot_outcome",
+      "kind": "shot_outcome",
+      "ref": "S-1656",
+      "asserted": "off_target",
+      "status": "supported",
+      "actual": "off_target",
+      "evidence": [
+       "S-1656"
+      ],
+      "note": "Shot outcome: off target."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Benedetti’s clever pass",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-10",
+       "other": "RVU-09",
+       "side": "away",
+       "until_seq": 1656,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1654"
+      ],
+      "note": "Recorded at 73' (P-1654)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Albertsen’s pressure proving crucial for Northbridge FC",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "NBR-14",
+       "other": null,
+       "side": "home",
+       "until_seq": 1656,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "PR-1655"
+      ],
+      "note": "Recorded at 73' (PR-1655)."
+     }
+    ],
+    "evidence": [
+     "S-1656",
+     "P-1654",
+     "PR-1655"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Strand’s big chance for Riverside United goes off target despite Benedetti’s clever pass, Albertsen’s pressure proving crucial for Northbridge FC.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Strand’s big chance for Riverside United goes off target despite Benedetti’s clever pass, Albertsen’s pressure proving crucial for Northbridge FC.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-031",
+   "trigger_event_id": "SUB-1696",
+   "seq": 1696,
+   "period": 2,
+   "t": 4435.9,
+   "display_minute": "74'",
+   "type": "sub",
+   "side": "away",
+   "facts": {
+    "change": {
+     "on": "RVU-18",
+     "off": "RVU-10"
+    }
+   },
+   "segments": [
+    {
+     "text": "Riverside United make a change as ",
+     "claim": null
+    },
+    {
+     "text": "Oskar Nyman replaces Luca Benedetti",
+     "claim": "change"
+    },
+    {
+     "text": " under pressure from Northbridge's ",
+     "claim": null
+    },
+    {
+     "text": "Mensah-Reid",
+     "claim": "name-1"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "change",
+     "role": "core",
+     "span": "Oskar Nyman replaces Luca Benedetti",
+     "extracted_kind": "substitution",
+     "kind": "substitution",
+     "ref": "SUB-1696",
+     "asserted": {
+      "on": "RVU-18",
+      "off": "RVU-10"
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Luca Benedetti under pressure from Northbridge's Mensah-Reid",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "RVU-10",
+      "other": "NBR-02",
+      "side": null,
+      "until_seq": 1696,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "change",
+      "role": "core",
+      "span": "Oskar Nyman replaces Luca Benedetti",
+      "extracted_kind": "substitution",
+      "kind": "substitution",
+      "ref": "SUB-1696",
+      "asserted": {
+       "on": "RVU-18",
+       "off": "RVU-10"
+      },
+      "status": "supported",
+      "actual": {
+       "on": "RVU-18",
+       "off": "RVU-10"
+      },
+      "evidence": [
+       "SUB-1696"
+      ],
+      "note": "Matches the substitution."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Luca Benedetti under pressure from Northbridge's Mensah-Reid",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "RVU-10",
+       "other": "NBR-02",
+       "side": null,
+       "until_seq": 1696,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [],
+      "note": "No matching press in the last 2 minutes of play."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Mensah-Reid",
+      "params": {
+       "player": "NBR-02"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Kofi Mensah-Reid, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "SUB-1696"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United make a change as Oskar Nyman replaces Luca Benedetti.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United make a change as Oskar Nyman replaces Luca Benedetti under pressure from Northbridge's Mensah-Reid.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Luca Benedetti under pressure from Northbridge's Mensah-Reid",
+       "status": "contradicted",
+       "note": "No matching press in the last 2 minutes of play."
+      },
+      {
+       "span": "Mensah-Reid",
+       "status": "unverifiable",
+       "note": "Names Kofi Mensah-Reid, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Riverside United make a change as Oskar Nyman replaces Luca Benedetti.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-032",
+   "trigger_event_id": "G-1745",
+   "seq": 1745,
+   "period": 2,
+   "t": 4567.3,
+   "display_minute": "77'",
+   "type": "goal",
+   "side": "home",
+   "facts": {
+    "scorer": "NBR-09",
+    "score": {
+     "home": 1,
+     "away": 2
+    },
+    "assist": "NBR-08",
+    "cause": true
+   },
+   "segments": [
+    {
+     "text": "Quiroga’s pressing steals possession",
+     "claim": "action"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "Okafor sets up Reyes",
+     "claim": "action-3"
+    },
+    {
+     "text": " who fires home for Northbridge FC, ",
+     "claim": null
+    },
+    {
+     "text": "narrowing the gap to 1-2 against Riverside United",
+     "claim": "score"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Quiroga’s pressing steals possession",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "NBR-03",
+      "other": null,
+      "side": "home",
+      "until_seq": 1745,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Quiroga’s pressing steals possession",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "NBR-03",
+      "other": null,
+      "side": "home",
+      "until_seq": 1745,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-3",
+     "role": "context",
+     "span": "Okafor sets up Reyes",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "NBR-08",
+      "other": "NBR-09",
+      "side": "home",
+      "until_seq": 1745,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "scorer",
+     "role": "core",
+     "span": "Reyes who fires home for Northbridge FC",
+     "extracted_kind": "goal_scorer",
+     "kind": "goal_scorer",
+     "ref": "G-1745",
+     "asserted": "NBR-09"
+    },
+    {
+     "id": "score",
+     "role": "core",
+     "span": "narrowing the gap to 1-2 against Riverside United",
+     "extracted_kind": "score",
+     "kind": "score",
+     "asserted": {
+      "home": 1,
+      "away": 2
+     }
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Quiroga’s pressing steals possession",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "NBR-03",
+       "other": null,
+       "side": "home",
+       "until_seq": 1745,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "PR-1739"
+      ],
+      "note": "Recorded at 77' (PR-1739)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Quiroga’s pressing steals possession",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "NBR-03",
+       "other": null,
+       "side": "home",
+       "until_seq": 1745,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "T-1740",
+       "R-1741"
+      ],
+      "note": "Recorded at 77' (R-1741)."
+     },
+     {
+      "id": "action-3",
+      "role": "context",
+      "span": "Okafor sets up Reyes",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "NBR-08",
+       "other": "NBR-09",
+       "side": "home",
+       "until_seq": 1745,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1743"
+      ],
+      "note": "Recorded at 77' (P-1743)."
+     },
+     {
+      "id": "scorer",
+      "role": "core",
+      "span": "Reyes who fires home for Northbridge FC",
+      "extracted_kind": "goal_scorer",
+      "kind": "goal_scorer",
+      "ref": "G-1745",
+      "asserted": "NBR-09",
+      "status": "supported",
+      "actual": "NBR-09",
+      "evidence": [
+       "G-1745",
+       "S-1744"
+      ],
+      "note": "Goal event names this scorer."
+     },
+     {
+      "id": "score",
+      "role": "core",
+      "span": "narrowing the gap to 1-2 against Riverside United",
+      "extracted_kind": "score",
+      "kind": "score",
+      "asserted": {
+       "home": 1,
+       "away": 2
+      },
+      "status": "supported",
+      "actual": {
+       "home": 1,
+       "away": 2
+      },
+      "evidence": [
+       "G-0538",
+       "G-1368",
+       "G-1745"
+      ],
+      "note": "Score matches the goal events so far."
+     }
+    ],
+    "evidence": [
+     "PR-1739",
+     "T-1740",
+     "R-1741",
+     "P-1743",
+     "G-1745",
+     "S-1744",
+     "G-0538",
+     "G-1368"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Quiroga’s pressing steals possession, Okafor sets up Reyes who fires home for Northbridge FC, narrowing the gap to 1-2 against Riverside United.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Quiroga’s pressing steals possession, Okafor sets up Reyes who fires home for Northbridge FC, narrowing the gap to 1-2 against Riverside United.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-033",
+   "trigger_event_id": "S-1773",
+   "seq": 1773,
+   "period": 2,
+   "t": 4691.9,
+   "display_minute": "79'",
+   "type": "chance",
+   "side": "away",
+   "facts": {
+    "shooter": "RVU-09",
+    "outcome": "woodwork",
+    "xg": 0.46
+   },
+   "segments": [
+    {
+     "text": "Strand’s thunderous strike",
+     "claim": "shooter"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "hits the woodwork",
+     "claim": "outcome"
+    },
+    {
+     "text": " – ",
+     "claim": null
+    },
+    {
+     "text": "easily the greatest near-miss in Riverside United’s entire league history this season",
+     "claim": "opinion"
+    },
+    {
+     "text": "!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "shooter",
+     "role": "core",
+     "span": "Strand’s thunderous strike",
+     "extracted_kind": "shot_player",
+     "kind": "shot_player",
+     "ref": "S-1773",
+     "asserted": "RVU-09"
+    },
+    {
+     "id": "outcome",
+     "role": "core",
+     "span": "hits the woodwork",
+     "extracted_kind": "shot_outcome",
+     "kind": "shot_outcome",
+     "ref": "S-1773",
+     "asserted": "woodwork"
+    },
+    {
+     "id": "opinion",
+     "role": "context",
+     "span": "easily the greatest near-miss in Riverside United’s entire league history this season",
+     "extracted_kind": "opinion",
+     "kind": "opinion",
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "shooter",
+      "role": "core",
+      "span": "Strand’s thunderous strike",
+      "extracted_kind": "shot_player",
+      "kind": "shot_player",
+      "ref": "S-1773",
+      "asserted": "RVU-09",
+      "status": "supported",
+      "actual": "RVU-09",
+      "evidence": [
+       "S-1773"
+      ],
+      "note": "Event names this player."
+     },
+     {
+      "id": "outcome",
+      "role": "core",
+      "span": "hits the woodwork",
+      "extracted_kind": "shot_outcome",
+      "kind": "shot_outcome",
+      "ref": "S-1773",
+      "asserted": "woodwork",
+      "status": "supported",
+      "actual": "woodwork",
+      "evidence": [
+       "S-1773"
+      ],
+      "note": "Shot outcome: woodwork."
+     },
+     {
+      "id": "opinion",
+      "role": "context",
+      "span": "easily the greatest near-miss in Riverside United’s entire league history this season",
+      "extracted_kind": "opinion",
+      "kind": "opinion",
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+     }
+    ],
+    "evidence": [
+     "S-1773"
+    ]
+   },
+   "planted_error": {
+    "kind": "unverifiable_superlative"
+   },
+   "aired": {
+    "text": "Strand hits the woodwork!",
+    "by": "template",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Strand’s thunderous strike hits the woodwork – easily the greatest near-miss in Riverside United’s entire league history this season!",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "easily the greatest near-miss in Riverside United’s entire league history this season",
+       "status": "unverifiable",
+       "note": "A judgement or comparison beyond this match cannot be checked against the match data."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Strand’s thunderous strike hits the woodwork – a big chance for Riverside United with no goal.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "a big chance for Riverside United",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data."
+      }
+     ]
+    },
+    {
+     "attempt": 2,
+     "author": "editor",
+     "text": "Strand’s thunderous strike hits the woodwork – a big chance for Riverside United with no goal.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "a big chance for Riverside United",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "CAP-034",
+   "trigger_event_id": "C-1836",
+   "seq": 1836,
+   "period": 2,
+   "t": 4920.1,
+   "display_minute": "83'",
+   "type": "stat",
+   "side": "away",
+   "facts": {
+    "possession": {
+     "side": "away",
+     "pct": 53
+    },
+    "accuracy": {
+     "side": "away",
+     "pct": 86
+    }
+   },
+   "segments": [
+    {
+     "text": "Riverside United hold 53% possession",
+     "claim": "possession"
+    },
+    {
+     "text": " ",
+     "claim": null
+    },
+    {
+     "text": "with 86% pass accuracy",
+     "claim": "accuracy"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "Lind key in regaining possession",
+     "claim": "action"
+    },
+    {
+     "text": " and ",
+     "claim": null
+    },
+    {
+     "text": "feeding Strand for a neat passing move",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "possession",
+     "role": "core",
+     "span": "Riverside United hold 53% possession",
+     "extracted_kind": "possession",
+     "kind": "possession",
+     "params": {
+      "until_seq": 1836
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 53
+     }
+    },
+    {
+     "id": "accuracy",
+     "role": "context",
+     "span": "with 86% pass accuracy",
+     "extracted_kind": "pass_accuracy",
+     "kind": "pass_accuracy",
+     "params": {
+      "until_seq": 1836
+     },
+     "asserted": {
+      "side": "away",
+      "pct": 86
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Lind key in regaining possession",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "RVU-04",
+      "other": null,
+      "side": null,
+      "until_seq": 1836,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "feeding Strand for a neat passing move",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-04",
+      "other": "RVU-09",
+      "side": null,
+      "until_seq": 1836,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "possession",
+      "role": "core",
+      "span": "Riverside United hold 53% possession",
+      "extracted_kind": "possession",
+      "kind": "possession",
+      "params": {
+       "until_seq": 1836
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 53
+      },
+      "status": "supported",
+      "actual": {
+       "side": "away",
+       "pct": 53
+      },
+      "evidence": [],
+      "note": "On-ball share 53.1%."
+     },
+     {
+      "id": "accuracy",
+      "role": "context",
+      "span": "with 86% pass accuracy",
+      "extracted_kind": "pass_accuracy",
+      "kind": "pass_accuracy",
+      "params": {
+       "until_seq": 1836
+      },
+      "asserted": {
+       "side": "away",
+       "pct": 86
+      },
+      "status": "supported",
+      "actual": {
+       "side": "away",
+       "pct": 86
+      },
+      "evidence": [],
+      "note": "Pass accuracy 85.8%."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Lind key in regaining possession",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "RVU-04",
+       "other": null,
+       "side": null,
+       "until_seq": 1836,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "T-1830",
+       "R-1831"
+      ],
+      "note": "Recorded at 82' (R-1831)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "feeding Strand for a neat passing move",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-04",
+       "other": "RVU-09",
+       "side": null,
+       "until_seq": 1836,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-1832"
+      ],
+      "note": "Recorded at 82' (P-1832)."
+     }
+    ],
+    "evidence": [
+     "T-1830",
+     "R-1831",
+     "P-1832"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United hold 53% possession with 86% pass accuracy, Lind key in regaining possession and feeding Strand for a neat passing move.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United hold 53% possession with 86% pass accuracy, Lind key in regaining possession and feeding Strand for a neat passing move.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-035",
+   "trigger_event_id": "SP-1844",
+   "seq": 1844,
+   "period": 2,
+   "t": 4933.4,
+   "display_minute": "83'",
+   "type": "sprint",
+   "side": "home",
+   "facts": {
+    "speed": {
+     "player": "NBR-02",
+     "kmh": 34.6
+    }
+   },
+   "segments": [
+    {
+     "text": "Mensah-Reid sprints to 34.6 km/h",
+     "claim": "speed"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "nabbing possession from Haddad",
+     "claim": "action"
+    },
+    {
+     "text": " and ",
+     "claim": null
+    },
+    {
+     "text": "driving Northbridge FC forward with electric pace",
+     "claim": "action-2"
+    },
+    {
+     "text": "!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "speed",
+     "role": "core",
+     "span": "Mensah-Reid sprints to 34.6 km/h",
+     "extracted_kind": "top_speed",
+     "kind": "top_speed",
+     "ref": "SP-1844",
+     "asserted": {
+      "player": "NBR-02",
+      "kmh": 34.6
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "nabbing possession from Haddad",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "NBR-02",
+      "other": "RVU-11",
+      "side": null,
+      "until_seq": 1844,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "driving Northbridge FC forward with electric pace",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "carry",
+      "actor": "NBR-02",
+      "other": null,
+      "side": "home",
+      "until_seq": 1844,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "speed",
+      "role": "core",
+      "span": "Mensah-Reid sprints to 34.6 km/h",
+      "extracted_kind": "top_speed",
+      "kind": "top_speed",
+      "ref": "SP-1844",
+      "asserted": {
+       "player": "NBR-02",
+       "kmh": 34.6
+      },
+      "status": "supported",
+      "actual": {
+       "player": "NBR-02",
+       "kmh": 34.6
+      },
+      "evidence": [
+       "SP-1844"
+      ],
+      "note": "Matches the speed reading."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "nabbing possession from Haddad",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "NBR-02",
+       "other": "RVU-11",
+       "side": null,
+       "until_seq": 1844,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "T-1841",
+       "R-1842"
+      ],
+      "note": "Recorded at 83' (R-1842)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "driving Northbridge FC forward with electric pace",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "carry",
+       "actor": "NBR-02",
+       "other": null,
+       "side": "home",
+       "until_seq": 1844,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "C-1843",
+       "SP-1844"
+      ],
+      "note": "Recorded at 83' (SP-1844)."
+     }
+    ],
+    "evidence": [
+     "SP-1844",
+     "T-1841",
+     "R-1842",
+     "C-1843"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Mensah-Reid sprints to 34.6 km/h, nabbing possession from Haddad and driving Northbridge FC forward with electric pace!",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Mensah-Reid sprints to 34.6 km/h, nabbing possession from Haddad and driving Northbridge FC forward with electric pace!",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-036",
+   "trigger_event_id": "S-1936",
+   "seq": 1936,
+   "period": 2,
+   "t": 5117.8,
+   "display_minute": "86'",
+   "type": "chance",
+   "side": "home",
+   "facts": {
+    "shooter": "NBR-11",
+    "outcome": "off_target"
+   },
+   "segments": [
+    {
+     "text": "Marsh surges forward",
+     "claim": "action-2"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Quiroga’s interception",
+     "claim": "action"
+    },
+    {
+     "text": " but ",
+     "claim": null
+    },
+    {
+     "text": "fires off target for Northbridge FC",
+     "claim": "shooter"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "missing a big chance late on",
+     "claim": "other"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Quiroga’s interception",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "NBR-03",
+      "other": null,
+      "side": null,
+      "until_seq": 1936,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Marsh surges forward",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "carry",
+      "actor": "NBR-11",
+      "other": null,
+      "side": null,
+      "until_seq": 1936,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "shooter",
+     "role": "core",
+     "span": "fires off target for Northbridge FC",
+     "extracted_kind": "shot_player",
+     "kind": "shot_player",
+     "ref": "S-1936",
+     "asserted": "NBR-11"
+    },
+    {
+     "id": "outcome",
+     "role": "core",
+     "span": "fires off target for Northbridge FC",
+     "extracted_kind": "shot_outcome",
+     "kind": "shot_outcome",
+     "ref": "S-1936",
+     "asserted": "off_target"
+    },
+    {
+     "id": "other",
+     "role": "context",
+     "span": "missing a big chance late on",
+     "extracted_kind": "other_fact",
+     "kind": "other_fact",
+     "asserted": "missing a big chance late on"
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Quiroga’s interception",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "NBR-03",
+       "other": null,
+       "side": null,
+       "until_seq": 1936,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "I-1928",
+       "R-1929"
+      ],
+      "note": "Recorded at 86' (R-1929)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Marsh surges forward",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "carry",
+       "actor": "NBR-11",
+       "other": null,
+       "side": null,
+       "until_seq": 1936,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "C-1933",
+       "SP-1934",
+       "C-1935"
+      ],
+      "note": "Recorded at 86' (C-1935)."
+     },
+     {
+      "id": "shooter",
+      "role": "core",
+      "span": "fires off target for Northbridge FC",
+      "extracted_kind": "shot_player",
+      "kind": "shot_player",
+      "ref": "S-1936",
+      "asserted": "NBR-11",
+      "status": "supported",
+      "actual": "NBR-11",
+      "evidence": [
+       "S-1936"
+      ],
+      "note": "Event names this player."
+     },
+     {
+      "id": "outcome",
+      "role": "core",
+      "span": "fires off target for Northbridge FC",
+      "extracted_kind": "shot_outcome",
+      "kind": "shot_outcome",
+      "ref": "S-1936",
+      "asserted": "off_target",
+      "status": "supported",
+      "actual": "off_target",
+      "evidence": [
+       "S-1936"
+      ],
+      "note": "Shot outcome: off target."
+     },
+     {
+      "id": "other",
+      "role": "context",
+      "span": "missing a big chance late on",
+      "extracted_kind": "other_fact",
+      "kind": "other_fact",
+      "asserted": "missing a big chance late on",
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "No rule can check this statement against the match data."
+     }
+    ],
+    "evidence": [
+     "I-1928",
+     "R-1929",
+     "C-1933",
+     "SP-1934",
+     "C-1935",
+     "S-1936"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Marsh surges forward after Quiroga’s interception and fires off target for Northbridge FC late in the game.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Marsh surges forward after Quiroga’s interception but fires off target for Northbridge FC, missing a big chance late on.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "missing a big chance late on",
+       "status": "unverifiable",
+       "note": "No rule can check this statement against the match data."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Marsh surges forward after Quiroga’s interception and fires off target for Northbridge FC late in the game.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-037",
+   "trigger_event_id": "SUB-1937",
+   "seq": 1937,
+   "period": 2,
+   "t": 5118.6,
+   "display_minute": "86'",
+   "type": "sub",
+   "side": "away",
+   "facts": {
+    "change": {
+     "on": "RVU-21",
+     "off": "RVU-11"
+    }
+   },
+   "segments": [
+    {
+     "text": "Riverside United make a late change as ",
+     "claim": null
+    },
+    {
+     "text": "Jesse Okonkwo replaces Faris Haddad",
+     "claim": "change"
+    },
+    {
+     "text": " amid ",
+     "claim": null
+    },
+    {
+     "text": "Northbridge's persistent pressure",
+     "claim": "action"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "change",
+     "role": "core",
+     "span": "Jesse Okonkwo replaces Faris Haddad",
+     "extracted_kind": "substitution",
+     "kind": "substitution",
+     "ref": "SUB-1937",
+     "asserted": {
+      "on": "RVU-21",
+      "off": "RVU-11"
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Northbridge's persistent pressure",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": null,
+      "other": null,
+      "side": "home",
+      "until_seq": 1937,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "VERIFY",
+    "claims": [
+     {
+      "id": "change",
+      "role": "core",
+      "span": "Jesse Okonkwo replaces Faris Haddad",
+      "extracted_kind": "substitution",
+      "kind": "substitution",
+      "ref": "SUB-1937",
+      "asserted": {
+       "on": "RVU-21",
+       "off": "RVU-11"
+      },
+      "status": "supported",
+      "actual": {
+       "on": "RVU-21",
+       "off": "RVU-11"
+      },
+      "evidence": [
+       "SUB-1937"
+      ],
+      "note": "Matches the substitution."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Northbridge's persistent pressure",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": null,
+       "other": null,
+       "side": "home",
+       "until_seq": 1937,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "PR-1906",
+       "PR-1911"
+      ],
+      "note": "Recorded at 85' (PR-1911)."
+     }
+    ],
+    "evidence": [
+     "SUB-1937",
+     "PR-1906",
+     "PR-1911"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Riverside United make a late change as Jesse Okonkwo replaces Faris Haddad amid Northbridge's persistent pressure.",
+    "by": "narrator",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Riverside United make a late change as Jesse Okonkwo replaces Faris Haddad amid Northbridge's persistent pressure.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-038",
+   "trigger_event_id": "PM-1978",
+   "seq": 1978,
+   "period": 2,
+   "t": 5228,
+   "display_minute": "88'",
+   "type": "milestone",
+   "side": "home",
+   "facts": {
+    "distance": {
+     "player": "NBR-08",
+     "km": 11
+    }
+   },
+   "segments": [
+    {
+     "text": "Sami Okafor has reached 12 km for Northbridge FC",
+     "claim": "distance"
+    },
+    {
+     "text": " as ",
+     "claim": null
+    },
+    {
+     "text": "Quiroga wins the ball back",
+     "claim": "action"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "pressing Strand for Riverside United",
+     "claim": "action-2"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "distance",
+     "role": "core",
+     "span": "Sami Okafor has reached 12 km for Northbridge FC",
+     "extracted_kind": "distance",
+     "kind": "distance",
+     "ref": "PM-1978",
+     "asserted": {
+      "player": "NBR-08",
+      "km": 12
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Quiroga wins the ball back",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": "NBR-03",
+      "other": null,
+      "side": null,
+      "until_seq": 1978,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "pressing Strand for Riverside United",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "NBR-07",
+      "other": "RVU-09",
+      "side": null,
+      "until_seq": 1978,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "WITHHOLD",
+    "claims": [
+     {
+      "id": "distance",
+      "role": "core",
+      "span": "Sami Okafor has reached 12 km for Northbridge FC",
+      "extracted_kind": "distance",
+      "kind": "distance",
+      "ref": "PM-1978",
+      "asserted": {
+       "player": "NBR-08",
+       "km": 12
+      },
+      "status": "contradicted",
+      "actual": {
+       "player": "NBR-08",
+       "km": 11
+      },
+      "evidence": [
+       "PM-1978"
+      ],
+      "note": "Recorded milestone is 11 km."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Quiroga wins the ball back",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": "NBR-03",
+       "other": null,
+       "side": null,
+       "until_seq": 1978,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "I-1976",
+       "R-1977"
+      ],
+      "note": "Recorded at 88' (R-1977)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "pressing Strand for Riverside United",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "NBR-07",
+       "other": "RVU-09",
+       "side": null,
+       "until_seq": 1978,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "PR-1973"
+      ],
+      "note": "No press by that player in the last 2 minutes; the latest was by Henrik Saul (PR-1973)."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Okafor",
+      "params": {
+       "player": "NBR-08"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Sami Okafor, but no checked statement about him holds."
+     },
+     {
+      "id": "name-2",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Strand",
+      "params": {
+       "player": "RVU-09"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Viktor Strand, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "PM-1978",
+     "I-1976",
+     "R-1977",
+     "PR-1973"
+    ]
+   },
+   "planted_error": {
+    "kind": "inflated_number"
+   },
+   "aired": {
+    "text": "Sami Okafor has reached 11 km for Northbridge FC as Quiroga wins the ball back.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Sami Okafor has reached 12 km for Northbridge FC as Quiroga wins the ball back after pressing Strand for Riverside United.",
+     "status": "WITHHOLD",
+     "flags": [
+      {
+       "span": "Sami Okafor has reached 12 km for Northbridge FC",
+       "status": "contradicted",
+       "note": "Recorded milestone is 11 km."
+      },
+      {
+       "span": "pressing Strand for Riverside United",
+       "status": "contradicted",
+       "note": "No press by that player in the last 2 minutes; the latest was by Henrik Saul (PR-1973)."
+      },
+      {
+       "span": "Okafor",
+       "status": "unverifiable",
+       "note": "Names Sami Okafor, but no checked statement about him holds."
+      },
+      {
+       "span": "Strand",
+       "status": "unverifiable",
+       "note": "Names Viktor Strand, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Sami Okafor has reached 11 km for Northbridge FC as Quiroga wins the ball back.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-039",
+   "trigger_event_id": "G-2031",
+   "seq": 2031,
+   "period": 2,
+   "t": 5315.9,
+   "display_minute": "89'",
+   "type": "goal",
+   "side": "home",
+   "facts": {
+    "scorer": "NBR-11",
+    "score": {
+     "home": 2,
+     "away": 2
+    },
+    "assist": "NBR-16",
+    "cause": true
+   },
+   "segments": [
+    {
+     "text": "Marsh levels for Northbridge FC at 3-2",
+     "claim": "scorer"
+    },
+    {
+     "text": " after ",
+     "claim": null
+    },
+    {
+     "text": "Ashkenazi’s slick assist",
+     "claim": "assist"
+    },
+    {
+     "text": ", ",
+     "claim": null
+    },
+    {
+     "text": "following a fierce press",
+     "claim": "cause"
+    },
+    {
+     "text": " and ",
+     "claim": null
+    },
+    {
+     "text": "neat passing move",
+     "claim": "action-3"
+    },
+    {
+     "text": ".",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "scorer",
+     "role": "core",
+     "span": "Marsh levels for Northbridge FC at 3-2",
+     "extracted_kind": "goal_scorer",
+     "kind": "goal_scorer",
+     "ref": "G-2031",
+     "asserted": "NBR-11"
+    },
+    {
+     "id": "assist",
+     "role": "context",
+     "span": "Ashkenazi’s slick assist",
+     "extracted_kind": "goal_assist",
+     "kind": "goal_assist",
+     "ref": "G-2031",
+     "asserted": "NBR-16"
+    },
+    {
+     "id": "cause",
+     "role": "context",
+     "span": "following a fierce press",
+     "extracted_kind": "goal_from_press",
+     "kind": "goal_from_press",
+     "ref": "G-2031",
+     "asserted": true
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "following a fierce press",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "NBR-07",
+      "other": null,
+      "side": "home",
+      "until_seq": 2031,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "following a fierce press",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pressure",
+      "actor": "NBR-08",
+      "other": null,
+      "side": "home",
+      "until_seq": 2031,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-3",
+     "role": "context",
+     "span": "neat passing move",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "NBR-16",
+      "other": "NBR-11",
+      "side": "home",
+      "until_seq": 2031,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "scorer",
+      "role": "core",
+      "span": "Marsh levels for Northbridge FC at 3-2",
+      "extracted_kind": "goal_scorer",
+      "kind": "goal_scorer",
+      "ref": "G-2031",
+      "asserted": "NBR-11",
+      "status": "supported",
+      "actual": "NBR-11",
+      "evidence": [
+       "G-2031",
+       "S-2030"
+      ],
+      "note": "Goal event names this scorer."
+     },
+     {
+      "id": "assist",
+      "role": "context",
+      "span": "Ashkenazi’s slick assist",
+      "extracted_kind": "goal_assist",
+      "kind": "goal_assist",
+      "ref": "G-2031",
+      "asserted": "NBR-16",
+      "status": "supported",
+      "actual": "NBR-16",
+      "evidence": [
+       "G-2031"
+      ],
+      "note": "Goal event names this assist."
+     },
+     {
+      "id": "cause",
+      "role": "context",
+      "span": "following a fierce press",
+      "extracted_kind": "goal_from_press",
+      "kind": "goal_from_press",
+      "ref": "G-2031",
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "PR-2019",
+       "R-2021",
+       "S-2030",
+       "G-2031"
+      ],
+      "note": "The move began with a recovery made within 5 s of a pressure."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "following a fierce press",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "NBR-07",
+       "other": null,
+       "side": "home",
+       "until_seq": 2031,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "PR-2025"
+      ],
+      "note": "No press by that player in the last 2 minutes; the latest was by Remy Castell (PR-2025)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "following a fierce press",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pressure",
+       "actor": "NBR-08",
+       "other": null,
+       "side": "home",
+       "until_seq": 2031,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "PR-2019"
+      ],
+      "note": "Recorded at 89' (PR-2019)."
+     },
+     {
+      "id": "action-3",
+      "role": "context",
+      "span": "neat passing move",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "NBR-16",
+       "other": "NBR-11",
+       "side": "home",
+       "until_seq": 2031,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "P-2029"
+      ],
+      "note": "Recorded at 89' (P-2029)."
+     }
+    ],
+    "evidence": [
+     "G-2031",
+     "S-2030",
+     "PR-2019",
+     "R-2021",
+     "PR-2025",
+     "P-2029"
+    ]
+   },
+   "planted_error": {
+    "kind": "wrong_score"
+   },
+   "aired": {
+    "text": "Marsh levels for Northbridge FC at 2-2 after Ashkenazi’s slick assist, following a neat passing move that started with a press.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Marsh levels for Northbridge FC at 3-2 after Ashkenazi’s slick assist, following a fierce press and neat passing move.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "following a fierce press",
+       "status": "contradicted",
+       "note": "No press by that player in the last 2 minutes; the latest was by Remy Castell (PR-2025)."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Marsh levels for Northbridge FC at 2-2 after Ashkenazi’s slick assist, following a press and neat passing move.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "following a press",
+       "status": "contradicted",
+       "note": "No press by that player in the last 2 minutes; the latest was by Remy Castell (PR-2025)."
+      }
+     ]
+    },
+    {
+     "attempt": 2,
+     "author": "editor",
+     "text": "Marsh levels for Northbridge FC at 2-2 after Ashkenazi’s slick assist, following a neat passing move that started with a press.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-040",
+   "trigger_event_id": "PM-2034",
+   "seq": 2034,
+   "period": 2,
+   "t": 5408.3,
+   "display_minute": "90+1'",
+   "type": "milestone",
+   "side": "away",
+   "facts": {
+    "distance": {
+     "player": "RVU-08",
+     "km": 11
+    }
+   },
+   "segments": [
+    {
+     "text": "Kenji Morita hits 11km",
+     "claim": "distance"
+    },
+    {
+     "text": " for Riverside United as ",
+     "claim": null
+    },
+    {
+     "text": "Bello’s risky pass gifts Northbridge a chance late on",
+     "claim": "action"
+    },
+    {
+     "text": "!",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "distance",
+     "role": "core",
+     "span": "Kenji Morita hits 11km",
+     "extracted_kind": "top_speed",
+     "kind": "distance",
+     "ref": "PM-2034",
+     "asserted": {
+      "player": "RVU-08",
+      "km": 11
+     }
+    },
+    {
+     "id": "action",
+     "role": "context",
+     "span": "Bello’s risky pass gifts Northbridge a chance late on",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "pass",
+      "actor": "RVU-17",
+      "other": null,
+      "side": "away",
+      "until_seq": 2034,
+      "window_s": 120
+     },
+     "asserted": true
+    },
+    {
+     "id": "action-2",
+     "role": "context",
+     "span": "Bello’s risky pass gifts Northbridge a chance late on",
+     "extracted_kind": "recent_action",
+     "kind": "recent_action",
+     "params": {
+      "action": "won_ball",
+      "actor": null,
+      "other": null,
+      "side": "home",
+      "until_seq": 2034,
+      "window_s": 120
+     },
+     "asserted": true
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "distance",
+      "role": "core",
+      "span": "Kenji Morita hits 11km",
+      "extracted_kind": "top_speed",
+      "kind": "distance",
+      "ref": "PM-2034",
+      "asserted": {
+       "player": "RVU-08",
+       "km": 11
+      },
+      "status": "supported",
+      "actual": {
+       "player": "RVU-08",
+       "km": 11
+      },
+      "evidence": [
+       "PM-2034"
+      ],
+      "note": "Matches the distance reading."
+     },
+     {
+      "id": "action",
+      "role": "context",
+      "span": "Bello’s risky pass gifts Northbridge a chance late on",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "pass",
+       "actor": "RVU-17",
+       "other": null,
+       "side": "away",
+       "until_seq": 2034,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "contradicted",
+      "actual": false,
+      "evidence": [
+       "P-2032"
+      ],
+      "note": "No completed pass by that player in the last 2 minutes; the latest was by Jesse Okonkwo (P-2032)."
+     },
+     {
+      "id": "action-2",
+      "role": "context",
+      "span": "Bello’s risky pass gifts Northbridge a chance late on",
+      "extracted_kind": "recent_action",
+      "kind": "recent_action",
+      "params": {
+       "action": "won_ball",
+       "actor": null,
+       "other": null,
+       "side": "home",
+       "until_seq": 2034,
+       "window_s": 120
+      },
+      "asserted": true,
+      "status": "supported",
+      "actual": true,
+      "evidence": [
+       "R-2021"
+      ],
+      "note": "Recorded at 89' (R-2021)."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Bello",
+      "params": {
+       "player": "RVU-17"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Tariq Bello, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "PM-2034",
+     "P-2032",
+     "R-2021"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Kenji Morita hits 11km for Riverside United.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Kenji Morita hits 11km for Riverside United as Bello’s risky pass gifts Northbridge a chance late on!",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Bello’s risky pass gifts Northbridge a chance late on",
+       "status": "contradicted",
+       "note": "No completed pass by that player in the last 2 minutes; the latest was by Jesse Okonkwo (P-2032)."
+      },
+      {
+       "span": "Bello",
+       "status": "unverifiable",
+       "note": "Names Tariq Bello, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Kenji Morita hits 11km for Riverside United.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  },
+  {
+   "id": "CAP-041",
+   "trigger_event_id": "CD-2048",
+   "seq": 2048,
+   "period": 2,
+   "t": 5438.3,
+   "display_minute": "90+1'",
+   "type": "card",
+   "side": "away",
+   "facts": {
+    "booked": "RVU-15"
+   },
+   "segments": [
+    {
+     "text": "Remy Castell gets booked for a late foul on Doyle",
+     "claim": "booked"
+    },
+    {
+     "text": " as the clock ticks into stoppage time at Riverside United.",
+     "claim": null
+    }
+   ],
+   "claims": [
+    {
+     "id": "booked",
+     "role": "core",
+     "span": "Remy Castell gets booked for a late foul on Doyle",
+     "extracted_kind": "card_player",
+     "kind": "card_player",
+     "ref": "CD-2048",
+     "asserted": "RVU-15"
+    }
+   ],
+   "verdict": {
+    "status": "QUALIFY",
+    "claims": [
+     {
+      "id": "booked",
+      "role": "core",
+      "span": "Remy Castell gets booked for a late foul on Doyle",
+      "extracted_kind": "card_player",
+      "kind": "card_player",
+      "ref": "CD-2048",
+      "asserted": "RVU-15",
+      "status": "supported",
+      "actual": "RVU-15",
+      "evidence": [
+       "CD-2048"
+      ],
+      "note": "Event names this player."
+     },
+     {
+      "id": "name-1",
+      "kind": "named_player",
+      "role": "context",
+      "span": "Doyle",
+      "params": {
+       "player": "NBR-06"
+      },
+      "asserted": true,
+      "status": "unverifiable",
+      "actual": null,
+      "evidence": [],
+      "note": "Names Ruairi Doyle, but no checked statement about him holds."
+     }
+    ],
+    "evidence": [
+     "CD-2048"
+    ]
+   },
+   "planted_error": null,
+   "aired": {
+    "text": "Remy Castell of Riverside United gets booked for a late foul as the clock ticks into stoppage time.",
+    "by": "editor",
+    "verified": true
+   },
+   "attempts": [
+    {
+     "attempt": 0,
+     "author": "narrator",
+     "text": "Remy Castell gets booked for a late foul on Doyle as the clock ticks into stoppage time at Riverside United.",
+     "status": "QUALIFY",
+     "flags": [
+      {
+       "span": "Doyle",
+       "status": "unverifiable",
+       "note": "Names Ruairi Doyle, but no checked statement about him holds."
+      }
+     ]
+    },
+    {
+     "attempt": 1,
+     "author": "editor",
+     "text": "Remy Castell of Riverside United gets booked for a late foul as the clock ticks into stoppage time.",
+     "status": "VERIFY",
+     "flags": []
+    }
+   ]
+  }
+ ]
+}

@@ -82,6 +82,7 @@ async def main(args: argparse.Namespace) -> None:
 
         # Resume: moments finished in an earlier run are loaded, not re-run.
         partial = Path(str(args.out) + ".partial.jsonl")
+        partial.parent.mkdir(parents=True, exist_ok=True)
         done: dict[int, dict] = {}
         if partial.exists() and not args.fresh:
             for line in partial.read_text(encoding="utf-8").splitlines():
