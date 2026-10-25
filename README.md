@@ -127,7 +127,7 @@ $env:FOUNDRY_MODEL = "gpt-4.1-mini"
 python agents\run_match.py --out public\traces\foundry-demo.json --rpm 30
 ```
 
-Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. You can then step through every agent call and the referee's verdict in the portal ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 7 workflow tests the same way.
+Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. In Application Insights, **Transaction search** then opens any caption as one timeline of every agent call, with the referee's verdict and evidence on its span ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 10 workflow tests the same way.
 
 ## Repository layout
 

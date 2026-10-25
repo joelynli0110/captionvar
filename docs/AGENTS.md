@@ -73,14 +73,18 @@ Each caption becomes one OpenTelemetry trace. The caption span is the root. Unde
 | `executor.process referee` | `captionvar.attempt`, `captionvar.author`, `captionvar.verdict`, `captionvar.claims`, `captionvar.claims_false`, `captionvar.claims_unchecked`, `captionvar.evidence` |
 | `invoke_agent …` / `chat …` | Model, token counts and latency, from Agent Framework |
 
-One-time setup: connect an Application Insights resource to the Foundry project. In the new Foundry portal, open the project and go to **Agents → Traces → Connect**. You can pick an existing resource or **Create new**. If there is no Connect button, use **Manage → Project details → Connected resources → Add connection → Application Insights**. To read traces you need the **Log Analytics Reader** role on that resource.
+One-time setup: connect an Application Insights resource to the Foundry project. The Foundry portal's menus change often; look for a **Tracing** or **Traces** page with a **Connect** button, or add it as a connected resource of the project (**Connected resources → Add connection → Application Insights**). You can pick an existing resource or create a new one. To read traces you need the **Log Analytics Reader** role on that resource.
 
 ```powershell
 pip install -r agents\requirements.txt        # adds azure-monitor-opentelemetry
 python agents\run_match.py --limit 5 --trace --out public\traces\trace-test.json
 ```
 
-The script reads the connection string from the project, so nothing else needs configuring. Traces show up after 2–5 minutes under **Traces** in the project. They are also in Application Insights, where **Transaction search** opens any caption as an end-to-end timeline. `--trace-content` also records prompts and replies; leave it off unless you need them. A five-caption run sends a few hundred spans, well inside the Application Insights free allowance.
+The script reads the connection string from the project, so nothing else needs configuring.
+
+To read a trace, open the Application Insights resource in the Azure portal and go to **Investigate → Transaction search**. Traces arrive after 2–5 minutes. Search for `caption` (or a minute, such as `caption 7'`) and open a result: **End-to-end transaction details** shows the caption as one timeline, with the narrator, extractor, referee and editor calls in order, and the attributes above on each span. Selecting the `executor.process referee` span shows that attempt's verdict and evidence IDs. Depending on the portal version, the same traces may also appear on the Foundry project's tracing page.
+
+`--trace-content` also records prompts and replies; leave it off unless you need them. A five-caption run sends a few hundred spans, well inside the Application Insights free allowance.
 
 ## Run it offline (no model)
 
