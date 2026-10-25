@@ -27,19 +27,28 @@ In the VAR room (right-hand panel) you can open any caption and see:
 - each draft, in order;
 - the event IDs behind each verdict, drawn on the pitch.
 
-## Results: one full match on Foundry (gpt-4.1-mini)
+## Results
 
-A seeded red team told the narrator to slip a specific error into about a third of the captions. The extractor and the referee were not told which captions those were.
+**Against simpler set-ups.** Five matches on Foundry (gpt-4.1-mini), 195 captions. Each set-up checks the same narrator drafts:
+
+| | Planted errors on air | Narrator's own false details on air | Cost per match |
+|---|---|---|---|
+| Narrator alone | 55 / 55 | 11 / 11 | ≈ $0.01 |
+| Same model checks itself | 0 / 55 | 8 / 11 | ≈ $0.02 |
+| Second LLM as judge + editor | 0 / 55 | 7 / 11 | ≈ $0.025 |
+| **CaptionVAR** | **0 / 55** | **0 / 11** | ≈ $0.10 |
+
+Given the facts, an LLM catches the errors you plant, but it misses the ones the model makes on its own. Those sit in the build-up ("loses possession under pressure from Sow" when Sow made no press), and a code referee looks up every one. Every own-error case was checked by hand against the raw events. Method, examples and caveats: [docs/EVALUATION.md](docs/EVALUATION.md).
+
+**The demo match.** A seeded red team told the narrator to slip a specific error into about a third of the captions. The extractor and the referee were not told which.
 
 | | |
 |---|---|
 | Captions written | 40 over 90 minutes |
 | Planted errors caught | **15 of 15** |
 | Captions with a false fact on air | **0** |
-| Flags on captions with no planted error | 1, a correct trim of a time remark the data can't check |
 | Aired as first written / after an editor rewrite / from the data | 24 / 15 / 1 |
-| Model calls | 116 (≈183k input and 12k output tokens) |
-| Cost and time for the whole match | **≈ $0.09**, 4 min 13 s |
+| Model calls, cost and time | 116 calls, **≈ $0.09**, 4 min 13 s |
 
 The full run is published in [`public/traces/foundry-demo.json`](public/traces/foundry-demo.json), and the demo replays it. Every draft, verdict and evidence ID is in that file.
 
@@ -71,6 +80,7 @@ Rules the referee enforces:
 - **Fail closed.** A caption with no claim that can be checked does not air.
 - **Every named player must be backed.** A name in the caption must belong to a claim that passed.
 - **Every caption must report its moment.** A true sentence that leaves out the scorer, the booked player or the sprint speed is withheld.
+- **No comparisons beyond the match.** "The best strike of the season" is flagged even if the extractor misses it.
 - **Build-up details are checked too.** "After Morita won it back" is looked up in the events of the previous two minutes.
 - **No future data.** The referee sees only events up to the moment being captioned.
 
@@ -103,7 +113,7 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ```bash
 npm install
-npm test          # 31 tests: simulator, referee, rendering
+npm test          # 32 tests: simulator, referee, rendering
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
 
@@ -136,7 +146,8 @@ docs/            agent design, data schema, media
 - **The match is synthetic.** Clubs, players and events are fictional, and positions are generated, not tracked. The design assumes an event feed with stable IDs, which official data providers supply, but it has not been run on one.
 - **The referee covers the claim types listed above.** Anything else ("their finest chance all season") is reported as uncheckable and trimmed, so a true remark can be dropped. That is the intended trade-off.
 - **The demo replays a recorded run.** The agents ran on Foundry and the site replays that trace, so no API key ships with the page. Run `run_match.py` to generate a new one.
-- **The red-team score measures the checking.** The planted errors are typical caption mistakes. The model's own unplanted errors are checked by the same code, but this run is too small to measure a recall rate for them.
+- **Strict, at the cost of some true detail.** The extractor sometimes ties a build-up action to the wrong player ("X under pressure from Y"). The referee then flags a true detail and the editor trims it. In the five-match comparison this cost 28 true details in 195 captions, and no false ones aired.
+- **The comparison is small.** It covers 5 matches, one model and 11 of the narrator's own errors. The direction is clear, but it is not a benchmark.
 - **English drafts only.** The agents write in English, and the other languages are rendered from the checked facts.
 
 ## License

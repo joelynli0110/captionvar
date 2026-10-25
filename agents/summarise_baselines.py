@@ -20,6 +20,7 @@ flag there is a measurement disagreement, listed for review.
 """
 import argparse
 import json
+import re
 from pathlib import Path
 
 SETUPS = ("narrator_only", "self_check", "llm_judge", "captionvar")
@@ -31,7 +32,8 @@ PLANT_KINDS = {
     "wrong_score": {"score"},
     "invented_goal": {"shot_outcome", "goal_scorer", "score"},
     "invented_cause": {"goal_from_press"},
-    "unverifiable_superlative": {"opinion", "other_fact"},
+    # Only the superlative itself: a rewrite's harmless "a big chance" is other_fact, not the plant.
+    "unverifiable_superlative": {"opinion"},
 }
 
 
@@ -53,6 +55,14 @@ def carries_plant(flags: list[dict], plant: str) -> bool:
     return any(f["kind"] in kinds and f["status"] in ("contradicted", "unverifiable") for f in flags)
 
 
+def verbatim(span: str | None, text: str | None) -> bool:
+    """The failed words still appear, word for word, in what aired (needs no second extraction)."""
+    if not span or not text or "..." in span:
+        return False
+    norm = lambda t: re.sub(r"[\u2018\u2019'`]", "'", t.lower())  # noqa: E731
+    return norm(span) in norm(text)
+
+
 def aired_flags(row: dict) -> list[dict]:
     m = row["m"]
     return [{**f, "status": "contradicted"} for f in m["false"]] + [{**f, "status": "unverifiable"} for f in m["unchecked"]]
@@ -64,7 +74,7 @@ def main(args: argparse.Namespace) -> None:
     if not paths:
         raise SystemExit("no baseline reports matched")
     reports = [json.loads(Path(p).read_text(encoding="utf-8")) for p in paths]
-    totals = {s: {"planted_in_drafts": 0, "planted_on_air": 0, "own_in_drafts": 0, "own_on_air": 0,
+    totals = {s: {"planted_in_drafts": 0, "planted_on_air": 0, "own_in_drafts": 0, "own_on_air": 0, "own_on_air_verbatim": 0,
                   "unchecked_on_air": 0, "not_aired": 0, "captions": 0} for s in SETUPS}
     own_cases, noise = [], []
     for rep in reports:
@@ -89,8 +99,10 @@ def main(args: argparse.Namespace) -> None:
                 if own:
                     t["own_in_drafts"] += 1
                     still = [f["span"] for f in flags if is_own(f, base)]
+                    word_for_word = [f["span"] for f in own if verbatim(f["span"], row["aired"])]
                     t["own_on_air"] += bool(still)
-                    case["aired"][s] = {"text": row["aired"], "still_false": still}
+                    t["own_on_air_verbatim"] += bool(word_for_word)
+                    case["aired"][s] = {"text": row["aired"], "still_false": still, "word_for_word": word_for_word}
                 if s == "captionvar" and (row["m"]["false"] or row["m"]["unchecked"]):
                     noise.append({"match": match, "id": row["id"], "aired": row["aired"],
                                   "flags": [f"{f['span']}: {f['note']}" for f in flags]})
@@ -103,11 +115,11 @@ def main(args: argparse.Namespace) -> None:
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
     print(f"{len(reports)} match(es), {totals['narrator_only']['captions']} captions\n")
-    print(f"{'set-up':<14}{'planted errors on air':>24}{'own errors on air':>20}{'unchecked on air':>18}{'not aired':>11}")
+    print(f"{'set-up':<14}{'planted on air':>16}{'own on air':>14}{'(word for word)':>17}{'unchecked on air':>18}{'not aired':>11}")
     for s in SETUPS:
         t = totals[s]
-        print(f"{s:<14}{t['planted_on_air']:>17}/{t['planted_in_drafts']:<6}{t['own_on_air']:>13}/{t['own_in_drafts']:<6}"
-              f"{t['unchecked_on_air']:>18}{t['not_aired']:>11}")
+        print(f"{s:<14}{t['planted_on_air']:>10}/{t['planted_in_drafts']:<5}{t['own_on_air']:>8}/{t['own_in_drafts']:<5}"
+              f"{t['own_on_air_verbatim']:>11}/{t['own_in_drafts']:<5}{t['unchecked_on_air']:>18}{t['not_aired']:>11}")
     print(f"\n{len(noise)} CaptionVAR caption(s) flagged by the re-measurement (review: these passed the referee once already).")
     print(f"wrote {args.out}")
 

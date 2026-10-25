@@ -274,6 +274,33 @@ export function checkNamedPlayers(text, verdict, players) {
 }
 
 /**
+ * Comparisons beyond this match ("the best strike of the season", "finest
+ * save in league history") cannot be checked against match data. The
+ * extractor normally reports them as opinions; this catches the ones it
+ * misses (seen in a Foundry run: "could've been the best strike attempt of
+ * the entire league season" aired unflagged). Words already inside a flagged
+ * claim are not counted twice.
+ */
+const SWEEPING = /\b(?:(?:the|their|his|its|our|a)\s+(?:best|greatest|finest|worst|biggest|fiercest|most\s+\w+)\b[^.!?]{0,40}?\b(?:season|history|career|decade|ever|all[- ]time|league)|season[- ]best|all[- ]time|of all time|ever\s+(?:seen|made|witnessed|scored)|in\s+(?:a\s+)?decade|(?:league|club)(?:'s|’s)?\s+history|record[- ]breaking)\b/i;
+
+export function checkSweepingClaims(text, verdict) {
+  const m = SWEEPING.exec(text);
+  if (!m) return verdict;
+  const hit = m[0].toLowerCase();
+  const covered = verdict.claims.some(c => c.status !== 'supported' && c.span && c.span.toLowerCase().includes(hit.split(/\s+/).slice(-1)[0]));
+  if (covered) return verdict;
+  return {
+    ...verdict,
+    status: verdict.status === 'VERIFY' ? 'QUALIFY' : verdict.status,
+    claims: [...verdict.claims, {
+      id: 'sweeping', kind: 'opinion', role: 'context', span: m[0], asserted: true,
+      status: 'unverifiable', actual: null, evidence: [],
+      note: 'A comparison beyond this match cannot be checked against the match data.',
+    }],
+  };
+}
+
+/**
  * The fact each kind of moment exists to report. A caption that drops it (an
  * editor rewrite that removes the scorer, or "Northbridge hit 12 km" for one
  * player's distance) is true but does not report the moment, so it is withheld
