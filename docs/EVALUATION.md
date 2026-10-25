@@ -52,3 +52,4 @@ Reproduce: [AGENTS.md → Baselines](AGENTS.md#baselines-what-the-multi-agent-de
 - The 11 own errors come from 5 matches with one model. The direction is clear (8 and 7 against 0), but the sample is small.
 - The matches are synthetic. Real commentary models may make different mistakes.
 - The LLM judge gets the same facts as the narrator. A judge with tools or more context might do better, at higher cost.
+- The comparison covers captions only. It was run before the Analyst, the recaps and their claim kinds (running totals, minutes since a shot, recent possession, earlier goals and bookings) were added. Those are scored by their own red team in each run's `summary.insights` and `summary.recaps`.

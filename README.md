@@ -2,7 +2,7 @@
 
 **AI match commentary, checked against the data before it airs.**
 
-A multi-agent system on **Microsoft Foundry** where one agent writes live football captions, a second reports what they claim, and a referee written in code checks every claim against the match events before anything reaches the viewer. Built for the Microsoft × Premier League *Inside the Game* hackathon.
+A multi-agent system on **Microsoft Foundry** where one agent writes live football captions, another explains why key moments matter, a third writes the half-time and full-time recaps, and a referee written in code checks every claim they make against the match events before anything reaches the viewer. Built for the Microsoft × Premier League *Inside the Game* hackathon.
 
 **[Open the live demo](https://joelynli0110.github.io/captionvar-live-starter/)**. It needs no sign-in and opens at 72:30 of a synthetic match, playing at 8× speed.
 
@@ -22,10 +22,16 @@ Every caption goes through a VAR check before it airs. The model writes the capt
 | **Trimmed** | The main claim holds, but a detail is false or can't be checked | The caption with that detail removed |
 | **Withheld** | The main claim is false | A corrected rewrite that passed the same check, or a caption built from the data |
 
+After a goal, a big chance, a pressing spell or a possession report, an **Analyst** adds one line on **why it matters**, from running numbers: shots and xG so far, minutes since the last shot on target, possession over the last 10 minutes, a player's match totals. At half-time and full time a **Recap writer** sums up the half. These lines go through the same check, with one difference: a caption always airs (corrected if need be), but a line of context or a recap sentence that still fails after one rewrite is cut.
+
 In the VAR room (right-hand panel) you can open any caption and see:
 - the false words struck through, with the reason;
-- each draft, in order;
+- whether the red team planted the error or the narrator made it on its own (checked by hand);
+- each draft, in order, and how long the caption took to air;
+- the line on why it matters, with its own verdict;
 - the event IDs behind each verdict, drawn on the pitch.
+
+The **Recaps** tab shows each recap sentence by sentence, with any the check cut.
 
 ## Results
 
@@ -59,14 +65,22 @@ flowchart LR
     M[("Match events<br/>observed so far")] --> N
     subgraph Foundry["Microsoft Agent Framework workflow"]
         N["Narrator<br/><i>LLM</i>"] --> X["Claim Extractor<br/><i>LLM, never sees the facts</i>"]
-        X --> R{"VAR Referee<br/><i>deterministic code</i>"}
+        X --> R{"VAR Referee<br/><i>code, over MCP</i>"}
         R -- fails --> E["Editor<br/><i>LLM, sees the verdict</i>"]
         E -- "rewrite, at most 2" --> X
         R -- "passes, or 2 rewrites failed" --> P["Publisher"]
+        P -- "key moment" --> A["Analyst<br/><i>LLM: why it matters</i>"]
+        W["Recap writer<br/><i>LLM, HT and FT</i>"]
+        A -- "line" --> X
+        W -- "each sentence" --> X
+        R -- "line fails" --> LE["Line editor<br/><i>LLM, one rewrite</i>"]
+        LE --> X
+        R -- "line passes" --> LP["Line publisher<br/><i>or cut</i>"]
     end
     M --> R
-    RT["Red team<br/><i>seeded</i>"] -. "plant an error" .-> N
+    RT["Red team<br/><i>seeded</i>"] -. "plant an error" .-> N & A & W
     P --> V["Broadcast overlay<br/>4 languages · fan / analyst"]
+    LP --> V
 ```
 
 What each agent does:
@@ -74,7 +88,12 @@ What each agent does:
 - **Claim Extractor** (LLM with structured output): turns the line into typed claims and records the exact words behind each claim. It sees only the caption and the squad lists, never the facts, so it can't quietly fix a claim before the check.
 - **Referee** (code): checks each claim against the events, with explicit tolerances, and cites the event IDs it used. The browser and the unit tests run this same code.
 - **Editor** (LLM): gets the verdict on each claim and the true facts, and rewrites the caption. Each rewrite goes back through the same extraction and check.
-- **Publisher**: airs the first version that passes. If none passes, it airs a caption built straight from the data.
+- **Publisher**: airs the first version that passes. If none passes, it airs a caption built straight from the data. For key moments it then hands the aired caption to the Analyst.
+- **Analyst** (LLM): writes one line on why the moment matters from the running numbers behind it.
+- **Recap writer** (LLM with structured output): writes the half-time and full-time recaps as separate sentences, each checked on its own.
+- **Line editor** (LLM): rewrites a failed line or recap sentence once; if it still fails, it is cut.
+
+The referee is an **MCP server** ([`scripts/referee-mcp.mjs`](scripts/referee-mcp.mjs)): the workflow calls its `check_caption` tool and the views each agent may see over MCP, and every call is its own span in the trace. Any MCP client can use the same tools; [`.vscode/mcp.json`](.vscode/mcp.json) adds them to GitHub Copilot agent mode in VS Code.
 
 Rules the referee enforces:
 - **Fail closed.** A caption with no claim that can be checked does not air.
@@ -82,9 +101,10 @@ Rules the referee enforces:
 - **Every caption must report its moment.** A true sentence that leaves out the scorer, the booked player or the sprint speed is withheld.
 - **No comparisons beyond the match.** "The best strike of the season" is flagged even if the extractor misses it.
 - **Build-up details are checked too.** "After Morita won it back" is looked up in the events of the previous two minutes.
-- **No future data.** The referee sees only events up to the moment being captioned.
+- **No future data.** The referee sees only events up to the moment being captioned, or the end of the half for a recap.
+- **Lines of context may interpret, not invent.** "The press is pinning them back" is allowed as framing next to at least one checked number; a line with no checked fact, or a false one, does not air.
 
-Claims it can check: scorer, assist, score, whether the goal came from a press, the scorer's goal tally, shooter, shot outcome, xG, booked player, substitutions, top speed, distance covered, possession, pass accuracy, recoveries in a time window, and the recent actions behind a moment (foul, tackle, pass, carry, press, ball won, ball lost, shot, save, block).
+Claims it can check: scorer, assist, score, whether the goal came from a press, the scorer's goal tally, shooter, shot outcome, xG, booked player, substitutions, top speed, distance covered, possession, pass accuracy, recoveries in a time window, the recent actions behind a moment (foul, tackle, pass, carry, press, ball won, ball lost, shot, save, block), and for context and recaps: team and player totals so far (shots, shots on target, xG, corners, fouls, bookings, final-third recoveries, goals, assists, passes), minutes since a team's previous shot, shot on target or goal, possession over the last 10 minutes, and earlier goals and bookings.
 
 More detail: [docs/AGENTS.md](docs/AGENTS.md).
 
@@ -113,7 +133,7 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ```bash
 npm install
-npm test          # 32 tests: simulator, referee, rendering
+npm test          # 36 tests: simulator, referee, context lines and recaps, rendering
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
 
@@ -127,16 +147,20 @@ $env:FOUNDRY_MODEL = "gpt-4.1-mini"
 python agents\run_match.py --out public\traces\foundry-demo.json --rpm 30
 ```
 
-Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. In Application Insights, **Transaction search** then opens any caption as one timeline of every agent call, with the referee's verdict and evidence on its span ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 10 workflow tests the same way.
+Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. In Application Insights, **Transaction search** then opens any caption as one timeline of every agent call, with the referee's verdict and evidence on its span ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 16 workflow tests the same way. `--no-insights` and `--no-recaps` skip the Analyst and the recaps.
+
+To replay a run you made, put it in `public/traces/` and open the demo with `?trace=<file>.json`. `?at=77`, `?at=HT` or `?at=FT` starts playback at that point.
+
+**The referee over MCP** needs only Node.js: `node scripts/referee-mcp.mjs` serves it on stdio. In VS Code, open the repository and start `captionvar-referee` from `.vscode/mcp.json`; Copilot agent mode can then check a caption with `check_caption`.
 
 ## Repository layout
 
 ```text
 src/sim/         seeded match simulator, stats, live feed, validator
-src/broadcast/   referee (verify.js), claim binding, agent packets, caption rendering
+src/broadcast/   referee (verify.js, statements.js), claim binding, context and recap facts, agent packets, rendering
 src/ui/          pitch, broadcast overlay, VAR room, timeline (React)
 agents/          Microsoft Agent Framework workflow, prompts, run_match.py
-scripts/         match generator, calibration, factbox (the referee as a service for Python)
+scripts/         match generator, calibration, referee-mcp.mjs (the referee as an MCP server), factbox
 public/traces/   the published Foundry run
 docs/            agent design, data schema, media
 ```
@@ -148,7 +172,7 @@ docs/            agent design, data schema, media
 - **The demo replays a recorded run.** The agents ran on Foundry and the site replays that trace, so no API key ships with the page. Run `run_match.py` to generate a new one.
 - **Strict, at the cost of some true detail.** The extractor sometimes ties a build-up action to the wrong player ("X under pressure from Y"). The referee then flags a true detail and the editor trims it. In the five-match comparison this cost 28 true details in 195 captions, and no false ones aired.
 - **The comparison is small.** It covers 5 matches, one model and 11 of the narrator's own errors. The direction is clear, but it is not a benchmark.
-- **English drafts only.** The agents write in English, and the other languages are rendered from the checked facts.
+- **English drafts only.** The agents write in English, and the other languages are rendered from the checked facts. Lines of context are free text, so they show in English only.
 
 ## License
 
