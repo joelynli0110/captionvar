@@ -2,10 +2,18 @@
 
 One workflow run per captioned moment:
 
-    Narrator ──► Extractor ──► Referee ──┬─(passes, or out of retries)──► Publisher
-       (LLM)       (LLM)      (code)     │
-                     ▲                   └─(fails)──► Editor (LLM) ─┐
-                     └──────────────────────────────────────────────┘
+    Narrator ──► Extractor ──► Referee ──┬─(passes, or out of retries)──► Publisher ──► Analyst ─┐
+       (LLM)       (LLM)      (code)     │                                              (LLM)    │
+                     ▲  ▲                └─(fails)──► Editor (LLM) ─┐                            │
+                     │  └───────────────────────────────────────────┘                            │
+                     └───────────── the Analyst's "why it matters" line takes the same path ─────┘
+                                    (Line editor on a fail, Line publisher at the end)
+
+and one per recap (half-time, full time), where each sentence of the Recap
+writer goes through Extractor and Referee on its own:
+
+    Recap writer ──► Extractor ──► Referee ──┬──► Line publisher
+       (LLM)           (LLM)       (code)    └──► Line editor (LLM) ──► Extractor
 
 * Narrator   writes the caption from the moment's facts (optionally told by
              the red team to plant one specific error).
@@ -18,6 +26,13 @@ One workflow run per captioned moment:
              the rewrite goes back through Extractor and Referee.
 * Publisher  airs the first version that passes. If none does within the
              retry budget, it airs a template rendered from the true facts.
+             For key moments it then hands the aired caption to the Analyst.
+* Analyst    writes one line on why the moment matters, from running numbers
+             (totals, xG, minutes since the last shot on target, recent possession).
+* Recap writer  writes the half-time and full-time recaps as separate sentences.
+* Line editor   rewrites a failed line or recap sentence once.
+* Line publisher  airs a line or sentence only if it passed; otherwise it is
+             dropped. A caption always airs; context is optional.
 """
 import asyncio
 import json
@@ -34,6 +49,8 @@ from . import prompts
 from .factbox import Factbox
 
 MAX_EDITS = 2
+# Lines of context and recap sentences get one rewrite, then are dropped.
+MAX_LINE_EDITS = 1
 
 # OpenTelemetry. A no-op unless run_match.py --trace sets up an exporter, in
 # which case each caption becomes one trace in Foundry: the caption span holds
@@ -50,16 +67,46 @@ class MomentTask:
     index: int
     packet: dict
     plant: str | None
+    # A line of context follows the caption for key moments.
+    insight: bool = False
+    insight_plant: str | None = None
+
+
+@dataclass
+class AnalystTask:
+    index: int
+    caption: str
+    plant: str | None
+
+
+@dataclass
+class RecapTask:
+    recap: str  # "HT" or "FT"
+    plant: str | None
 
 
 @dataclass
 class Draft:
-    index: int
+    index: int | None
     text: str
     attempt: int
     author: str
     plant: str | None
     history: list = field(default_factory=list)
+    # What is being written: a caption, a "why it matters" line, or a recap sentence.
+    scope: str = "caption"
+    recap: str | None = None
+    part: int = 0
+    followup: AnalystTask | None = None
+
+    def where(self) -> dict:
+        """Arguments that tell the referee what this draft is checked against."""
+        where = {"scope": self.scope}
+        if self.index is not None:
+            where["index"] = self.index
+        if self.recap:
+            where["recap"] = self.recap
+        return where
 
 
 @dataclass
@@ -225,7 +272,51 @@ class NarratorExecutor(Executor):
                 + " Keep everything else accurate."
             )
         response = await ask(self.agent, self.usage, payload, temperature=0.8)
-        await ctx.send_message(Draft(task.index, clean(response.text), 0, "narrator", task.plant))
+        followup = AnalystTask(task.index, "", task.insight_plant) if task.insight else None
+        await ctx.send_message(Draft(task.index, clean(response.text), 0, "narrator", task.plant, followup=followup))
+
+
+def red_team_line(menu: dict, plant: str | None) -> dict:
+    if not plant or plant not in menu:
+        return {}
+    return {"red_team_instruction": "For this text only, include exactly one plausible but FALSE detail: "
+            + menu[plant] + " Keep everything else accurate."}
+
+
+class AnalystExecutor(Executor):
+    """Writes why a moment matters, after its caption has aired."""
+
+    def __init__(self, agent: Agent, factbox: Factbox, usage: Usage) -> None:
+        super().__init__(id="analyst")
+        self.agent, self.factbox, self.usage = agent, factbox, usage
+
+    @handler
+    async def write(self, task: AnalystTask, ctx: WorkflowContext[Draft]) -> None:
+        packet = await self.factbox.call("analyst_packet", index=task.index, caption=task.caption)
+        payload = {**packet, **red_team_line(prompts.RED_TEAM_INSIGHT, task.plant)}
+        response = await ask(self.agent, self.usage, payload, temperature=0.7)
+        await ctx.send_message(Draft(task.index, clean(response.text), 0, "analyst", task.plant, scope="insight"))
+
+
+class RecapWriterExecutor(Executor):
+    """Writes a recap as separate sentences; each is checked on its own."""
+
+    def __init__(self, agent: Agent, factbox: Factbox, usage: Usage) -> None:
+        super().__init__(id="recap_writer")
+        self.agent, self.factbox, self.usage = agent, factbox, usage
+
+    @handler
+    async def write(self, task: RecapTask, ctx: WorkflowContext[Draft, dict]) -> None:
+        packet = await self.factbox.call("recap_packet", recap=task.recap)
+        payload = {**packet, **red_team_line(prompts.RED_TEAM_RECAP, task.plant)}
+        response = await ask(self.agent, self.usage, payload, response_format=prompts.Recap, temperature=0.6)
+        value = response.value or prompts.Recap.model_validate_json(response.text)
+        sentences = [clean(t) for t in value.sentences if clean(t)]
+        # Which sentence carries the plant is ground truth for scoring only; the checkers never see it.
+        await ctx.yield_output({"kind": "recap_plan", "recap": task.recap, "sentences": sentences,
+                                "planted_sentence": value.planted_sentence if task.plant else None})
+        for i, text in enumerate(sentences):
+            await ctx.send_message(Draft(None, text, 0, "recap_writer", task.plant, scope="recap", recap=task.recap, part=i))
 
 
 class ExtractorExecutor(Executor):
@@ -235,7 +326,7 @@ class ExtractorExecutor(Executor):
 
     @handler
     async def extract(self, draft: Draft, ctx: WorkflowContext[Extracted]) -> None:
-        packet = await self.factbox.call("extractor_packet", index=draft.index, text=draft.text)
+        packet = await self.factbox.call("extractor_packet", text=draft.text, **draft.where())
         response = await ask(self.agent, self.usage, packet, response_format=prompts.Extraction, temperature=0)
         value = response.value or prompts.Extraction.model_validate_json(response.text)
         claims = [c.model_dump() for c in value.claims]
@@ -252,10 +343,11 @@ class RefereeExecutor(Executor):
     @handler
     async def check(self, item: Extracted, ctx: WorkflowContext[Checked]) -> None:
         started = time.perf_counter()
-        result = await self.factbox.call("verify", index=item.draft.index, text=item.draft.text, extracted=item.claims)
+        result = await self.factbox.call("verify", text=item.draft.text, extracted=item.claims, **item.draft.where())
         self.usage.referee_s += time.perf_counter() - started
         claims = result["verdict"]["claims"]
         trace.get_current_span().set_attributes({
+            "captionvar.scope": item.draft.scope,
             "captionvar.attempt": item.draft.attempt,
             "captionvar.author": item.draft.author,
             "captionvar.verdict": result["verdict"]["status"],
@@ -273,8 +365,10 @@ class RefereeExecutor(Executor):
             # Why this version did not pass, so a reviewer can see what each rewrite fixed.
             "flags": [
                 {"span": c.get("span"), "status": c["status"], "note": c.get("note")}
-                for c in result["verdict"]["claims"] if c["status"] != "supported"
+                for c in result["verdict"]["claims"] if c["status"] != "supported" and not c.get("framing")
             ],
+            "verdict": result["verdict"],
+            "segments": result["segments"],
         })
         await ctx.send_message(Checked(item.draft, result))
 
@@ -289,57 +383,162 @@ class EditorExecutor(Executor):
         d = checked.draft
         packet = await self.factbox.call("editor_packet", index=d.index, text=d.text, verdict=checked.result["verdict"])
         response = await ask(self.agent, self.usage, packet, temperature=0.3)
-        await ctx.send_message(Draft(d.index, clean(response.text), d.attempt + 1, "editor", d.plant, d.history))
+        await ctx.send_message(Draft(d.index, clean(response.text), d.attempt + 1, "editor", d.plant, d.history, followup=d.followup))
+
+
+class LineEditorExecutor(Executor):
+    """Rewrites a failed line of context or recap sentence, once."""
+
+    def __init__(self, agent: Agent, factbox: Factbox, usage: Usage) -> None:
+        super().__init__(id="line_editor")
+        self.agent, self.factbox, self.usage = agent, factbox, usage
+
+    @handler
+    async def rewrite(self, checked: Checked, ctx: WorkflowContext[Draft]) -> None:
+        d = checked.draft
+        packet = await self.factbox.call("line_editor_packet", text=d.text, verdict=checked.result["verdict"], **d.where())
+        response = await ask(self.agent, self.usage, packet, temperature=0.3)
+        await ctx.send_message(Draft(d.index, clean(response.text), d.attempt + 1, "line_editor", d.plant, d.history,
+                                     scope=d.scope, recap=d.recap, part=d.part))
+
+
+def clock(usage: Usage) -> dict:
+    """When an output aired, and the time spent so far, for time-to-air."""
+    return {"at": time.perf_counter(), "throttle_s": usage.throttle_s, "model_s": usage.model_s,
+            "referee_s": usage.referee_s, "calls": usage.calls}
 
 
 class PublisherExecutor(Executor):
-    def __init__(self, factbox: Factbox) -> None:
+    def __init__(self, factbox: Factbox, usage: Usage) -> None:
         super().__init__(id="publisher")
-        self.factbox = factbox
+        self.factbox, self.usage = factbox, usage
 
     @handler
-    async def publish(self, checked: Checked, ctx: WorkflowContext[Never, dict]) -> None:
+    async def publish(self, checked: Checked, ctx: WorkflowContext[AnalystTask, dict]) -> None:
         d = checked.draft
         if checked.status == "VERIFY":
             aired = {"text": d.text, "by": d.author, "verified": True}
         else:
             fallback = await self.factbox.call("template", index=d.index, verdict=checked.result["verdict"])
             aired = {"text": fallback["text"], "by": "template", "verified": True}
-        await ctx.yield_output({"history": d.history, "aired": aired, "plant": d.plant})
+        await ctx.yield_output({"kind": "caption", "history": d.history, "aired": aired, "plant": d.plant, "clock": clock(self.usage)})
+        # Hand-off: the Analyst explains the moment the viewer has just seen.
+        if d.followup:
+            await ctx.send_message(AnalystTask(d.index, aired["text"], d.followup.plant))
+
+
+class LinePublisherExecutor(Executor):
+    """Airs a line of context or a recap sentence only if it passed."""
+
+    def __init__(self, usage: Usage) -> None:
+        super().__init__(id="line_publisher")
+        self.usage = usage
+
+    @handler
+    async def publish(self, checked: Checked, ctx: WorkflowContext[Never, dict]) -> None:
+        d = checked.draft
+        aired = {"text": d.text, "by": d.author, "verified": True} if checked.status == "VERIFY" else None
+        await ctx.yield_output({"kind": d.scope, "recap": d.recap, "part": d.part, "history": d.history,
+                                "aired": aired, "plant": d.plant, "clock": clock(self.usage)})
+
+
+def max_edits(draft: Draft) -> int:
+    return MAX_EDITS if draft.scope == "caption" else MAX_LINE_EDITS
 
 
 def needs_edit(msg: Any) -> bool:
-    return isinstance(msg, Checked) and msg.status != "VERIFY" and msg.draft.attempt < MAX_EDITS
+    return isinstance(msg, Checked) and msg.status != "VERIFY" and msg.draft.attempt < max_edits(msg.draft)
 
 
 def ready_to_air(msg: Any) -> bool:
     return isinstance(msg, Checked) and not needs_edit(msg)
 
 
-def build_workflow(narrator: Agent, extractor: Agent, editor: Agent, factbox: Factbox, usage: Usage):
-    n = NarratorExecutor(narrator, usage)
-    x = ExtractorExecutor(extractor, factbox, usage)
+def is_caption(msg: Any) -> bool:
+    return msg.draft.scope == "caption"
+
+
+def caption_needs_edit(msg: Any) -> bool:
+    return needs_edit(msg) and is_caption(msg)
+
+
+def line_needs_edit(msg: Any) -> bool:
+    return needs_edit(msg) and not is_caption(msg)
+
+
+def caption_ready(msg: Any) -> bool:
+    return ready_to_air(msg) and is_caption(msg)
+
+
+def line_ready(msg: Any) -> bool:
+    return ready_to_air(msg) and not is_caption(msg)
+
+
+@dataclass
+class Agents:
+    narrator: Agent
+    extractor: Agent
+    editor: Agent
+    analyst: Agent
+    recap_writer: Agent
+    line_editor: Agent
+
+
+def build_workflow(agents: Agents, factbox: Factbox, usage: Usage):
+    """Caption, then (for key moments) a checked line on why it matters."""
+    n = NarratorExecutor(agents.narrator, usage)
+    x = ExtractorExecutor(agents.extractor, factbox, usage)
     r = RefereeExecutor(factbox, usage)
-    e = EditorExecutor(editor, factbox, usage)
-    p = PublisherExecutor(factbox)
+    e = EditorExecutor(agents.editor, factbox, usage)
+    p = PublisherExecutor(factbox, usage)
+    a = AnalystExecutor(agents.analyst, factbox, usage)
+    le = LineEditorExecutor(agents.line_editor, factbox, usage)
+    lp = LinePublisherExecutor(usage)
     return (
-        WorkflowBuilder(start_executor=n, name="captionvar", description="Narrate, extract, VAR check, edit, publish")
+        WorkflowBuilder(start_executor=n, name="captionvar", description="Narrate, extract, VAR check, edit, publish, explain")
         .add_edge(n, x)
         .add_edge(x, r)
-        .add_edge(r, e, condition=needs_edit)
-        .add_edge(r, p, condition=ready_to_air)
+        .add_edge(r, e, condition=caption_needs_edit)
+        .add_edge(r, p, condition=caption_ready)
         .add_edge(e, x)
+        .add_edge(p, a)
+        .add_edge(a, x)
+        .add_edge(r, le, condition=line_needs_edit)
+        .add_edge(r, lp, condition=line_ready)
+        .add_edge(le, x)
         .build()
     )
 
 
-def make_agents(client: Any) -> tuple[Agent, Agent, Agent]:
-    from .prompts import EXTRACTOR, EDITOR, NARRATOR
+def build_recap_workflow(agents: Agents, factbox: Factbox, usage: Usage):
+    """A recap, every sentence checked on its own."""
+    w = RecapWriterExecutor(agents.recap_writer, factbox, usage)
+    x = ExtractorExecutor(agents.extractor, factbox, usage)
+    r = RefereeExecutor(factbox, usage)
+    le = LineEditorExecutor(agents.line_editor, factbox, usage)
+    lp = LinePublisherExecutor(usage)
+    return (
+        WorkflowBuilder(start_executor=w, name="captionvar-recap", description="Write a recap, check each sentence, edit, publish")
+        .add_edge(w, x)
+        .add_edge(x, r)
+        .add_edge(r, le, condition=line_needs_edit)
+        .add_edge(r, lp, condition=line_ready)
+        .add_edge(le, x)
+        .build()
+    )
+
+
+def make_agents(client: Any) -> Agents:
+    from .prompts import ANALYST, EDITOR, EXTRACTOR, LINE_EDITOR, NARRATOR, RECAP_WRITER
     kinds = "\n".join(f"- {k}: {v}" for k, v in KIND_DOCS.items())
-    narrator = Agent(client, NARRATOR, name="narrator", description="Writes live captions from moment facts")
-    extractor = Agent(client, EXTRACTOR.format(kinds=kinds), name="extractor", description="Extracts checkable claims; blind to the facts")
-    editor = Agent(client, EDITOR, name="editor", description="Repairs captions that failed the VAR check")
-    return narrator, extractor, editor
+    return Agents(
+        narrator=Agent(client, NARRATOR, name="narrator", description="Writes live captions from moment facts"),
+        extractor=Agent(client, EXTRACTOR.format(kinds=kinds), name="extractor", description="Extracts checkable claims; blind to the facts"),
+        editor=Agent(client, EDITOR, name="editor", description="Repairs captions that failed the VAR check"),
+        analyst=Agent(client, ANALYST, name="analyst", description="Explains why a moment matters from running numbers"),
+        recap_writer=Agent(client, RECAP_WRITER, name="recap_writer", description="Writes half-time and full-time recaps"),
+        line_editor=Agent(client, LINE_EDITOR, name="line_editor", description="Repairs a line of context or recap sentence once"),
+    )
 
 
 # Kept in sync with src/broadcast/extracted.js (EXTRACTABLE_KINDS).
@@ -363,6 +562,12 @@ KIND_DOCS = {
     "recent_action": "Something a named player (or a team) did in the build-up: a foul, winning the ball, pressing, a pass, a run with the ball, losing the ball, a shot, a save, a block or a tackle.",
     "opinion": "A judgement, comparison or superlative that match data cannot confirm.",
     "other_fact": "Any other factual assertion not covered above.",
+    "team_total": "A team's running total so far in the match (metric: goals, shots, shots_on_target, xg, corners, fouls, yellow_cards, final_third_recoveries).",
+    "player_total": "A player's running total so far in the match (metric: goals, assists, shots, recoveries, pressures, passes_completed).",
+    "minutes_since": "How many minutes since the team's previous shot, shot_on_target or goal (metric), e.g. 'their first shot on target in 20 minutes'.",
+    "recent_possession": "A team's share of possession in percent over the last 10 minutes.",
+    "goal_event": "A goal scored earlier: who scored (player_id), who assisted (other_player_id) and at which minute (number), as far as stated.",
+    "card_event": "A player booked earlier in the match.",
 }
 
 
@@ -382,44 +587,139 @@ def plan_red_team(packets: list[dict], rate: float, seed: str) -> dict[int, str]
     return plan
 
 
+def plan_line_red_team(keys: list, menu: dict, rate: float, seed: str) -> dict:
+    """The same for lines of context (keyed by moment index) or recaps (keyed by "HT"/"FT")."""
+    rng = random.Random(seed)
+    options = sorted(menu)
+    return {k: rng.choice(options) for k in keys if rng.random() < rate}
+
+
 # -------------------------------------------------------------------- run
 
 
-async def run_moment(index: int, packet: dict, plant: str | None, agents: tuple, factbox: Factbox, usage: Usage) -> dict:
+def timing_since(start: dict, end: dict) -> dict:
+    """Time from a run's start to an output airing, without rate-limit waits.
+
+    Moments are captioned one at a time, so nothing else competes for the time
+    measured here: it is the model calls, the referee and the workflow itself.
+    """
+    throttle = end["throttle_s"] - start["throttle_s"]
+    return {
+        "time_to_air_s": round(max(0.0, end["at"] - start["at"] - throttle), 2),
+        "model_s": round(end["model_s"] - start["model_s"], 2),
+        "referee_ms": round((end["referee_s"] - start["referee_s"]) * 1000, 1),
+        "model_calls": end["calls"] - start["calls"],
+        "throttle_s": round(throttle, 2),
+    }
+
+
+async def run_moment(index: int, packet: dict, plant: str | None, agents: Agents, factbox: Factbox, usage: Usage,
+                     insight: bool = False, insight_plant: str | None = None) -> dict:
+    """Caption one moment (and, for key moments, explain it). Returns the caption and the line of context."""
     with TRACER.start_as_current_span(f"caption {packet['minute']} {packet['moment_type']}") as span:
         span.set_attributes({
             "captionvar.moment_index": index,
             "captionvar.minute": packet["minute"],
             "captionvar.moment_type": packet["moment_type"],
             "captionvar.red_team": plant or "none",
+            "captionvar.insight_red_team": (insight_plant or "none") if insight else "n/a",
         })
-        workflow = build_workflow(*agents, factbox, usage)
-        events = await workflow.run(MomentTask(index, packet, plant))
+        start = clock(usage)
+        workflow = build_workflow(agents, factbox, usage)
+        events = await workflow.run(MomentTask(index, packet, plant, insight, insight_plant))
         outputs = events.get_outputs()
-        if not outputs:
-            raise RuntimeError(f"moment {index}: workflow produced no output")
-        out = outputs[-1]
+        caption = next((o for o in outputs if o.get("kind") == "caption"), None)
+        if not caption:
+            raise RuntimeError(f"moment {index}: workflow produced no caption")
+        line = next((o for o in outputs if o.get("kind") == "insight"), None)
+        if insight and not line:
+            raise RuntimeError(f"moment {index}: the analyst produced no line")
+        caption["timing"] = timing_since(start, caption["clock"])
+        if line:
+            line["timing"] = timing_since(start, line["clock"])
         span.set_attributes({
-            "captionvar.first_draft_verdict": out["history"][0]["status"],
-            "captionvar.rewrites": len(out["history"]) - 1,
-            "captionvar.aired_by": out["aired"]["by"],
-            "captionvar.aired_text": out["aired"]["text"],
+            "captionvar.first_draft_verdict": caption["history"][0]["status"],
+            "captionvar.rewrites": len(caption["history"]) - 1,
+            "captionvar.aired_by": caption["aired"]["by"],
+            "captionvar.aired_text": caption["aired"]["text"],
+            "captionvar.time_to_air_s": caption["timing"]["time_to_air_s"],
+            **({"captionvar.insight_verdict": line["history"][-1]["status"],
+                "captionvar.insight_aired": bool(line["aired"])} if line else {}),
         })
-        return out
+        return {"caption": caption, "insight": line}
+
+
+async def run_recap(recap: str, plant: str | None, agents: Agents, factbox: Factbox, usage: Usage) -> dict:
+    """Write and check one recap. Returns its sentences in order with what aired."""
+    with TRACER.start_as_current_span(f"recap {recap}") as span:
+        span.set_attribute("captionvar.red_team", plant or "none")
+        start = clock(usage)
+        events = await build_recap_workflow(agents, factbox, usage).run(RecapTask(recap, plant))
+        outputs = events.get_outputs()
+        plan = next((o for o in outputs if o.get("kind") == "recap_plan"), None)
+        parts = sorted((o for o in outputs if o.get("kind") == "recap"), key=lambda o: o["part"])
+        if not plan or len(parts) != len(plan["sentences"]):
+            raise RuntimeError(f"recap {recap}: {len(parts)} of {len(plan['sentences']) if plan else '?'} sentences finished")
+        last = max((p["clock"] for p in parts), key=lambda c: c["at"], default=start)
+        aired = sum(bool(p["aired"]) for p in parts)
+        span.set_attributes({"captionvar.sentences": len(parts), "captionvar.sentences_aired": aired})
+        return {"plan": plan, "parts": parts, "timing": timing_since(start, last)}
+
+
+def attempts_of(history: list) -> list:
+    return [{k: h.get(k) for k in ("attempt", "author", "text", "status", "flags")} for h in history]
 
 
 async def assemble_decision(index: int, out: dict, factbox: Factbox) -> dict:
     """Shape a workflow result into the trace format the UI consumes."""
-    first = out["history"][0]
+    cap = out["caption"]
+    first = cap["history"][0]
     header = await factbox.call("decision_header", index=index)
     checked = await factbox.call("verify", index=index, text=first["text"], extracted=first["extracted"])
-    return {
+    decision = {
         "id": f"CAP-{index + 1:03d}",
         **header,
         "segments": checked["segments"],
         "claims": checked["claims"],
         "verdict": checked["verdict"],
-        "planted_error": {"kind": out["plant"]} if out["plant"] else None,
-        "aired": out["aired"],
-        "attempts": [{k: h.get(k) for k in ("attempt", "author", "text", "status", "flags")} for h in out["history"]],
+        "planted_error": {"kind": cap["plant"]} if cap["plant"] else None,
+        "aired": cap["aired"],
+        "attempts": attempts_of(cap["history"]),
+        "timing": cap["timing"],
+    }
+    if out.get("insight"):
+        decision["insight"] = assemble_line(out["insight"])
+    return decision
+
+
+def assemble_line(line: dict) -> dict:
+    """A line of context or recap sentence: its first draft as checked, every attempt, and what aired."""
+    first = line["history"][0]
+    return {
+        "text": first["text"],
+        "segments": first["segments"],
+        "verdict": first["verdict"],
+        "planted_error": {"kind": line["plant"]} if line["plant"] else None,
+        "aired": line["aired"],
+        "attempts": attempts_of(line["history"]),
+        **({"timing": line["timing"]} if "timing" in line else {}),
+    }
+
+
+async def assemble_recap(recap: str, out: dict, factbox: Factbox) -> dict:
+    header = next(r for r in await factbox.call("recaps") if r["recap"] == recap)
+    plan = out["plan"]
+    sentences = [assemble_line(p) for p in out["parts"]]
+    planted = plan["planted_sentence"]
+    for i, s in enumerate(sentences):
+        # The writer names the sentence it planted the error in; the others are not counted as planted.
+        if s["planted_error"] and i != planted:
+            s["planted_error"] = None
+    return {
+        "id": f"RECAP-{recap}",
+        **header,
+        "sentences": sentences,
+        "aired_text": " ".join(s["aired"]["text"] for s in sentences if s["aired"]),
+        "planted_error": {"kind": out["parts"][0]["plant"], "sentence": planted} if out["parts"] and out["parts"][0]["plant"] else None,
+        "timing": out["timing"],
     }

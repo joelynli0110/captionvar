@@ -36,6 +36,13 @@ OP_TO_TOOL = {
     "template": "caption_from_data",
     "decision_header": "moment_header",
     "simulated": "test_narrator_caption",
+    "insight_moments": "list_insight_moments",
+    "analyst_packet": "analyst_view",
+    "recaps": "list_recaps",
+    "recap_packet": "recap_view",
+    "line_editor_packet": "line_editor_view",
+    "simulated_insight": "test_analyst_insight",
+    "simulated_recap": "test_recap",
 }
 
 

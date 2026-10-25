@@ -14,7 +14,10 @@ import { spotMoments, captionHeader, indexPeople, narrate, observedFor } from '.
 import { verifyCaption, checkNamedPlayers, checkMomentCovered, checkSweepingClaims } from '../src/broadcast/verify.js';
 import { renderCaption } from '../src/broadcast/render.js';
 import { toVerifiableClaims, segmentsFromSpans } from '../src/broadcast/extracted.js';
-import { narratorPacket, extractorPacket, editorPacket } from '../src/broadcast/packets.js';
+import { narratorPacket, extractorPacket, editorPacket, analystPacket, recapPacket, lineEditorPacket } from '../src/broadcast/packets.js';
+import { INSIGHT_TYPES, RECAPS, recapSpot } from '../src/broadcast/context.js';
+import { verifyStatement } from '../src/broadcast/statements.js';
+import { simulateInsight, simulateRecap } from '../src/broadcast/analyst.js';
 
 /** The deterministic operations for one synthetic match, keyed by name. */
 export function createFactbox(seed = 'captionvar-demo-6') {
@@ -67,8 +70,10 @@ export function createFactbox(seed = 'captionvar-demo-6') {
   const OPS = {
     info: () => ({ match_id: match.meta.match_id, seed, moments: spots.length, home: match.squads.home.name, away: match.squads.away.name }),
     moments: () => spots.map((spot, i) => narratorPacket(match, spot, i)),
-    extractor_packet: ({ index, text }) => extractorPacket(match, spotAt(index), text),
-    verify: ({ index, text, extracted }) => {
+    extractor_packet: ({ index, text, scope = 'caption', recap }) => extractorPacket(match, scopeSpot(scope, index, recap), text, scope),
+    verify: ({ index, text, extracted, scope = 'caption', recap }) => {
+      // Lines of context and recap sentences follow the statement rules (statements.js).
+      if (scope !== 'caption') return verifyStatement(match, scopeSpot(scope, index, recap), text, extracted, people);
       const spot = spotAt(index);
       const claims = toVerifiableClaims(spot, extracted || []);
       const header = captionHeader(spot.trigger, spot.moment);
@@ -97,7 +102,29 @@ export function createFactbox(seed = 'captionvar-demo-6') {
       return { ...captionHeader(spot.trigger, spot.moment), facts: spot.facts };
     },
     simulated: ({ index, seed: narratorSeed = 'narrator-10' }) => simulated(index, narratorSeed),
+
+    // "Why it matters" lines and recaps.
+    insight_moments: () => spots.map((s, i) => (INSIGHT_TYPES.has(s.moment.type) ? i : null)).filter(i => i != null),
+    analyst_packet: ({ index, caption }) => analystPacket(match, spotAt(index), index, caption),
+    recaps: () => RECAPS.map(which => ({ recap: which, ...recapHeader(which) })),
+    recap_packet: ({ recap }) => recapPacket(match, recap),
+    line_editor_packet: ({ scope = 'insight', index, recap, text, verdict }) => lineEditorPacket(match, scopeSpot(scope, index, recap), text, verdict),
+    simulated_insight: ({ index, plant = null }) => simulateInsight(match, spotAt(index), { plant }),
+    simulated_recap: ({ recap, plant = null }) => simulateRecap(match, recap, { plant }),
   };
+
+  function scopeSpot(scope, index, recap) {
+    if (scope === 'recap') {
+      if (!RECAPS.includes(recap)) throw new Error(`unknown recap ${recap}`);
+      return recapSpot(match, recap);
+    }
+    return spotAt(index);
+  }
+
+  function recapHeader(which) {
+    const { trigger } = recapSpot(match, which);
+    return { trigger_event_id: trigger.id, seq: trigger.seq, period: trigger.period, t: trigger.t, display_minute: trigger.display_minute };
+  }
   return OPS;
 }
 

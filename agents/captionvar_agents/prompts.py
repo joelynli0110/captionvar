@@ -1,4 +1,4 @@
-"""Instructions for the three LLM agents and the red-team error menu."""
+"""Instructions for the LLM agents and the red-team error menus."""
 from __future__ import annotations
 
 from typing import Literal
@@ -37,6 +37,7 @@ List every checkable assertion the caption makes. For each one give:
 - number: the number asserted, as a number (or null)
 - outcome: for shot_outcome: goal, saved, off_target, blocked or woodwork (or null)
 - home, away: for a score claim, the goals of the home and away team (or null)
+- metric: for team_total, player_total and minutes_since, which count it is (or null)
 
 Kinds:
 {kinds}
@@ -50,6 +51,9 @@ Rules:
 - Build-up details ("after Morita won it back", "a foul on Whitcombe", "pressing from Vence and Okafor")
   are recent_action. For a team-level action without a named player, give side instead.
   If several players are named for one action, list one claim per player.
+- Running counts so far in the match ("their fifth shot", "1.4 xG", "Strand's third shot") are
+  team_total or player_total; "the first shot on target in 20 minutes" is minutes_since.
+- An earlier goal ("after Strand's opener in the 24th minute") is goal_event, with the minute as number.
 - Superlatives, comparisons with other matches or seasons, and judgements about how a team
   is playing ("dominating", "struggling to keep control") are "opinion".
 - Any other factual statement you cannot map to a kind is "other_fact"."""
@@ -72,6 +76,12 @@ ClaimKind = Literal[
     "shot_player", "shot_outcome", "shot_xg", "card_player", "substitution",
     "top_speed", "distance", "final_third_recoveries", "recoveries_after_press",
     "possession", "pass_accuracy", "recent_action", "opinion", "other_fact",
+    "team_total", "player_total", "minutes_since", "recent_possession", "goal_event", "card_event",
+]
+
+Metric = Literal[
+    "goals", "assists", "shots", "shots_on_target", "xg", "corners", "fouls", "yellow_cards",
+    "final_third_recoveries", "recoveries", "pressures", "passes_completed", "shot", "shot_on_target", "goal",
 ]
 
 Action = Literal["foul", "won_ball", "pressure", "pass", "carry", "giveaway", "shot", "save", "block", "tackle"]
@@ -88,10 +98,54 @@ class ExtractedClaim(BaseModel):
     action: Action | None
     home: int | None
     away: int | None
+    metric: Metric | None
 
 
 class Extraction(BaseModel):
     claims: list[ExtractedClaim]
+
+
+ANALYST = """\
+You are the match analyst on a live football broadcast. A caption about a moment
+has just aired. You write ONE short line, at most 28 words, that tells the viewer
+why the moment matters, using the running numbers in context.
+
+- Pick one or two numbers from context that explain the moment: shots or xG so far,
+  minutes since the previous shot on target or goal, final-third recoveries,
+  possession over the last 10 minutes, the player's match totals.
+- Quote numbers exactly as given (xG to one decimal, percentages rounded).
+- Then say in a few words what they show, for example who is on top or what changed.
+- Do not repeat the caption. Do not compare with other matches or seasons.
+- Use short team names and player surnames.
+Every number and name will be checked against the match data.
+Return the line only, without quotes."""
+
+RECAP_WRITER = """\
+You write the recap shown on a live football broadcast at half-time or full time.
+You get everything recorded so far as JSON.
+
+Write 4 to 6 short sentences, each at most 25 words and each able to stand alone:
+the score and who leads, each goal (scorer, minute, assist if given), how the
+teams compare (shots, shots on target, xG, possession), and one player who stood out
+by a number given. Quote numbers exactly as given. Use short team names and surnames.
+Do not compare with other matches or seasons. Every sentence will be checked
+against the match data; a sentence that fails is cut.
+Return the sentences as a list, in reading order. Set planted_sentence to null,
+unless a red_team_instruction asks you to plant an error: then give the index of
+the sentence that carries it."""
+
+LINE_EDITOR = """\
+You are the broadcast editor. A line of match analysis or a recap sentence failed
+the VAR check. You get the line, the verdict on each claim and the true facts.
+
+Rewrite it so every factual statement is true: keep "supported" claims, correct
+"contradicted" ones from true_facts, and remove anything "unverifiable".
+Do not add new facts. Keep it to one sentence. Return the line only, without quotes."""
+
+
+class Recap(BaseModel):
+    sentences: list[str]
+    planted_sentence: int | None = Field(description="Index of the sentence with the planted error, if a red-team instruction asked for one")
 
 
 # Red-team: errors the narrator is told to plant, by moment type. These mirror
@@ -115,6 +169,19 @@ RED_TEAM_BY_TYPE = {
     "milestone": ["inflated_number"],
     "press": ["inflated_number", "unverifiable_superlative"],
     "stat": ["inflated_number", "unverifiable_superlative"],
+}
+
+# The analyst and the recap writer get their own menus.
+RED_TEAM_INSIGHT = {
+    "inflated_number": "State one of the numbers you quote one or two higher than context says (for xG, add 0.3).",
+    "wrong_player": "Credit a player total you quote to a different player from team_players.",
+    "unverifiable_superlative": "Add a comparison with the whole season or league history.",
+}
+
+RED_TEAM_RECAP = {
+    "wrong_player": "Name the wrong scorer for one goal, using another player from team_players.",
+    "inflated_number": "State one team total (shots, shots on target or corners) two higher than the facts say.",
+    "wrong_score": "Give the score with one goal too many for one team, in one sentence only.",
 }
 
 

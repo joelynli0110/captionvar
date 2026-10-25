@@ -26,6 +26,15 @@ def run(tmp_path: Path, **kw) -> dict:
     return json.loads(out.read_text())
 
 
+def untimed(value):
+    """The same data without timings, which differ from run to run."""
+    if isinstance(value, dict):
+        return {k: untimed(v) for k, v in value.items() if k != "timing"}
+    if isinstance(value, list):
+        return [untimed(v) for v in value]
+    return value
+
+
 def test_full_match_catches_every_planted_error(tmp_path):
     trace = run(tmp_path)
     s = trace["summary"]
@@ -188,5 +197,38 @@ def test_referee_is_served_over_mcp_and_matches_the_jsonl_fallback(tmp_path, mon
     over_mcp = run(tmp_path / "mcp", limit=8)
     monkeypatch.setenv("CAPTIONVAR_FACTBOX", "jsonl")
     over_jsonl = run(tmp_path / "jsonl", limit=8)
-    strip = lambda t: [{k: v for k, v in d.items() if k != "timing"} for d in t["decisions"]]  # noqa: E731
-    assert strip(over_mcp) == strip(over_jsonl)
+    assert untimed(over_mcp["decisions"]) == untimed(over_jsonl["decisions"])
+
+
+def test_key_moments_get_a_checked_line_on_why_they_matter(tmp_path):
+    trace = run(tmp_path)
+    lines = [d for d in trace["decisions"] if d.get("insight")]
+    assert {d["type"] for d in lines} <= {"goal", "chance", "press", "stat"} and len(lines) >= 10
+    s = trace["summary"]["insights"]
+    assert s["planted_errors"] > 0 and s["caught"] == s["planted_errors"] and s["flagged_without_plant"] == 0
+    for d in lines:
+        ins = d["insight"]
+        if ins["aired"]:
+            assert ins["attempts"][-1]["status"] == "VERIFY"
+        else:
+            # One rewrite by the line editor, then dropped: a line of context never airs unchecked.
+            assert [a["author"] for a in ins["attempts"]] == ["analyst", "line_editor"]
+            assert all(a["status"] != "VERIFY" for a in ins["attempts"])
+        assert ins["timing"]["time_to_air_s"] >= d["timing"]["time_to_air_s"]
+
+
+def test_recaps_check_every_sentence_and_cut_the_planted_one(tmp_path):
+    trace = run(tmp_path)
+    recaps = {r["recap"]: r for r in trace["recaps"]}
+    assert set(recaps) == {"HT", "FT"}
+    planted = [r for r in recaps.values() if r["planted_error"]]
+    assert len(planted) == 1
+    bad = planted[0]["sentences"][planted[0]["planted_error"]["sentence"]]
+    assert bad["verdict"]["status"] != "VERIFY" and not bad["aired"]
+    for r in recaps.values():
+        assert r["aired_text"] == " ".join(s["aired"]["text"] for s in r["sentences"] if s["aired"])
+    assert trace["summary"]["recaps"]["caught_recaps"] == 1
+
+
+def test_short_runs_skip_the_recaps(tmp_path):
+    assert "recaps" not in run(tmp_path, limit=4)

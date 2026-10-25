@@ -8,6 +8,8 @@
  * the model — so a model cannot talk its way into a weaker check.
  */
 
+import { TEAM_METRICS, PLAYER_METRICS, SINCE_METRICS, RECENT_POSSESSION_MIN } from './context.js';
+
 /** The vocabulary the extractor may use. Anything else must be 'other_fact'. */
 export const EXTRACTABLE_KINDS = {
   goal_scorer: 'A named player scored a goal.',
@@ -27,6 +29,12 @@ export const EXTRACTABLE_KINDS = {
   possession: "A team's share of possession in percent.",
   pass_accuracy: "A team's pass completion in percent.",
   recent_action: 'Something a named player (or a team) did in the build-up: a foul, winning the ball, pressing, a pass, a run with the ball, losing the ball, a shot, a save, a block or a tackle.',
+  team_total: "A team's running total so far in the match (metric: goals, shots, shots_on_target, xg, corners, fouls, yellow_cards, final_third_recoveries).",
+  player_total: "A player's running total so far in the match (metric: goals, assists, shots, recoveries, pressures, passes_completed).",
+  minutes_since: "How many minutes since the team's previous shot, shot_on_target or goal (metric), e.g. 'their first shot on target in 20 minutes'.",
+  recent_possession: "A team's share of possession in percent over the last 10 minutes.",
+  goal_event: 'A goal scored earlier: who scored (player_id), who assisted (other_player_id) and at which minute (number), as far as stated.',
+  card_event: 'A player booked earlier in the match.',
   opinion: 'A judgement, comparison or superlative that match data cannot confirm.',
   other_fact: 'Any other factual assertion not covered above.',
 };
@@ -47,6 +55,7 @@ const ID_FOR = {
   shot_player: 'shooter', shot_outcome: 'outcome', shot_xg: 'xg', card_player: 'booked', substitution: 'change',
   top_speed: 'speed', distance: 'distance', final_third_recoveries: 'count', recoveries_after_press: 'pressed',
   possession: 'possession', pass_accuracy: 'accuracy', recent_action: 'action', opinion: 'opinion', other_fact: 'other',
+  team_total: 'team', player_total: 'player', minutes_since: 'since', recent_possession: 'recent', goal_event: 'goal', card_event: 'card',
 };
 
 const WINDOW_S = 300;
@@ -66,6 +75,15 @@ export function toVerifiableClaims(spot, extracted) {
 
   for (let x of extracted) {
     let kind = EXTRACTABLE_KINDS[x.kind] ? x.kind : 'other_fact';
+    // A recap spans a whole half: earlier goals and bookings are looked up in
+    // the record, and a two-minute build-up window does not apply.
+    if (type === 'recap') {
+      if (kind === 'card_player') kind = 'card_event';
+      if (kind === 'recent_action' || kind === 'shot_player' || kind === 'shot_outcome') {
+        x = { ...x, kind: 'other_fact' };
+        kind = 'other_fact';
+      }
+    }
     // A shot, assist or booking mentioned outside its own moment is a build-up action.
     if (type !== 'chance' && type !== 'goal' && (kind === 'shot_player' || kind === 'shot_outcome')) {
       x = { ...x, kind: 'recent_action', action: 'shot' };
@@ -107,8 +125,23 @@ function mapClaim(kind, x, trigger, moment) {
   const outside = () => ({ kind: 'other_fact', asserted: x.span, note_hint: 'refers to something outside this moment' });
 
   switch (kind) {
-    case 'goal_scorer': return goalRef ? { kind, ref: goalRef, asserted: x.player_id ?? 'unknown' } : outside();
-    case 'goal_assist': return goalRef ? { kind, ref: goalRef, asserted: x.player_id ?? 'unknown' } : outside();
+    // Outside its own goal moment, a scorer or assist refers to an earlier goal.
+    case 'goal_scorer': return goalRef ? { kind, ref: goalRef, asserted: x.player_id ?? 'unknown' } : goalEvent({ scorer: x.player_id ?? 'unknown' }, x, trigger);
+    case 'goal_assist': return goalRef ? { kind, ref: goalRef, asserted: x.player_id ?? 'unknown' } : goalEvent({ assist: x.player_id ?? 'unknown' }, x, trigger);
+    case 'goal_event':
+      return goalEvent({ ...(x.player_id ? { scorer: x.player_id } : {}), ...(x.other_player_id ? { assist: x.other_player_id } : {}) }, x, trigger, true);
+    case 'card_event':
+      return { kind, params: { until_seq: trigger.seq }, asserted: { player: x.player_id ?? 'unknown' } };
+    case 'team_total':
+      return TEAM_METRICS[x.metric] ? { kind, params: { until_seq: trigger.seq, side, metric: x.metric }, asserted: num } : { kind: 'other_fact', asserted: x.span };
+    case 'player_total':
+      return PLAYER_METRICS.includes(x.metric) && x.player_id
+        ? { kind, params: { until_seq: trigger.seq, metric: x.metric }, asserted: { player: x.player_id, n: num } }
+        : { kind: 'other_fact', asserted: x.span };
+    case 'minutes_since':
+      return SINCE_METRICS[x.metric] ? { kind, params: { until_seq: trigger.seq, side, metric: x.metric }, asserted: num } : { kind: 'other_fact', asserted: x.span };
+    case 'recent_possession':
+      return { kind, params: { until_seq: trigger.seq, window_min: RECENT_POSSESSION_MIN }, asserted: { side, pct: num } };
     case 'goal_from_press': return goalRef ? { kind, ref: goalRef, asserted: true } : outside();
     case 'scorer_tally': return goalRef ? { kind, ref: goalRef, asserted: num } : outside();
     case 'score': return { kind, asserted: { home: Number(x.home), away: Number(x.away) } };
@@ -138,6 +171,11 @@ function mapClaim(kind, x, trigger, moment) {
     case 'opinion': return { kind, asserted: true };
     default: return { kind: 'other_fact', asserted: x.span };
   }
+}
+
+function goalEvent(asserted, x, trigger, withMinute = false) {
+  const minute = withMinute && x.number != null && !Number.isNaN(Number(x.number)) ? Number(x.number) : null;
+  return { kind: 'goal_event', params: { until_seq: trigger.seq }, asserted: { ...asserted, minute } };
 }
 
 /** Split caption text into segments tied to the claims whose quoted span they contain. */

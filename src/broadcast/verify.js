@@ -13,9 +13,37 @@
  *
  * Numbers are compared by code with explicit tolerances, never by a model.
  */
-import { possessionShare, teamStats } from '../sim/stats.js';
+import { possessionShare, teamStats, playerStats } from '../sim/stats.js';
+import { TEAM_METRICS, minutesSince, recentWindow } from './context.js';
 
-const TOLERANCE = { kmh: 0.2, xg: 0.015 };
+// xg_total: a running team xG is quoted to one decimal ("1.4 xG").
+const TOLERANCE = { kmh: 0.2, xg: 0.015, xg_total: 0.05 };
+
+const sideName = side => (side === 'home' ? 'Home' : 'Away');
+const fmt = n => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+/** Match minute of an event as a number (stoppage time counts as 45 or 90). */
+const minuteOf = e => Number(String(e.display_minute).split('+')[0].replace(/\D/g, ''));
+
+/** Which events stand behind each running total, for the evidence list (the latest few). */
+const MAX_EVIDENCE = 12;
+const TEAM_EVENT = {
+  goals: side => e => e.type === 'goal' && e.side === side,
+  shots: side => e => e.type === 'shot' && e.side === side,
+  shots_on_target: side => e => e.type === 'shot' && e.on_target && e.side === side,
+  xg: side => e => e.type === 'shot' && e.side === side,
+  corners: side => e => e.type === 'pass' && e.set_piece === 'corner' && e.side === side,
+  fouls: side => e => e.type === 'foul' && e.side === side,
+  yellow_cards: side => e => e.type === 'card' && e.side === side,
+  final_third_recoveries: side => e => e.type === 'recovery' && e.zone === 'attacking_third' && e.side === side,
+};
+const PLAYER_EVENT = {
+  goals: id => e => e.type === 'goal' && e.scorer_id === id,
+  assists: id => e => e.type === 'goal' && e.assist_id === id,
+  shots: id => e => e.type === 'shot' && e.player_id === id,
+  recoveries: id => e => e.type === 'recovery' && e.player_id === id,
+  pressures: id => e => e.type === 'pressure' && e.player_id === id,
+  passes_completed: id => e => e.type === 'pass' && e.successful && e.player_id === id,
+};
 
 /** A whole-number percentage is right only if it is the actual value rounded down or up. */
 const pctMatches = (stated, actual) => stated >= Math.floor(actual) && stated <= Math.ceil(actual);
@@ -140,6 +168,69 @@ function checkClaim(claim, observed, byId) {
         : contradicted({ side: a.side, pct: Math.round(acc) }, [], `Pass accuracy is ${acc}%.`);
     }
 
+    case 'team_total': {
+      const { side, metric } = claim.params;
+      const seen = observed.filter(e => e.seq <= claim.params.until_seq);
+      const actual = teamStats(seen, side)[TEAM_METRICS[metric]];
+      const ids = seen.filter(TEAM_EVENT[metric](side)).map(e => e.id).slice(-MAX_EVIDENCE);
+      const ok = metric === 'xg' ? Math.abs(a - actual) <= TOLERANCE.xg_total : a === actual;
+      const label = metric.replace(/_/g, ' ');
+      return ok
+        ? supported(actual, ids, `${sideName(side)} ${label} so far: ${fmt(actual)}.`)
+        : contradicted(actual, ids, `${sideName(side)} ${label} so far: ${fmt(actual)}, not ${fmt(a)}.`);
+    }
+
+    case 'player_total': {
+      const seen = observed.filter(e => e.seq <= claim.params.until_seq);
+      const actual = playerStats(seen, a.player)[claim.params.metric];
+      const ids = seen.filter(PLAYER_EVENT[claim.params.metric](a.player)).map(e => e.id).slice(-MAX_EVIDENCE);
+      const label = claim.params.metric.replace(/_/g, ' ');
+      return actual === a.n
+        ? supported({ player: a.player, n: actual }, ids, `${actual} ${label} recorded for this player.`)
+        : contradicted({ player: a.player, n: actual }, ids, `${actual} ${label} recorded for this player, not ${a.n}.`);
+    }
+
+    case 'minutes_since': {
+      const { side, metric, until_seq: until } = claim.params;
+      const trigger = observed.find(e => e.seq === until);
+      const { minutes, prev } = minutesSince(observed, trigger, side, metric);
+      const ids = prev ? [prev.id, trigger.id] : [trigger.id];
+      const what = metric.replace(/_/g, ' ');
+      const since = prev ? `the previous ${what} (${prev.display_minute})` : 'kick-off';
+      return a >= Math.floor(minutes) && a <= Math.ceil(minutes)
+        ? supported(minutes, ids, `${minutes} minutes since ${since}.`)
+        : contradicted(minutes, ids, `${minutes} minutes since ${since}, not ${a}.`);
+    }
+
+    case 'recent_possession': {
+      const trigger = observed.find(e => e.seq === claim.params.until_seq);
+      const share = possessionShare(recentWindow(observed, trigger, claim.params.window_min));
+      if (share[a.side] == null) return unverifiable('No on-ball actions in the window.');
+      return pctMatches(a.pct, share[a.side])
+        ? supported({ side: a.side, pct: Math.round(share[a.side]) }, [], `${sideName(a.side)} share over the last ${claim.params.window_min} minutes: ${share[a.side]}%.`)
+        : contradicted({ side: a.side, pct: Math.round(share[a.side]) }, [], `${sideName(a.side)} share over the last ${claim.params.window_min} minutes is ${share[a.side]}%.`);
+    }
+
+    case 'goal_event': {
+      const goals = observed.filter(e => e.type === 'goal' && e.seq <= claim.params.until_seq);
+      const fits = g => (!a.scorer || g.scorer_id === a.scorer) && (!a.assist || g.assist_id === a.assist)
+        && (a.minute == null || Math.abs(minuteOf(g) - a.minute) <= 1);
+      const hit = goals.find(fits);
+      if (hit) return supported({ scorer: hit.scorer_id, assist: hit.assist_id ?? null, minute: minuteOf(hit) }, [hit.id, hit.shot_id].filter(Boolean), `Goal at ${hit.display_minute} matches.`);
+      const near = goals.find(g => !a.scorer || g.scorer_id === a.scorer);
+      return contradicted(null, goals.map(e => e.id), near && a.scorer
+        ? `This player scored at ${near.display_minute}${a.assist && near.assist_id !== a.assist ? ', with a different assist' : ''}.`
+        : goals.length ? 'No goal so far matches this scorer, assist and minute.' : 'No goal has been scored yet.');
+    }
+
+    case 'card_event': {
+      const cards = observed.filter(e => e.type === 'card' && e.seq <= claim.params.until_seq);
+      const hit = cards.find(e => e.player_id === a.player);
+      return hit
+        ? supported(a.player, [hit.id], `Booked at ${hit.display_minute}.`)
+        : contradicted(null, cards.map(e => e.id), 'No booking is recorded for this player.');
+    }
+
     case 'opinion':
       return unverifiable('A judgement or comparison beyond this match cannot be checked against the match data.');
 
@@ -251,7 +342,7 @@ export function checkNamedPlayers(text, verdict, players) {
     if (c.status !== 'supported') continue;
     const a = c.asserted;
     if (typeof a === 'string') backed.add(a);
-    if (a && typeof a === 'object') for (const k of ['player', 'on', 'off']) if (a[k]) backed.add(a[k]);
+    if (a && typeof a === 'object') for (const k of ['player', 'on', 'off', 'scorer', 'assist']) if (a[k]) backed.add(a[k]);
     for (const k of ['actor', 'other']) if (c.params?.[k]) backed.add(c.params[k]);
   }
   const escape = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

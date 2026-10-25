@@ -5,9 +5,14 @@
  *   extractorPacket the caption and the roster only — no facts, so the
  *                   extractor reports what was said, not what is true
  *   editorPacket    the verdict on each claim and the true facts to correct with
+ *   analystPacket   the moment, its aired caption and the numbers behind it
+ *   recapPacket     everything recorded up to the end of the half or match
+ *   lineEditorPacket a failed line of context or recap, its verdict and the
+ *                   true numbers
  */
 import { indexPeople } from './narrator.js';
 import { RECENT_WINDOW_S } from './extracted.js';
+import { contextFacts, recapFacts } from './context.js';
 
 const NOTABLE = new Set(['pass', 'carry', 'shot', 'recovery', 'tackle', 'interception', 'pressure', 'save', 'block', 'foul', 'card', 'goal']);
 
@@ -91,10 +96,10 @@ export function narratorPacket(match, spot, index) {
   };
 }
 
-export function extractorPacket(match, spot, text) {
+export function extractorPacket(match, spot, text, scope = 'caption') {
   return {
     caption: text,
-    moment_type: spot.moment.type,
+    moment_type: scope === 'caption' ? spot.moment.type : scope === 'insight' ? `context line for a ${spot.moment.type}` : 'match recap sentence',
     home: { side: 'home', name: match.squads.home.name },
     away: { side: 'away', name: match.squads.away.name },
     roster: roster(match),
@@ -113,5 +118,40 @@ export function editorPacket(match, spot, text, verdict) {
       why: c.note,
     })),
     true_facts: namedFacts(spot, people),
+  };
+}
+
+export function analystPacket(match, spot, index, caption) {
+  const people = indexPeople(match);
+  return {
+    index,
+    minute: spot.trigger.display_minute,
+    moment_type: spot.moment.type,
+    caption_on_air: caption,
+    moment_facts: namedFacts(spot, people),
+    context: contextFacts(match, spot),
+    // Only used when a red-team instruction asks for a wrong player.
+    team_players: match.squads[spot.moment.side === 'away' ? 'away' : 'home'].players.map(p => p.name),
+  };
+}
+
+export function recapPacket(match, which) {
+  return {
+    recap_facts: recapFacts(match, which),
+    team_players: [...match.squads.home.players, ...match.squads.away.players].map(p => p.name),
+  };
+}
+
+export function lineEditorPacket(match, spot, text, verdict) {
+  const people = indexPeople(match);
+  return {
+    original_line: text,
+    claims: verdict.claims.filter(c => !c.framing).map(c => ({
+      quoted: c.span ?? null,
+      kind: c.extracted_kind ?? c.kind,
+      status: c.status,
+      why: c.note,
+    })),
+    true_facts: spot.moment.type === 'recap' ? recapFacts(match, spot.moment.recap) : { moment: namedFacts(spot, people), context: contextFacts(match, spot) },
   };
 }

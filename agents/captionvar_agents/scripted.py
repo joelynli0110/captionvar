@@ -1,9 +1,12 @@
 """A chat client that needs no model, for tests and offline runs.
 
-It answers as the three agents would, using the test narrator's captions
-from the factbox: the narrator returns the test narrator's line (including any
-planted error), the extractor returns that line's claims, and the editor
-returns the safe template. The full Agent Framework workflow -- agents,
+It answers as the agents would, using the test narrator, analyst and recap
+writer from the factbox: the narrator returns the test narrator's line
+(including any planted error), the analyst and the recap writer return the
+test lines (planting an error when the red team asks), the extractor returns
+the claims of whichever line it is given, and the editors return the text
+unchanged, so a failed caption falls back to the template and a failed line
+is dropped. The full Agent Framework workflow -- agents,
 executors, conditional edges, the edit loop -- runs exactly as with Foundry.
 """
 import json
@@ -26,6 +29,8 @@ class ScriptedChatClient(BaseChatClient):
         self.narrator_seed = narrator_seed
         self.texts: dict[int, str] = {}
         self.all_known = False
+        # Claims of lines written by the test analyst and recap writer, by text.
+        self.line_claims: dict[str, list] = {}
 
     async def _inner_get_response(self, *, messages: Any, stream: bool, options: Any, **kwargs: Any) -> ChatResponse:
         if stream:
@@ -45,6 +50,12 @@ class ScriptedChatClient(BaseChatClient):
             reply = user["your_caption"]
         elif "problems" in user:  # baseline judge editor
             reply = user["caption"]
+        elif "caption_on_air" in user:
+            reply = await self._analyse(user)
+        elif "recap_facts" in user:
+            reply = await self._recap(user)
+        elif "original_line" in user:
+            reply = user["original_line"]  # cannot write prose: the line is dropped
         elif "moment" in user:
             reply = await self._narrate(user)
         elif "roster" in user:
@@ -60,8 +71,25 @@ class ScriptedChatClient(BaseChatClient):
         self.texts[index] = sim["text"]
         return sim["text"]
 
+    async def _analyse(self, user: dict) -> str:
+        plant = "inflated_number" if "red_team_instruction" in user else None
+        sim = await self.factbox.call("simulated_insight", index=user["index"], plant=plant)
+        self.line_claims[sim["text"]] = sim["extracted"]
+        return sim["text"]
+
+    async def _recap(self, user: dict) -> str:
+        which = "HT" if user["recap_facts"]["recap"] == "half-time" else "FT"
+        plant = "wrong_player" if "red_team_instruction" in user else None
+        sim = await self.factbox.call("simulated_recap", recap=which, plant=plant)
+        for sentence in sim["sentences"]:
+            self.line_claims[sentence["text"]] = sentence["extracted"]
+        return json.dumps({"sentences": [x["text"] for x in sim["sentences"]], "planted_sentence": sim["planted_sentence"]})
+
     async def _extract(self, user: dict) -> str:
         caption = user["caption"]
+        fields = ("player_id", "other_player_id", "side", "number", "outcome", "home", "away", "action", "metric")
+        if caption in self.line_claims:
+            return json.dumps({"claims": [{"kind": c["kind"], "span": c["span"], **{f: c.get(f) for f in fields}} for c in self.line_claims[caption]]})
         index = next((i for i, t in self.texts.items() if t == caption), None)
         if index is None and not self.all_known:
             # A caption this client did not narrate (e.g. a baseline re-check): learn every test caption.
@@ -72,7 +100,6 @@ class ScriptedChatClient(BaseChatClient):
         if index is None:
             return json.dumps({"claims": []})  # edited text: handled by the template path below
         sim = await self.factbox.call("simulated", index=index, seed=self.narrator_seed)
-        fields = ("player_id", "other_player_id", "side", "number", "outcome", "home", "away", "action")
         claims = [{"kind": c["kind"], "span": c["span"], **{f: c.get(f) for f in fields}} for c in sim["extracted"]]
         return json.dumps({"claims": claims})
 
