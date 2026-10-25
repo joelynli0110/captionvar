@@ -14,6 +14,9 @@ function Detail({ decision, people, view, aired, onInspect }) {
       <p className="detail-label">{changed ? 'Narrator wrote' : 'On air'}</p>
       <Draft decision={decision} />
       {changed && <p className="aired"><span>On air instead</span>{aired}</p>}
+      {decision.own_error && (
+        <p className="own-note"><span className="vr-origin is-own">Narrator's own</span> {decision.planted_error ? 'Besides the planted error, the narrator got a detail wrong on its own.' : 'The narrator got this wrong on its own.'} Checked by hand against the events: {decision.own_error}</p>
+      )}
       <Attempts decision={decision} />
       <ul className="claims" aria-label="Claims checked">
         {decision.verdict.claims.map(c => (
@@ -72,7 +75,22 @@ function Gist({ decision, aired }) {
   );
 }
 
-function Kpis({ summary }) {
+/**
+ * Who made the error the check stopped: the red team planted it on purpose,
+ * or the narrator made it unprompted. Without this, a list of struck-through
+ * captions reads as a bad narrator rather than a working check.
+ */
+function Origin({ decision }) {
+  return (
+    <>
+      {decision.planted_error && <span className="vr-origin is-planted" title="The red team planted this error on purpose to test the check">Planted</span>}
+      {decision.own_error && <span className="vr-origin is-own" title="An error the narrator made unprompted, checked by hand against the events">Narrator's own</span>}
+    </>
+  );
+}
+
+/** Three numbers at most: VAR calls are counted on the tab when space is short. */
+function Kpis({ summary, own }) {
   const calls = summary.qualified + summary.withheld;
   return (
     <dl className="kpis">
@@ -82,7 +100,8 @@ function Kpis({ summary }) {
           <dt>planted errors caught</dt>
         </div>
       )}
-      <div><dd>{calls}</dd><dt>VAR calls</dt></div>
+      {own > 0 && <div className="kpi-own"><dd>{own}</dd><dt>of its own errors stopped</dt></div>}
+      {!(own > 0) && <div><dd>{calls}</dd><dt>VAR calls</dt></div>}
       <div><dd>{summary.captions}</dd><dt>captions checked</dt></div>
     </dl>
   );
@@ -107,13 +126,19 @@ export default function VarRoom({ decisions, liveId, selectedId, onSelect, summa
           <h2>VAR room</h2>
           <button type="button" className="link" onClick={onExplain}>How it works</button>
         </div>
-        <Kpis summary={summary} />
+        <Kpis summary={summary} own={decisions.filter(d => d.own_error && d.verdict.status !== 'VERIFY').length} />
         <p className="vr-source">{sourceLine(source)}</p>
         <div className="vr-tabs" role="tablist" aria-label="Captions to show">
           {[['calls', `VAR calls · ${calls.length}`], ['all', `All captions · ${decisions.length}`]].map(([value, label]) => (
             <button key={value} type="button" role="tab" aria-selected={filter === value} className={filter === value ? 'on' : ''} onClick={() => setFilter(value)}>{label}</button>
           ))}
         </div>
+        {calls.some(d => d.planted_error) && (
+          <p className="vr-legend">
+            <span><span className="vr-origin is-planted">Planted</span> by the red team</span>
+            {calls.some(d => d.own_error) && <span><span className="vr-origin is-own">Narrator's own</span> unprompted, checked by hand</span>}
+          </p>
+        )}
       </header>
       {shown.length === 0 && (
         <p className="vr-empty">{decisions.length === 0 ? 'Captions appear here as the narrator writes them.' : 'No VAR calls yet: every caption so far checked out.'}</p>
@@ -127,7 +152,10 @@ export default function VarRoom({ decisions, liveId, selectedId, onSelect, summa
             <li key={d.id} className={`vr-item tone-${v.tone}${open ? ' is-open' : ''}${d.id === liveId ? ' is-live' : ''}`}>
               <button type="button" className="vr-row" onClick={() => onSelect(open ? null : d.id)} aria-expanded={open}>
                 <span className="vr-minute">{d.display_minute}</span>
-                <span className="vr-verdict">{v.label}</span>
+                <span className="vr-verdict">
+                  {v.label}
+                  <Origin decision={d} />
+                </span>
                 <Gist decision={d} aired={aired} />
               </button>
               {open && <Detail decision={d} people={people} view={view} aired={aired} onInspect={onInspect} />}

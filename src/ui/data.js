@@ -6,6 +6,7 @@
 import { generateMatch } from '../sim/generateMatch.js';
 import { buildTrace } from '../broadcast/trace.js';
 import { globalT } from '../broadcast/narrator.js';
+import adjudication from '../../docs/eval-adjudication.json';
 
 export const DEMO = {
   matchSeed: 'captionvar-demo-6',
@@ -47,11 +48,22 @@ export async function loadAgentTrace(match, url = `${import.meta.env.BASE_URL}tr
     if (!res.ok) return null;
     const trace = await res.json();
     if (trace.match_id !== match.meta.match_id || !Array.isArray(trace.decisions)) return null;
-    trace.decisions = trace.decisions.map(d => ({ ...d, g: globalT(d) + 2 }));
+    const seed = trace.settings?.match_seed;
+    trace.decisions = trace.decisions.map(d => ({ ...d, g: globalT(d) + 2, own_error: ownError(seed, d.id) }));
     return trace;
   } catch {
     return null;
   }
+}
+
+/**
+ * The narrator's own (unplanted) errors in a Foundry run, as checked by hand
+ * against the raw events (docs/eval-adjudication.json). Only cases judged
+ * "real" count; extractor mix-ups the referee flagged are false alarms.
+ */
+function ownError(seed, id) {
+  const entry = seed ? adjudication[`${seed} ${id}`] : null;
+  return entry?.[0] === 'real' ? entry[1] : null;
 }
 
 export function loadBroadcast() {
