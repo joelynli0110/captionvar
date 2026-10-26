@@ -66,6 +66,20 @@ Given the facts, an LLM catches the errors you plant, but it misses the ones the
 
 Times leave out waits on our own rate limiter, which paces calls for a small deployment quota. The full run is published in [`public/traces/foundry-demo.json`](public/traces/foundry-demo.json), and the demo replays it at the recorded pace. Every draft, verdict, timing and evidence ID is in that file, and the hand check is in [`docs/demo-adjudication.json`](docs/demo-adjudication.json).
 
+**A cheaper model.** The referee is code, so the model behind the agents is a cost choice, not a safety one. The same match and red-team plan, run with gpt-4.1-nano instead of gpt-4.1-mini:
+
+| | gpt-4.1-mini | gpt-4.1-nano |
+|---|---|---|
+| Planted errors in captions caught | 15 / 15 | 15 / 15 |
+| False facts on air (aired captions checked by hand) | 0 | 0 of 21 written by the model |
+| First drafts that passed the check | 22 / 40 | 6 / 40 |
+| Captions that aired from the data, because no rewrite passed | 0 | 19 / 40 |
+| Lines on why it matters aired | 18 / 19 | 2 / 19 |
+| Time to air, median | 3.7 s | 6.9 s |
+| Cost for the match | ≈ $0.18 | ≈ $0.07 |
+
+The cheaper model fails the check far more often, so more captions fall back to plain ones built from the data and most lines of context are cut. Nothing false gets through either way. Details: [docs/EVALUATION.md](docs/EVALUATION.md#a-cheaper-model).
+
 ## How it works
 
 ```mermaid

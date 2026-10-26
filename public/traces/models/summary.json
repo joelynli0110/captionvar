@@ -1,0 +1,61 @@
+{
+ "match_seed": "captionvar-demo-6",
+ "runs": [
+  {
+   "model": "gpt-4.1-nano",
+   "trace": "public/traces/models/gpt-4.1-nano.json",
+   "generated_at": "2026-10-26T01:36:52Z",
+   "captions": 40,
+   "planted": 15,
+   "planted_caught": 15,
+   "planted_not_stopped": 0,
+   "first_draft_passed": 6,
+   "aired_by": {
+    "narrator": 6,
+    "editor": 15,
+    "template": 19
+   },
+   "flagged_without_plant": 19,
+   "lines": 19,
+   "lines_aired": 2,
+   "lines_planted": 8,
+   "lines_caught": 8,
+   "recap_sentences": 12,
+   "recap_sentences_aired": 11,
+   "recaps_planted": 1,
+   "recaps_caught": 1,
+   "time_to_air_p50_s": 6.87,
+   "time_to_air_p95_s": 11.25,
+   "llm_calls": 280,
+   "cost_usd": 0.0672
+  },
+  {
+   "model": "gpt-4.1-mini",
+   "trace": "public/traces/foundry-demo.json",
+   "generated_at": "2026-10-25T23:56:13Z",
+   "captions": 40,
+   "planted": 15,
+   "planted_caught": 15,
+   "planted_not_stopped": 0,
+   "first_draft_passed": 22,
+   "aired_by": {
+    "narrator": 22,
+    "editor": 18,
+    "template": 0
+   },
+   "flagged_without_plant": 3,
+   "lines": 19,
+   "lines_aired": 18,
+   "lines_planted": 8,
+   "lines_caught": 5,
+   "recap_sentences": 12,
+   "recap_sentences_aired": 12,
+   "recaps_planted": 1,
+   "recaps_caught": 1,
+   "time_to_air_p50_s": 3.69,
+   "time_to_air_p95_s": 7.08,
+   "llm_calls": 188,
+   "cost_usd": 0.1825
+  }
+ ]
+}

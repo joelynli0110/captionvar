@@ -47,6 +47,17 @@ Reproduce: [AGENTS.md → Baselines](AGENTS.md#baselines-what-the-multi-agent-de
 - **It is strict at the cost of some true detail.** In 28 of the 195 captions, a true build-up detail was flagged because the extractor tied it to the wrong player, and the editor trimmed it. Nothing false aired; some true colour was lost. Better role rules in the extractor prompt (passive voice, "under pressure from", "forces X into") are the obvious next step.
 - **The measurement has noise too.** Re-checking CaptionVAR's own aired captions flagged 6 of 195. All 6 are measurement mistakes: three colour phrases read as claims, two true details checked wrongly (a giveaway, a lead), and a count checked against the wrong metric. They are listed in the summary file.
 
+## A cheaper model
+
+The same match, the same seeded red-team plan, gpt-4.1-nano behind every agent instead of gpt-4.1-mini ([`public/traces/models/`](../public/traces/models/), compared with `agents/compare_models.py`).
+
+- **Safety held.** All 15 planted caption errors were stopped. We checked by hand every one of the 21 captions nano wrote that aired (6 first drafts, 15 editor rewrites) against the raw events, including the build-up details ("Vence winning the ball back after pressing", "Sow winning a tackle"). All are true. The other 19 aired from the data.
+- **Quality dropped.** Only 6 of 40 first drafts passed (22 with mini). Nano's narrator and editor make more mistakes, and its extractor misreads more true details. Two rewrites were often not enough, so 19 captions aired as plain captions built from the data. Only 2 of 19 lines of context passed; 11 of 12 recap sentences did.
+- **Cost and time.** About $0.07 for the match against $0.18, but more calls (280 against 188) and a slower median time to air (6.9 s against 3.7 s), because more drafts go through the editor.
+- **One failure handled.** At 61' nano's extractor returned JSON that did not parse. The workflow now retries such replies and, if they never parse, treats them as no claims, so the draft cannot air unchecked.
+
+So the referee turns the model into a cost and quality dial: a cheaper model costs fluency and context, not correctness.
+
 ## Limits
 
 - The 11 own errors come from 5 matches with one model. The direction is clear (8 and 7 against 0), but the sample is small.
