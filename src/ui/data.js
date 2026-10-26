@@ -6,7 +6,7 @@
 import { generateMatch } from '../sim/generateMatch.js';
 import { buildTrace } from '../broadcast/trace.js';
 import { globalT } from '../broadcast/narrator.js';
-import adjudication from '../../docs/eval-adjudication.json';
+import adjudication from '../../docs/demo-adjudication.json';
 
 export const DEMO = {
   matchSeed: 'captionvar-demo-6',
@@ -79,6 +79,7 @@ export async function loadAgentTrace(match, endG, url = traceUrl()) {
       ...d,
       g: globalT(d) + (d.timing?.time_to_air_s ?? 2),
       own_error: ownError(trace, d.id),
+      insight: d.insight && plantNotPresent(trace, d.id) ? { ...d.insight, planted_error: { ...d.insight.planted_error, not_present: true } } : d.insight,
     }));
     return placeLines(trace, endG);
   } catch {
@@ -87,19 +88,28 @@ export async function loadAgentTrace(match, endG, url = traceUrl()) {
 }
 
 /**
- * The narrator's own (unplanted) errors in a Foundry run, as checked by hand
- * against the raw events (docs/eval-adjudication.json). Only cases judged
- * "real" count; extractor mix-ups the referee flagged are false alarms.
+ * The narrator's own (unplanted) errors in the published Foundry run, as
+ * checked by hand against the raw events (docs/demo-adjudication.json). Only
+ * cases judged "real" count; extractor mix-ups the referee flagged are false
+ * alarms.
  */
-// The runs the hand check covers. A new run of the same match has different
-// drafts, so its captions are not tagged until it is checked again.
-const ADJUDICATED_RUNS = { 'captionvar-demo-6': '2026-10-24T22:13:30Z' };
-
 function ownError(trace, id) {
-  const seed = trace.settings?.match_seed;
-  if (trace.source !== 'foundry-agents' || ADJUDICATED_RUNS[seed] !== trace.generated_at) return null;
-  const entry = adjudication[`${seed} ${id}`];
+  // A new run of the same match has different drafts, so its captions are not
+  // tagged until it is checked again.
+  const run = adjudication.run;
+  if (trace.source !== 'foundry-agents' || trace.settings?.match_seed !== run.match_seed || trace.generated_at !== run.generated_at) return null;
+  const entry = adjudication.cases[id];
   return entry?.[0] === 'real' ? entry[1] : null;
+}
+
+/**
+ * Red-team instructions the Analyst did not follow (checked by hand): the line
+ * it wrote has no planted error in it, so it is not counted as caught or missed.
+ */
+function plantNotPresent(trace, id) {
+  const run = adjudication.run;
+  if (trace.generated_at !== run.generated_at) return false;
+  return Boolean(adjudication.lines?.planted_not_present?.[id]);
 }
 
 export function loadBroadcast() {

@@ -57,7 +57,7 @@ function InsightDetail({ line }) {
   const changed = line.verdict.status !== 'VERIFY';
   return (
     <section className="insight-detail" aria-label="Why it matters">
-      <p className="detail-label">Why it matters{line.planted_error ? ' · planted' : ''}</p>
+      <p className="detail-label">Why it matters{line.planted_error ? (line.planted_error.not_present ? ' · red team ignored: no error in the line' : ' · planted') : ''}</p>
       <LineDraft line={line} />
       {changed && (line.aired
         ? <p className="aired"><span>On air after one rewrite</span>{line.aired.text}</p>
@@ -144,7 +144,7 @@ function Gist({ decision, aired }) {
 function Origin({ decision }) {
   return (
     <>
-      {(decision.planted_error || decision.insight?.planted_error) && <span className="vr-origin is-planted" title="The red team planted this error on purpose to test the check">Planted</span>}
+      {(decision.planted_error || (decision.insight?.planted_error && !decision.insight.planted_error.not_present)) && <span className="vr-origin is-planted" title="The red team planted this error on purpose to test the check">Planted</span>}
       {decision.own_error && <span className="vr-origin is-own" title="An error the narrator made unprompted, checked by hand against the events">Narrator's own</span>}
       {lineFlagged(decision) && <span className="vr-origin is-line" title="The line on why it matters failed the check">{decision.insight.aired ? 'Why: fixed' : 'Why: cut'}</span>}
     </>
@@ -181,7 +181,7 @@ function sourceLine(source) {
 /** Red-team score over lines of context and recap sentences aired so far. */
 function lineScore(decisions, recaps) {
   const lines = [...decisions.map(d => d.insight).filter(Boolean), ...recaps.flatMap(r => r.sentences)];
-  const planted = lines.filter(l => l.planted_error);
+  const planted = lines.filter(l => l.planted_error && !l.planted_error.not_present);
   return { planted: planted.length, caught: planted.filter(l => l.verdict.status !== 'VERIFY').length };
 }
 
@@ -205,7 +205,7 @@ export default function VarRoom({ decisions, recaps = [], liveId, selectedId, on
             <button key={value} type="button" role="tab" aria-selected={filter === value} className={filter === value ? 'on' : ''} onClick={() => setFilter(value)}>{label}</button>
           ))}
         </div>
-        {filter !== 'recaps' && calls.some(d => d.planted_error || d.insight?.planted_error) && (
+        {filter !== 'recaps' && calls.some(d => d.planted_error || (d.insight?.planted_error && !d.insight.planted_error.not_present)) && (
           <p className="vr-legend">
             <span><span className="vr-origin is-planted">Planted</span> by the red team</span>
             {calls.some(d => d.own_error) && <span><span className="vr-origin is-own">Narrator's own</span> unprompted, checked by hand</span>}

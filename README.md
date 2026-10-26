@@ -44,19 +44,25 @@ The **Recaps** tab shows each recap sentence by sentence, with any the check cut
 | Second LLM as judge + editor | 0 / 55 | 7 / 11 | ≈ $0.025 |
 | **CaptionVAR** | **0 / 55** | **0 / 11** | ≈ $0.10 |
 
+These costs cover the captions; the Analyst and the recaps add about $0.08 a match.
+
 Given the facts, an LLM catches the errors you plant, but it misses the ones the model makes on its own. Those sit in the build-up ("loses possession under pressure from Sow" when Sow made no press), and a code referee looks up every one. Every own-error case was checked by hand against the raw events. Method, examples and caveats: [docs/EVALUATION.md](docs/EVALUATION.md).
 
-**The demo match.** A seeded red team told the narrator to slip a specific error into about a third of the captions. The extractor and the referee were not told which.
+**The demo match.** A seeded red team told the agents to slip a specific error into about a third of what they wrote. The extractor and the referee were not told which.
 
 | | |
 |---|---|
 | Captions written | 40 over 90 minutes |
-| Planted errors caught | **15 of 15** |
-| Captions with a false fact on air | **0** |
-| Aired as first written / after an editor rewrite / from the data | 24 / 15 / 1 |
-| Model calls, cost and time | 116 calls, **≈ $0.09**, 4 min 13 s |
+| Planted errors in captions caught | **15 of 15**, none on air |
+| Lines on why a moment matters | 19 written, 18 aired (7 after a rewrite), 1 cut |
+| Planted errors in those lines caught | **5 of 5**; told 3 more times, the Analyst wrote a true line instead |
+| Recap sentences (half-time, full time) | 12 written, 12 aired (1 after a rewrite); the planted wrong total was caught |
+| The narrator's own errors the referee flagged | 6, checked by hand: 1 real ("under pressure from Marsh", his own teammate), trimmed; 5 true details misread by the extractor |
+| Time to air, per caption | median **3.7 s**, p95 7.1 s; 2.9 s when the first draft passes. The referee itself: about 3 ms |
+| Time to air, line on why it matters | median 10 s after the moment |
+| Model calls, cost and time | 188 calls, **≈ $0.18**, 6 min 42 s for the whole match |
 
-The full run is published in [`public/traces/foundry-demo.json`](public/traces/foundry-demo.json), and the demo replays it. Every draft, verdict and evidence ID is in that file.
+Times leave out waits on our own rate limiter, which paces calls for a small deployment quota. The full run is published in [`public/traces/foundry-demo.json`](public/traces/foundry-demo.json), and the demo replays it at the recorded pace. Every draft, verdict, timing and evidence ID is in that file, and the hand check is in [`docs/demo-adjudication.json`](docs/demo-adjudication.json).
 
 ## How it works
 
@@ -171,6 +177,7 @@ docs/            agent design, data schema, media
 - **The referee covers the claim types listed above.** Anything else ("their finest chance all season") is reported as uncheckable and trimmed, so a true remark can be dropped. That is the intended trade-off.
 - **The demo replays a recorded run.** The agents ran on Foundry and the site replays that trace, so no API key ships with the page. Run `run_match.py` to generate a new one.
 - **Strict, at the cost of some true detail.** The extractor sometimes ties a build-up action to the wrong player ("X under pressure from Y"). The referee then flags a true detail and the editor trims it. In the five-match comparison this cost 28 true details in 195 captions, and no false ones aired.
+- **Lines of context have the same extractor weakness.** In the demo run, 3 of 19 lines were rewritten over a true detail the extractor misread (a score the wrong way round, a "none after pressing" read as a press). The rewrites aired, and no planted error did.
 - **The comparison is small.** It covers 5 matches, one model and 11 of the narrator's own errors. The direction is clear, but it is not a benchmark.
 - **English drafts only.** The agents write in English, and the other languages are rendered from the checked facts. Lines of context are free text, so they show in English only.
 

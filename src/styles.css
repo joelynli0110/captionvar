@@ -263,7 +263,7 @@ button { cursor: pointer; }
 .vr-item.tone-stop { --tone: var(--stop); }
 .vr-item.is-open { background: var(--night-3); border-left-color: var(--var); }
 .vr-row {
-  display: grid; grid-template-columns: 3.6ch 92px 1fr; align-items: baseline; gap: 10px;
+  display: grid; grid-template-columns: 4.6ch 92px 1fr; align-items: baseline; gap: 10px;
   width: 100%; background: none; border: 0; padding: 11px 18px; text-align: left;
 }
 .vr-row:hover { background: #ffffff06; }
