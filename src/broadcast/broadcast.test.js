@@ -410,3 +410,16 @@ test('found in a Foundry run: a comparison beyond the match is never framing, an
   assert.equal(verifyStatement(ctxMatch, ft, ...sentence(goal.assist_id), ctxPeople).verdict.status, 'VERIFY');
   if (other) assert.equal(verifyStatement(ctxMatch, ft, ...sentence(other.assist_id), ctxPeople).verdict.status, 'WITHHOLD');
 });
+
+test('player tags fire exactly at their thresholds, straight from the events', async () => {
+  const { overlayFeed, THRESHOLDS } = await import('./overlays.js');
+  const feed = overlayFeed(ctxMatch, ctxPeople);
+  const byId = new Map(ctxMatch.events.map(e => [e.id, e]));
+  const of = kind => feed.filter(t => t.kind === kind).map(t => byId.get(t.event_id));
+  assert.ok(of('speed').length > 0 && of('speed').every(e => e.top_speed_kmh >= THRESHOLDS.sprint_kmh));
+  assert.equal(of('shot').length, ctxMatch.events.filter(e => e.type === 'shot').length);
+  assert.ok(of('pass').every(e => e.successful && (e.distance_m >= THRESHOLDS.long_pass_m || e.difficulty >= THRESHOLDS.difficult_pass)));
+  const missed = ctxMatch.events.filter(e => e.type === 'pass' && e.successful && e.distance_m >= THRESHOLDS.long_pass_m && !feed.some(t => t.event_id === e.id));
+  assert.equal(missed.length, 0);
+  assert.ok(feed.every(t => t.title && t.value && t.threshold));
+});

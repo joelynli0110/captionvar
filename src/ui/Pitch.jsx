@@ -38,23 +38,73 @@ function Markings() {
   );
 }
 
+/** Players at their last touch, faint and fading with age: the shape of both teams. */
+/** Dark or light shirt numbers, whichever reads on the kit colour. */
+function ink(hex) {
+  const n = parseInt(String(hex).replace('#', ''), 16);
+  if (Number.isNaN(n)) return '#fff';
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum > 0.6 ? '#0d1320' : '#fff';
+}
+
+function Shape({ shape, teamColor }) {
+  return (
+    <g className="shape" aria-hidden="true">
+      {shape.map(p => (
+        <g key={p.id} opacity={0.55 - p.age * 0.35}>
+          <circle cx={X(p.x)} cy={Y(p.y)} r="1.25" fill={teamColor(p.side)} stroke="#0d132099" strokeWidth="0.15" />
+          <text x={X(p.x)} y={Y(p.y) + 0.48} textAnchor="middle" className="shape-number" fill={ink(teamColor(p.side))}>{p.number}</text>
+        </g>
+      ))}
+    </g>
+  );
+}
+
+/** The move in progress, touch by touch, in the team's colour. */
+function Chain({ trail, teamColor }) {
+  if (trail.length < 2) return null;
+  const points = trail.map(e => `${X(e.x)},${Y(e.y)}`).join(' ');
+  return (
+    <g className="chain" aria-hidden="true">
+      <polyline points={points} fill="none" stroke={teamColor(trail.at(-1).side)} strokeWidth="0.4" strokeOpacity="0.7" strokeLinejoin="round" />
+      {trail.map((e, i) => (
+        <circle key={e.id} cx={X(e.x)} cy={Y(e.y)} r={i === trail.length - 1 ? 0.8 : 0.55} fill={teamColor(e.side)} opacity={0.35 + (i / trail.length) * 0.6} />
+      ))}
+    </g>
+  );
+}
+
+/** A threshold tag (sprint, long or difficult pass, shot, distance) beside the player. */
+function Tag({ tag, teamColor }) {
+  if (!tag?.at) return null;
+  const width = Math.max(tag.title.length * 1.05, (tag.value.length + tag.note.length) * 0.82) + 4;
+  const right = X(tag.at.x) > 105 - width - 4;
+  const x = right ? X(tag.at.x) - width - 2.4 : X(tag.at.x) + 2.4;
+  // Above the player, unless that would sit under the score bug (top left): then below.
+  let y = Y(tag.at.y) - 7.5;
+  if (y < 0.8 || (y < 8.5 && x < 36)) y = Y(tag.at.y) + 2.4;
+  y = Math.min(y, 68 - 7.4);
+  return (
+    <g className={`tag tag-${tag.kind}`} role="img" aria-label={`${tag.title}: ${tag.value}, ${tag.note}`}>
+      <rect x={x} y={y} width={width} height="6.4" rx="0.6" className="tag-box" />
+      <rect x={x} y={y} width="0.8" height="6.4" fill={teamColor(tag.side)} />
+      <text x={x + 1.8} y={y + 2.5} className="tag-title">{tag.title}</text>
+      <text x={x + 1.8} y={y + 5.2} className="tag-line"><tspan className="tag-value">{tag.value}</tspan> {tag.note}</text>
+    </g>
+  );
+}
+
 /**
- * The broadcast pitch: ball, recent touches, the acting player and — when a
- * caption is under review — its evidence drawn as VAR lines.
+ * The broadcast pitch: the teams' shape at their last touches, the move in
+ * progress, the ball and the acting player, threshold tags, and, when a
+ * caption is under review, its evidence drawn as VAR lines.
  */
-export default function Pitch({ ball, actor, trail, evidence, evidenceLabels, focus, pop, teamColor, analyst }) {
+export default function Pitch({ ball, actor, trail, shape = [], evidence, evidenceLabels, focus, tag, teamColor }) {
   return (
     <svg className="pitch" viewBox="0 0 105 68" role="img" aria-label="Live pitch view of the synthetic match">
       <Markings />
-
-      {trail.map((e, i) => (
-        e.end_x != null && e.type === 'pass' && (analyst || i >= trail.length - 4)
-          ? <line key={`l${e.id}`} x1={X(e.x)} y1={Y(e.y)} x2={X(e.end_x)} y2={Y(e.end_y)} stroke={teamColor(e.side)} strokeOpacity={0.15 + (i / trail.length) * 0.45} strokeWidth="0.35" />
-          : null
-      ))}
-      {trail.map((e, i) => (
-        <circle key={e.id} cx={X(e.x)} cy={Y(e.y)} r="0.75" fill={teamColor(e.side)} opacity={0.15 + (i / trail.length) * 0.55} />
-      ))}
+      <Shape shape={shape} teamColor={teamColor} />
+      <Chain trail={trail} teamColor={teamColor} />
 
       {focus.map(e => (
         <circle key={`f${e.id}`} cx={X(e.x)} cy={Y(e.y)} r="1.1" fill="none" stroke="var(--focus)" strokeWidth="0.3" opacity="0.7" />
@@ -87,12 +137,7 @@ export default function Pitch({ ball, actor, trail, evidence, evidenceLabels, fo
         </g>
       )}
 
-      {pop && ball && (
-        <g className="pop">
-          <rect x={X(ball.x) + 2.4} y={Y(ball.y) + 1} width={pop.length * 1.15 + 2.4} height="3.6" rx="0.6" />
-          <text x={X(ball.x) + 3.6} y={Y(ball.y) + 3.65}>{pop}</text>
-        </g>
-      )}
+      <Tag tag={tag} teamColor={teamColor} />
     </svg>
   );
 }

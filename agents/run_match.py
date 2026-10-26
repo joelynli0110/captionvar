@@ -47,8 +47,16 @@ from captionvar_agents.pipeline import (  # noqa: E402
     plan_line_red_team, plan_red_team, run_moment, run_recap,
 )
 
-# Published Global Standard price for gpt-4.1-mini, USD per 1M tokens (input, output).
-PRICE_PER_M = {"gpt-4.1-mini": (0.40, 1.60)}
+# Global Standard list prices, USD per 1M tokens (input, output). Check the Azure
+# OpenAI pricing page for your region before quoting a cost; the key is the
+# deployment's model name (FOUNDRY_MODEL).
+PRICE_PER_M = {
+    "gpt-4.1-mini": (0.40, 1.60),
+    "gpt-4.1-nano": (0.10, 0.40),
+    "gpt-4.1": (2.00, 8.00),
+    "gpt-4o-mini": (0.15, 0.60),
+    "gpt-4o": (2.50, 10.00),
+}
 
 
 def foundry_client():

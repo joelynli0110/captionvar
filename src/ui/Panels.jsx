@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LANGUAGES } from '../broadcast/render.js';
+import { THRESHOLDS } from '../broadcast/overlays.js';
 
 function Segmented({ label, value, options, onChange }) {
   return (
@@ -75,6 +76,24 @@ export function ViewerSettings({ view, setView, teams, players, source }) {
   );
 }
 
+/**
+ * Caption language, one tap away beside the transport: the four languages are
+ * rendered from the checked facts, so switching never re-opens a checked claim.
+ */
+export function LanguageChips({ value, onChange }) {
+  const SHORT = { en: 'EN', es: 'ES', de: 'DE', zh: '中文' };
+  return (
+    <div className="lang-chips" role="radiogroup" aria-label="Caption language">
+      {LANGUAGES.map(l => (
+        <button key={l.code} type="button" role="radio" aria-checked={value === l.code} title={l.label}
+          className={value === l.code ? 'on' : ''} onClick={() => onChange(l.code)}>
+          {SHORT[l.code] ?? l.code.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 const ROWS = [
   ['Possession', s => `${s.possession.home ?? 0}%`, s => `${s.possession.away ?? 0}%`],
   ['xG', s => s.home.xg.toFixed(2), s => s.away.xg.toFixed(2)],
@@ -83,6 +102,9 @@ const ROWS = [
   ['Final-third recoveries', s => s.home.attacking_third_recoveries, s => s.away.attacking_third_recoveries],
   ['Recoveries after a press', s => s.home.recoveries_after_pressure, s => s.away.recoveries_after_pressure],
   ['Pressures', s => s.home.pressures, s => s.away.pressures],
+  [`Long passes (≥ ${THRESHOLDS.long_pass_m} m)`, s => s.home.long_passes, s => s.away.long_passes],
+  ['Difficult passes completed', s => s.home.difficult_passes, s => s.away.difficult_passes],
+  ['Fastest shot', s => (s.home.fastest_shot_kmh ? `${s.home.fastest_shot_kmh} km/h` : '–'), s => (s.away.fastest_shot_kmh ? `${s.away.fastest_shot_kmh} km/h` : '–')],
 ];
 
 export function StatsPanel({ stats, teams }) {

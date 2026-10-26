@@ -9,7 +9,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test src/sim/*.test.js src/broadcast/*.test.js",
     "match": "node scripts/generate_match.mjs",
-    "calibrate": "node scripts/calibrate_sim.mjs"
+    "calibrate": "node scripts/calibrate_sim.mjs",
+    "overlays": "node scripts/overlay_feed.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

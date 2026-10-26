@@ -130,6 +130,10 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ## Viewer features
 
+- **Player tags at fixed thresholds**, straight from the event feed: a sprint of 33 km/h or more, a completed pass of 40 m or more or with difficulty 60/100 or more, every shot with its xG and speed, and distance milestones. `npm run overlays` writes them as a timed, machine-readable overlay feed (JSON lines) for a graphics renderer.
+- **The move in progress and both teams' shape** on the pitch: every touch of the current possession, and each player at his last touch (positions are not tracked, so these fade with age).
+- **Language one tap away** beside the transport, and pass quality (long and difficult passes, fastest shot) in the analyst panel.
+
 - **Fan or analyst** wording, with neutral or partisan framing.
 - **Follow a player**: the pitch traces their recent actions, and a card shows their live numbers.
 - **English, Spanish, German and Chinese.** The analyst view and the other languages are built from the verified facts, not machine-translated from the caption, so they can't reintroduce an error.
@@ -141,7 +145,7 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ```bash
 npm install
-npm test          # 37 tests: simulator, referee, context lines and recaps, rendering
+npm test          # 38 tests: simulator, referee, context lines and recaps, rendering
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
 
@@ -157,7 +161,7 @@ $env:FOUNDRY_MODEL = "gpt-4.1-mini"
 python agents\run_match.py --out public\traces\foundry-demo.json --rpm 30
 ```
 
-Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. In Application Insights, **Transaction search** then opens any caption as one timeline of every agent call, with the referee's verdict and evidence on its span ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 16 workflow tests the same way. `--no-insights` and `--no-recaps` skip the Analyst and the recaps.
+Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. In Application Insights, **Transaction search** then opens any caption as one timeline of every agent call, with the referee's verdict and evidence on its span ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 17 workflow tests the same way. `--no-insights` and `--no-recaps` skip the Analyst and the recaps.
 
 To replay a run you made, put it in `public/traces/` and open the demo with `?trace=<file>.json`. `?at=77`, `?at=HT` or `?at=FT` starts playback at that point.
 
