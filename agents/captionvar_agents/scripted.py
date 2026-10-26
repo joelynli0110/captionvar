@@ -22,6 +22,7 @@ class ScriptedChatClient(BaseChatClient):
     # Test hooks: simulate a throttled deployment or a moment that fails once.
     rate_limit_first_calls = 0
     fail_moments_once: set = set()
+    invalid_extractions = 0  # extractor replies that will not parse, like a small model's
 
     def __init__(self, factbox: Factbox, narrator_seed: str = "narrator-10") -> None:
         super().__init__()
@@ -59,6 +60,9 @@ class ScriptedChatClient(BaseChatClient):
         elif "moment" in user:
             reply = await self._narrate(user)
         elif "roster" in user:
+            if ScriptedChatClient.invalid_extractions > 0:
+                ScriptedChatClient.invalid_extractions -= 1
+                raise RuntimeError("service failed to complete the prompt: 1 validation error for Extraction\n  Invalid JSON: EOF while parsing (simulated)")
             reply = await self._extract(user)
         else:
             reply = await self._edit(user)

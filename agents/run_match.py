@@ -287,7 +287,7 @@ async def main(args: argparse.Namespace) -> None:
                            "caught_recaps": sum(recap_caught(r) for r in recap_list if r["planted_error"])}} if recap_list else {}),
         },
         "usage": {"llm_calls": usage.calls, "input_tokens": usage.input_tokens, "output_tokens": usage.output_tokens,
-                  "rate_limited_retries": usage.throttled,
+                  "rate_limited_retries": usage.throttled, "invalid_outputs_retried": usage.invalid_outputs,
                   "estimated_cost_usd": cost, "by_agent": usage.by_agent, "wall_seconds": round(time.time() - started, 1)},
         "decisions": decisions,
         **({"recaps": recap_list} if recap_list else {}),

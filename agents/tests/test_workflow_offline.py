@@ -248,3 +248,16 @@ def test_model_comparison_reads_runs_of_the_same_match(tmp_path, capfd):
     summary = json.loads(out.read_text(encoding="utf-8"))
     assert len(summary["runs"]) == 2 and all(r["planted_not_stopped"] == 0 for r in summary["runs"])
     assert "| Model |" in capfd.readouterr().out
+
+
+def test_unparseable_extractions_are_retried_then_fail_closed(tmp_path, monkeypatch):
+    from captionvar_agents.scripted import ScriptedChatClient
+    # Two bad replies: the retry recovers.
+    monkeypatch.setattr(ScriptedChatClient, "invalid_extractions", 2)
+    trace = run(tmp_path / "retry", limit=1)
+    assert trace["usage"]["invalid_outputs_retried"] == 2 and trace["decisions"][0]["attempts"][0]["status"] == "VERIFY"
+    # Every try fails: no checkable claim, so the draft does not air as written, and the run goes on.
+    monkeypatch.setattr(ScriptedChatClient, "invalid_extractions", 3)
+    trace = run(tmp_path / "closed", limit=1)
+    d = trace["decisions"][0]
+    assert d["attempts"][0]["status"] == "WITHHOLD" and d["aired"]["verified"]
