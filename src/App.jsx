@@ -7,8 +7,9 @@ import Pitch from './ui/Pitch.jsx';
 import { ScoreBug, LowerThird, ReviewCard, RecapCard, useOnAirPhase } from './ui/Broadcast.jsx';
 import VarRoom from './ui/VarRoom.jsx';
 import Timeline from './ui/Timeline.jsx';
-import { ViewerSettings, StatsPanel, PlayerCard } from './ui/Panels.jsx';
+import { ViewerSettings, StatsPanel, PlayerCard, LanguageChips } from './ui/Panels.jsx';
 import HowItWorks from './ui/HowItWorks.jsx';
+import { tagFor } from './broadcast/overlays.js';
 
 const B = loadBroadcast();
 const PEOPLE = B.trace.people;
@@ -17,6 +18,8 @@ const ON_BALL = new Set(['pass', 'carry', 'shot', 'recovery', 'tackle', 'interce
 const CAPTION_HOLD_S = 45; // match seconds a caption stays in the lower third
 const WITH_LINE_HOLD_S = 70; // longer when a line of context follows it
 const SPEEDS = [2, 4, 8, 16, 32];
+const TAG_REAL_S = 2.8; // real seconds a player tag stays on screen, whatever the playback speed
+const SHAPE_WINDOW_S = 240; // match seconds a player's last touch still marks where he is
 
 const teamColor = side => B.teams[side].colors.primary;
 
@@ -82,6 +85,31 @@ function recent(idx, pick, limit, lookback = 400) {
   return out.reverse();
 }
 
+/**
+ * Where each player last touched the ball in the last few minutes of this
+ * half. Positions are not tracked in the feed, so this is an honest stand-in
+ * for the team shapes: drawn faint, and only for players seen recently.
+ */
+function lastTouches(idx) {
+  const now = B.events[Math.max(0, idx)];
+  const seen = new Map();
+  for (let i = idx; i >= 0 && i > idx - 700; i -= 1) {
+    const e = B.events[i];
+    if (e.period !== now.period || now.t - e.t > SHAPE_WINDOW_S) break;
+    if (e.player_id && e.x != null && !seen.has(e.player_id)) {
+      seen.set(e.player_id, { id: e.player_id, side: e.side, x: e.x, y: e.y, age: (now.t - e.t) / SHAPE_WINDOW_S, number: PEOPLE.players.get(e.player_id)?.number });
+    }
+  }
+  return [...seen.values()];
+}
+
+/** Where to draw a tag: the event, or for events without a position the player's last touch. */
+function placeOf(e, shape) {
+  if (e.x != null) return { x: e.x, y: e.y };
+  const p = shape.find(s => s.id === e.player_id);
+  return p ? { x: p.x, y: p.y } : null;
+}
+
 export default function App() {
   const [explaining, setExplaining] = useState(introWanted);
   const held = useRef(false);
@@ -129,7 +157,14 @@ export default function App() {
   const ball = ballAt(idx, g);
   const actorEvent = recent(idx, e => ON_BALL.has(e.type) && e.player_id, 1, 6)[0];
   const actor = actorEvent ? { ...PEOPLE.players.get(actorEvent.player_id), side: actorEvent.side } : null;
-  const trail = recent(idx, e => ON_BALL.has(e.type) && e.x != null, view.persona === 'analyst' ? 14 : 6, 40);
+  // The move in progress: every touch of the current possession, in order.
+  const possession = ball?.event?.possession_id;
+  const chain = useMemo(
+    () => recent(idx, e => ON_BALL.has(e.type) && e.x != null && e.possession_id === possession, view.persona === 'analyst' ? 14 : 8, 60),
+    [idx, possession, view.persona],
+  );
+  const trail = chain.length >= 2 ? chain : recent(idx, e => ON_BALL.has(e.type) && e.x != null, 6, 40);
+  const shape = useMemo(() => lastTouches(idx), [idx]);
   const focus = view.player ? recent(idx, e => e.player_id === view.player && e.x != null, 6) : [];
   // Draw only the evidence that belongs to this moment (same half, within
   // 150 s); older supporting events, such as earlier goals behind a score
@@ -139,8 +174,9 @@ export default function App() {
       .filter(e => e && e.x != null && e.period === reviewed.period && Math.abs(e.t - reviewed.t) <= 150)
       .sort((a, b) => a.seq - b.seq)
     : [];
-  const popEvent = recent(idx, e => (e.type === 'sprint' || e.type === 'shot') && g - B.eventG[e.seq - 1] < 4, 1, 4)[0];
-  const pop = popEvent ? (popEvent.type === 'sprint' ? `${popEvent.top_speed_kmh} km/h` : `xG ${popEvent.xg.toFixed(2)}, ${popEvent.shot_speed_kmh} km/h`) : null;
+  // A player tag when an event crosses a threshold (sprint, long or difficult pass, shot, distance).
+  const tagEvent = recent(idx, e => g - B.eventG[e.seq - 1] <= TAG_REAL_S * speed && tagFor(e, PEOPLE), 1, 30)[0];
+  const tag = tagEvent ? { ...tagFor(tagEvent, PEOPLE), at: placeOf(tagEvent, shape) } : null;
 
   const focusPlayer = view.player ? PEOPLE.players.get(view.player) : null;
   const focusStats = useMemo(() => (view.player ? playerStats(observed, view.player) : null), [observed, view.player]);
@@ -177,7 +213,7 @@ export default function App() {
       <main className="stage">
         <div className="broadcast">
           <div className="screen">
-            <Pitch ball={ball} actor={actor} trail={trail} evidence={evidence} evidenceLabels={Boolean(selected)} focus={focus} pop={pop} teamColor={teamColor} analyst={view.persona === 'analyst'} />
+            <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected)} focus={focus} tag={tag} teamColor={teamColor} />
             <ScoreBug teams={B.teams} score={stats.score} clock={clockLabel(g, B.halfG)} />
             {focusPlayer && focusStats && (
               <PlayerCard player={focusPlayer} stats={focusStats} team={B.teams[focusPlayer.side]} onClose={() => setView(v => ({ ...v, player: '' }))} />
@@ -206,6 +242,7 @@ export default function App() {
             >
               Next VAR call<span aria-hidden="true"> ›</span>
             </button>
+            <LanguageChips value={view.lang} onChange={lang => setView(v => ({ ...v, lang }))} />
             <nav className="jumps" aria-label="Key moments">
               {keyMoments.map(m => (
                 <button key={m.label} type="button" onClick={() => { seek(m.g); setSelectedId(null); setPlaying(true); }}>{m.label}</button>

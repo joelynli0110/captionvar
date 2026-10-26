@@ -46,6 +46,10 @@ export function teamStats(events, side) {
     fouls: own.filter(e => e.type === 'foul').length,
     yellow_cards: own.filter(e => e.type === 'card').length,
     corners: passes.filter(e => e.set_piece === 'corner').length,
+    // Pass quality and ball speed, at the thresholds the on-screen tags use (overlays.js).
+    long_passes: completed.filter(e => e.distance_m >= 40).length,
+    difficult_passes: completed.filter(e => e.difficulty >= 0.6).length,
+    fastest_shot_kmh: shots.length ? Math.max(...shots.map(e => e.shot_speed_kmh ?? 0)) : null,
     offsides: own.filter(e => e.type === 'offside').length,
     sprints: own.filter(e => e.type === 'sprint').length,
   };
