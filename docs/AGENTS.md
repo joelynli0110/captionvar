@@ -154,6 +154,18 @@ python agents\summarise_baselines.py "public\traces\eval\*.baselines.json" --out
 
 The summary separates **planted** errors (the red team's, known ground truth) from the narrator's **own** errors (false statements it made unasked, mostly build-up details such as who pressed whom), and lists every own-error case and every CaptionVAR caption the re-measurement flagged, for manual review.
 
+## Compare models
+
+The referee is code, so the model behind the agents is a cost and speed choice, not a safety one. To test that, deploy another model in the same Foundry project (for example `gpt-4.1-nano`) and run the demo match again with the same red-team plan:
+
+```powershell
+$env:FOUNDRY_MODEL = "gpt-4.1-nano"
+python agents\run_match.py --fresh --out public\traces\models\gpt-4.1-nano.json --rpm 30
+python agents\compare_models.py public\traces\foundry-demo.json "public\traces\models\*.json" --out public\traces\models\summary.json
+```
+
+`compare_models.py` prints one row per model: planted errors caught and not stopped, how many first drafts passed, who wrote what aired (narrator, editor, or the data), lines of context and recap sentences aired, time to air and cost. Prices for common deployments are in `PRICE_PER_M` in `run_match.py`; check them against the Azure pricing page for your region.
+
 ## Time to air
 
 Each decision records `timing`: the time from the start of its workflow run to the caption airing (`time_to_air_s`), split into model time, referee time and model calls. Waits on our own rate limiter and `429` back-offs are left out, because they come from a small deployment quota, not from the design; they are recorded separately as `throttle_s`. A line of context has its own `timing`, from the same start to the line airing. `summary.time_to_air` gives the median, p95 and maximum, the median by number of rewrites, and the referee's median in milliseconds. Moments run one at a time (`--concurrency 1`), so nothing else competes for the measured time. The demo airs each caption as late as it did in the recorded run.

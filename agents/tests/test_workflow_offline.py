@@ -232,3 +232,19 @@ def test_recaps_check_every_sentence_and_cut_the_planted_one(tmp_path):
 
 def test_short_runs_skip_the_recaps(tmp_path):
     assert "recaps" not in run(tmp_path, limit=4)
+
+
+def test_model_comparison_reads_runs_of_the_same_match(tmp_path, capsys):
+    import compare_models
+    run(tmp_path / "a", limit=6)
+    run(tmp_path / "b", limit=6)
+    out = tmp_path / "summary.json"
+    import sys as _sys
+    argv, _sys.argv = _sys.argv, ["compare_models.py", str(tmp_path / "*" / "trace.json"), "--out", str(out)]
+    try:
+        compare_models.main()
+    finally:
+        _sys.argv = argv
+    summary = json.loads(out.read_text(encoding="utf-8"))
+    assert len(summary["runs"]) == 2 and all(r["planted_not_stopped"] == 0 for r in summary["runs"])
+    assert "| Model |" in capsys.readouterr().out
