@@ -4,7 +4,7 @@ import { matchStats, playerStats } from './sim/stats.js';
 import { renderCaption } from './broadcast/render.js';
 import { summarise } from './broadcast/trace.js';
 import Pitch from './ui/Pitch.jsx';
-import { ScoreBug, LowerThird, ReviewCard, useOnAirPhase } from './ui/Broadcast.jsx';
+import { ScoreBug, LowerThird, ReviewCard, RecapCard, useOnAirPhase } from './ui/Broadcast.jsx';
 import VarRoom from './ui/VarRoom.jsx';
 import Timeline from './ui/Timeline.jsx';
 import { ViewerSettings, StatsPanel, PlayerCard } from './ui/Panels.jsx';
@@ -15,6 +15,7 @@ const PEOPLE = B.trace.people;
 const PLAYERS = [...PEOPLE.players.values()];
 const ON_BALL = new Set(['pass', 'carry', 'shot', 'recovery', 'tackle', 'interception', 'clearance', 'save', 'block', 'foul']);
 const CAPTION_HOLD_S = 45; // match seconds a caption stays in the lower third
+const WITH_LINE_HOLD_S = 70; // longer when a line of context follows it
 const SPEEDS = [2, 4, 8, 16, 32];
 
 const teamColor = side => B.teams[side].colors.primary;
@@ -92,11 +93,13 @@ export default function App() {
   const [agentTrace, setAgentTrace] = useState(null);
   const [source, setSource] = useState('test');
   useEffect(() => {
-    loadAgentTrace(B.match).then(trace => {
+    loadAgentTrace(B.match, B.endG).then(trace => {
       if (trace) { setAgentTrace(trace); setSource('agents'); }
     });
   }, []);
   const decisions = source === 'agents' && agentTrace ? agentTrace.decisions : B.trace.decisions;
+  const recaps = (source === 'agents' && agentTrace ? agentTrace.recaps : B.trace.recaps) ?? [];
+  const [closedRecap, setClosedRecap] = useState(null);
   const sourceControl = { kind: source, agentTrace, onChange: value => { setSource(value); setSelectedId(null); } };
 
   const idx = indexAt(B.eventG, g);
@@ -107,7 +110,15 @@ export default function App() {
   const airedNewestFirst = useMemo(() => [...aired].reverse(), [aired]);
   const summary = useMemo(() => summarise(aired), [aired]);
   const latest = aired.at(-1);
-  const onAir = latest && g - latest.g <= CAPTION_HOLD_S ? latest : null;
+  const hold = latest?.insight?.aired ? WITH_LINE_HOLD_S : CAPTION_HOLD_S;
+  const onAir = latest && g - latest.g <= hold ? latest : null;
+  // The line of context airs after its caption, in English only: the other
+  // languages are rendered from checked facts, and a line is free text.
+  const insight = onAir?.insight?.aired && g >= onAir.insight.g && view.lang === 'en' ? onAir.insight.aired.text : null;
+  const recapsAired = useMemo(() => recaps.filter(r => r.g <= g), [recaps, g]);
+  const lastRecap = recapsAired.at(-1);
+  const recapOnAir = lastRecap && lastRecap.id !== closedRecap
+    && (lastRecap.recap === 'HT' ? g < B.halfG.start2 : g >= B.endG - 1) ? lastRecap : null;
   const selected = selectedId ? decisions.find(d => d.id === selectedId) : null;
   const reviewed = selected || onAir;
   const phase = useOnAirPhase(onAir);
@@ -172,7 +183,8 @@ export default function App() {
               <PlayerCard player={focusPlayer} stats={focusStats} team={B.teams[focusPlayer.side]} onClose={() => setView(v => ({ ...v, player: '' }))} />
             )}
             {phase === 'review' && onAir && <ReviewCard decision={onAir} text={renderAired(onAir)} />}
-            <LowerThird decision={onAir} text={onAir ? renderAired(onAir) : ''} lang={view.lang} phase={phase} />
+            {recapOnAir && phase !== 'review' && <RecapCard recap={recapOnAir} onClose={() => setClosedRecap(recapOnAir.id)} />}
+            {!recapOnAir && <LowerThird decision={onAir} text={onAir ? renderAired(onAir) : ''} lang={view.lang} phase={phase} insight={insight} />}
           </div>
 
           <div className="transport">
@@ -208,6 +220,7 @@ export default function App() {
 
         <VarRoom
           decisions={airedNewestFirst}
+          recaps={recapsAired}
           liveId={onAir?.id}
           onExplain={() => { setPlaying(false); setExplaining(true); }}
           selectedId={selectedId}

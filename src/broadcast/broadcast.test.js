@@ -4,6 +4,10 @@ import { generateMatch } from '../sim/generateMatch.js';
 import { buildTrace, overlayRecord } from './trace.js';
 import { verifyCaption } from './verify.js';
 import { renderCaption, LANGUAGES } from './render.js';
+import { spotMoments, indexPeople } from './narrator.js';
+import { INSIGHT_TYPES, recapSpot, contextFacts, RECAPS } from './context.js';
+import { simulateInsight, simulateRecap } from './analyst.js';
+import { verifyStatement } from './statements.js';
 
 const match = generateMatch({ seed: 'captionvar-demo-6' });
 const trace = buildTrace(match, { seed: 'narrator-10' });
@@ -324,4 +328,85 @@ test('a comparison beyond the match is flagged even when the extractor misses it
   // Already flagged by the extractor: not counted twice.
   const flagged = { status: 'QUALIFY', claims: [{ status: 'unverifiable', span: 'their finest opportunity all season' }] };
   assert.equal(checkSweepingClaims('Reyes off target, their finest opportunity all season.', flagged), flagged);
+});
+
+// ------------------------------------------------ context lines and recaps
+
+const ctxMatch = generateMatch({ seed: 'captionvar-demo-6' });
+const ctxPeople = indexPeople(ctxMatch);
+const ctxSpots = spotMoments(ctxMatch);
+const insightSpots = ctxSpots.filter(s => INSIGHT_TYPES.has(s.moment.type));
+
+test('every true line of context passes and every planted one is stopped', () => {
+  assert.ok(insightSpots.length >= 10);
+  for (const spot of insightSpots) {
+    const ok = simulateInsight(ctxMatch, spot);
+    assert.equal(verifyStatement(ctxMatch, spot, ok.text, ok.extracted, ctxPeople).verdict.status, 'VERIFY', ok.text);
+    const bad = simulateInsight(ctxMatch, spot, { plant: 'inflated_number' });
+    assert.equal(verifyStatement(ctxMatch, spot, bad.text, bad.extracted, ctxPeople).verdict.status, 'WITHHOLD', bad.text);
+  }
+});
+
+test('recap sentences are checked against the half they close, never later', () => {
+  for (const which of RECAPS) {
+    const spot = recapSpot(ctxMatch, which);
+    for (const s of simulateRecap(ctxMatch, which).sentences) {
+      assert.equal(verifyStatement(ctxMatch, spot, s.text, s.extracted, ctxPeople).verdict.status, 'VERIFY', s.text);
+    }
+    const planted = simulateRecap(ctxMatch, which, { plant: 'wrong_player' });
+    const s = planted.sentences[planted.planted_sentence];
+    assert.equal(verifyStatement(ctxMatch, spot, s.text, s.extracted, ctxPeople).verdict.status, 'WITHHOLD', s.text);
+  }
+  // A second-half goal is not part of the half-time recap.
+  const late = ctxMatch.events.find(e => e.type === 'goal' && e.period === 2);
+  const name = ctxPeople.name(late.scorer_id);
+  const v = verifyStatement(ctxMatch, recapSpot(ctxMatch, 'HT'), `${name} scored.`, [{ kind: 'goal_event', span: `${name} scored`, player_id: late.scorer_id }], ctxPeople);
+  assert.equal(v.verdict.status, 'WITHHOLD');
+});
+
+test('a line may interpret checked facts, but not stand on opinion alone or compare beyond the match', () => {
+  const spot = insightSpots.find(s => s.moment.type === 'chance');
+  const base = simulateInsight(ctxMatch, spot);
+  const framing = { kind: 'opinion', span: 'so the chances keep coming' };
+  const withFraming = verifyStatement(ctxMatch, spot, base.text, [...base.extracted, framing], ctxPeople);
+  assert.equal(withFraming.verdict.status, 'VERIFY');
+  assert.ok(withFraming.verdict.claims.some(c => c.framing));
+  const alone = verifyStatement(ctxMatch, spot, 'The chances keep coming.', [{ kind: 'opinion', span: 'The chances keep coming' }], ctxPeople);
+  assert.equal(alone.verdict.status, 'WITHHOLD');
+  const sweeping = verifyStatement(ctxMatch, spot, `${base.text} Their best spell of the season.`, base.extracted, ctxPeople);
+  assert.notEqual(sweeping.verdict.status, 'VERIFY');
+});
+
+test('minutes since the previous shot on target is measured on the match clock', () => {
+  const spot = insightSpots.find(s => s.moment.type === 'chance' && contextFacts(ctxMatch, s).teams[ctxPeople.teams[s.moment.side].name].minutes_since_previous_shot_on_target != null);
+  const mins = contextFacts(ctxMatch, spot).teams[ctxPeople.teams[spot.moment.side].name].minutes_since_previous_shot_on_target;
+  const claim = n => [{ kind: 'minutes_since', span: `first shot on target in ${n} minutes`, side: spot.moment.side, metric: 'shot_on_target', number: n }];
+  const text = n => `Their first shot on target in ${n} minutes.`;
+  assert.equal(verifyStatement(ctxMatch, spot, text(Math.round(mins)), claim(Math.round(mins)), ctxPeople).verdict.status, 'VERIFY');
+  assert.equal(verifyStatement(ctxMatch, spot, text(Math.round(mins) + 5), claim(Math.round(mins) + 5), ctxPeople).verdict.status, 'WITHHOLD');
+});
+
+test('found in a Foundry run: a comparison beyond the match is never framing, and recap assists belong to their goal', () => {
+  const spot = insightSpots.find(s => s.moment.type === 'press');
+  const base = simulateInsight(ctxMatch, spot);
+  const text = `${base.text} A pressing intensity rarely seen this season.`;
+  const v = verifyStatement(ctxMatch, spot, text, [...base.extracted, { kind: 'opinion', span: 'A pressing intensity rarely seen this season' }], ctxPeople);
+  assert.notEqual(v.verdict.status, 'VERIFY');
+
+  // "possession in the last 10 minutes" is checked against the window even if the extractor says possession.
+  const recent = contextFacts(ctxMatch, spot).possession_pct_last_10_min[ctxPeople.teams[spot.moment.side].name];
+  const pct = Math.round(recent);
+  const r = verifyStatement(ctxMatch, spot, `${pct}% possession in the last 10 minutes.`, [{ kind: 'possession', span: `${pct}% possession in the last 10 minutes`, side: spot.moment.side, number: pct }], ctxPeople);
+  assert.equal(r.verdict.status, 'VERIFY');
+
+  const goal = ctxMatch.events.find(e => e.type === 'goal' && e.assist_id);
+  const other = ctxMatch.events.find(e => e.type === 'goal' && e.assist_id && e.assist_id !== goal.assist_id && e.id !== goal.id);
+  const n = id => ctxPeople.name(id);
+  const sentence = assist => [`${n(goal.scorer_id)} scored, assisted by ${n(assist)}.`, [
+    { kind: 'goal_scorer', span: `${n(goal.scorer_id)} scored`, player_id: goal.scorer_id },
+    { kind: 'goal_assist', span: `assisted by ${n(assist)}`, player_id: assist },
+  ]];
+  const ft = recapSpot(ctxMatch, 'FT');
+  assert.equal(verifyStatement(ctxMatch, ft, ...sentence(goal.assist_id), ctxPeople).verdict.status, 'VERIFY');
+  if (other) assert.equal(verifyStatement(ctxMatch, ft, ...sentence(other.assist_id), ctxPeople).verdict.status, 'WITHHOLD');
 });

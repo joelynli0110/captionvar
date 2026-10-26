@@ -23,7 +23,16 @@ def run(tmp_path: Path, **kw) -> dict:
     args = argparse.Namespace(out=str(out), offline=True, match_seed="captionvar-demo-6", red_team=0.35, rpm=None, fresh=True,
                               red_team_seed="red-1", limit=kw.get("limit"), from_minute=kw.get("from_minute"), concurrency=4)
     asyncio.run(run_match.main(args))
-    return json.loads(out.read_text())
+    return json.loads(out.read_text(encoding="utf-8"))
+
+
+def untimed(value):
+    """The same data without timings, which differ from run to run."""
+    if isinstance(value, dict):
+        return {k: untimed(v) for k, v in value.items() if k != "timing"}
+    if isinstance(value, list):
+        return [untimed(v) for v in value]
+    return value
 
 
 def test_full_match_catches_every_planted_error(tmp_path):
@@ -69,7 +78,7 @@ def test_referee_rejects_a_caption_with_no_checkable_claim():
 
 
 def test_extractor_kinds_match_the_javascript_vocabulary():
-    js = (ROOT.parent / "src" / "broadcast" / "extracted.js").read_text()
+    js = (ROOT.parent / "src" / "broadcast" / "extracted.js").read_text(encoding="utf-8")
     for kind in pipeline.KIND_DOCS:
         assert f"  {kind}:" in js, kind
 
@@ -93,9 +102,9 @@ def test_a_failed_run_resumes_without_redoing_finished_moments(tmp_path, monkeyp
     with pytest.raises(SystemExit):
         asyncio.run(run_match.main(argparse.Namespace(**base, fresh=True)))
     partial = Path(str(out) + ".partial.jsonl")
-    assert len(partial.read_text().splitlines()) == 4 and not out.exists()
+    assert len(partial.read_text(encoding="utf-8").splitlines()) == 4 and not out.exists()
     asyncio.run(run_match.main(argparse.Namespace(**base, fresh=False)))
-    trace = json.loads(out.read_text())
+    trace = json.loads(out.read_text(encoding="utf-8"))
     assert [d["id"] for d in trace["decisions"]] == [f"CAP-{i:03d}" for i in range(1, 6)]
     assert not partial.exists()
 
@@ -159,3 +168,67 @@ def test_each_caption_is_one_trace_with_the_verdict_on_the_referee_span(tmp_path
         referee = [s for s in inside if s.name == "executor.process referee"]
         assert all(s.attributes["captionvar.verdict"] in {"VERIFY", "QUALIFY", "WITHHOLD"} for s in referee)
         assert cap.attributes["captionvar.aired_by"] in {"narrator", "editor", "template"}
+
+
+def test_each_caption_records_its_time_to_air(tmp_path):
+    trace = run(tmp_path, limit=6)
+    for d in trace["decisions"]:
+        t = d["timing"]
+        assert t["time_to_air_s"] >= 0 and t["model_calls"] >= 2 and t["referee_ms"] > 0
+    lat = trace["summary"]["time_to_air"]
+    assert lat["captions_timed"] == 6 and lat["p50_s"] <= lat["p95_s"] <= lat["max_s"]
+
+
+def test_percentile_is_nearest_rank():
+    assert run_match.percentile([5, 1, 4, 2, 3], 0.5) == 3
+    assert run_match.percentile(list(range(1, 41)), 0.95) == 38
+    assert run_match.percentile([7], 0.95) == 7
+
+
+def test_referee_is_served_over_mcp_and_matches_the_jsonl_fallback(tmp_path, monkeypatch):
+    from captionvar_agents.factbox import OP_TO_TOOL
+
+    async def tools() -> set:
+        async with Factbox() as fb:
+            assert fb.transport == "mcp"
+            return {t.name for t in (await fb._session.list_tools()).tools}
+
+    assert set(OP_TO_TOOL.values()) <= asyncio.run(tools())
+    over_mcp = run(tmp_path / "mcp", limit=8)
+    monkeypatch.setenv("CAPTIONVAR_FACTBOX", "jsonl")
+    over_jsonl = run(tmp_path / "jsonl", limit=8)
+    assert untimed(over_mcp["decisions"]) == untimed(over_jsonl["decisions"])
+
+
+def test_key_moments_get_a_checked_line_on_why_they_matter(tmp_path):
+    trace = run(tmp_path)
+    lines = [d for d in trace["decisions"] if d.get("insight")]
+    assert {d["type"] for d in lines} <= {"goal", "chance", "press", "stat"} and len(lines) >= 10
+    s = trace["summary"]["insights"]
+    assert s["planted_errors"] > 0 and s["caught"] == s["planted_errors"] and s["flagged_without_plant"] == 0
+    for d in lines:
+        ins = d["insight"]
+        if ins["aired"]:
+            assert ins["attempts"][-1]["status"] == "VERIFY"
+        else:
+            # One rewrite by the line editor, then dropped: a line of context never airs unchecked.
+            assert [a["author"] for a in ins["attempts"]] == ["analyst", "line_editor"]
+            assert all(a["status"] != "VERIFY" for a in ins["attempts"])
+        assert ins["timing"]["time_to_air_s"] >= d["timing"]["time_to_air_s"]
+
+
+def test_recaps_check_every_sentence_and_cut_the_planted_one(tmp_path):
+    trace = run(tmp_path)
+    recaps = {r["recap"]: r for r in trace["recaps"]}
+    assert set(recaps) == {"HT", "FT"}
+    planted = [r for r in recaps.values() if r["planted_error"]]
+    assert len(planted) == 1
+    bad = planted[0]["sentences"][planted[0]["planted_error"]["sentence"]]
+    assert bad["verdict"]["status"] != "VERIFY" and not bad["aired"]
+    for r in recaps.values():
+        assert r["aired_text"] == " ".join(s["aired"]["text"] for s in r["sentences"] if s["aired"])
+    assert trace["summary"]["recaps"]["caught_recaps"] == 1
+
+
+def test_short_runs_skip_the_recaps(tmp_path):
+    assert "recaps" not in run(tmp_path, limit=4)

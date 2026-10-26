@@ -2,11 +2,22 @@
 
 Built with **Microsoft Agent Framework** (Python) on **Microsoft Foundry**.
 
+Per moment (one workflow run):
+
 ```
                  ┌──────────────────────── edit loop (≤ 2) ────────────────────────┐
                  ▼                                                                 │
-Narrator ──► Extractor ──► Referee ──┬── passes / out of retries ──► Publisher     │
-  (LLM)        (LLM)       (code)    └── fails ──► Editor (LLM) ───────────────────┘
+Narrator ──► Extractor ──► Referee ──┬── passes / out of retries ──► Publisher ──► Analyst (LLM, key moments)
+  (LLM)        (LLM)     (code, MCP) └── fails ──► Editor (LLM) ───────────────────┘        │
+                 ▲                                                                           │
+                 └─── the Analyst's line: Extractor ► Referee ► Line editor (≤ 1) or Line publisher ◄┘
+```
+
+Per recap (half-time and full time), every sentence on its own:
+
+```
+Recap writer ──► Extractor ──► Referee ──┬──► Line publisher (airs the sentence, or cuts it)
+    (LLM)          (LLM)     (code, MCP) └──► Line editor (LLM, one rewrite) ──► Extractor
 ```
 
 | Agent | Kind | Sees | Produces |
@@ -15,7 +26,11 @@ Narrator ──► Extractor ──► Referee ──┬── passes / out of r
 | Claim Extractor | LLM, structured output | The caption and squad lists **only, never the facts** | Typed claims with the exact words that make each one |
 | Referee (VAR) | Deterministic code | Claims and the events observed **up to that moment** | Verdict per claim (holds / false / cannot be checked) with evidence event IDs |
 | Editor | LLM | The verdict on each claim and the true facts | A repaired caption, which goes back through Extractor and Referee |
-| Publisher | Code | The last checked version | The first version that passes; otherwise a caption rendered from the true facts |
+| Publisher | Code | The last checked version | The first version that passes; otherwise a caption rendered from the true facts. For goals, big chances, pressing spells and possession reports it hands the aired caption to the Analyst |
+| Analyst | LLM | The aired caption, the moment's facts and the running numbers behind it (team totals, xG, minutes since the previous shot, shot on target or goal, possession over the last 10 minutes, the player's match totals) | One line on why the moment matters |
+| Recap writer | LLM, structured output | Everything recorded up to the end of the half or match | A recap as a list of sentences |
+| Line editor | LLM | A failed line or recap sentence, the verdict on each claim and the true numbers | One rewrite, checked again |
+| Line publisher | Code | The last checked line or sentence | The line if it passed; otherwise nothing (it is cut) |
 
 Design choices that matter for trust:
 
@@ -29,9 +44,24 @@ Design choices that matter for trust:
 - **No comparisons beyond the match.** "The best strike of the season" or "finest save in league history" cannot be checked against match data. Code flags such phrases even when the extractor misses them (seen in a Foundry run), so they are trimmed rather than aired.
 - **Percentages are not rounded generously.** A whole-number percentage must equal the actual value rounded down or up (61.0% allows only 61%; 62.6% allows 62% or 63%).
 - **No future data.** The referee only sees events with `seq` up to the moment being captioned.
-- **Red team.** A seeded plan tells the narrator to plant one specific kind of error in about a third of captions (wrong player, invented goal, inflated number, wrong score, invented cause, unverifiable superlative). Only the plan knows; the extractor and referee do not. The trace reports how many were caught, and separately how many other captions were flagged (these may be genuine narrator mistakes and are listed for review rather than scored).
+- **Red team.** A seeded plan tells the narrator to plant one specific kind of error in about a third of captions (wrong player, invented goal, inflated number, wrong score, invented cause, unverifiable superlative). Only the plan knows; the extractor and referee do not. The trace reports how many were caught, and separately how many other captions were flagged (these may be genuine narrator mistakes and are listed for review rather than scored). The Analyst gets its own plan (an inflated number, a total credited to the wrong player, or a comparison beyond the match) at the same rate, and one of the two recaps per run is told to carry a wrong scorer, an inflated total or a wrong score; the recap writer names which sentence it put it in, and that is used only for scoring.
 
-The JavaScript side runs as a small stdio service (`scripts/factbox.mjs`), so Python and the browser share one implementation of spotting, checking and rendering.
+### Lines of context and recaps
+
+A line on why a moment matters, or a recap sentence, is checked by the same extractor and referee as a caption (`src/broadcast/statements.js`), with these rules:
+
+- **Every fact must hold.** There is no trimming: a line with a false or uncheckable fact goes to the line editor once, and if the rewrite also fails, nothing airs. A caption always airs (corrected if need be); context is optional.
+- **Interpretation is allowed, invention is not.** The point of the line is to say what the numbers show, so a judgement the extractor reports as `opinion` ("the press is pinning them back") is kept as framing, but only next to at least one checked fact, and never a comparison beyond the match.
+- **Running totals are checked against the record.** New claim kinds: `team_total` (shots, shots on target, xG to ±0.05, corners, fouls, bookings, final-third recoveries so far), `player_total` (goals, assists, shots, recoveries, pressures, completed passes), `minutes_since` (a team's previous shot, shot on target or goal, on the match clock), `recent_possession` (last 10 minutes), `goal_event` and `card_event` (an earlier goal or booking, with scorer, assist and minute as stated). Captions can use them too.
+- **A recap sees only its half.** The half-time recap is checked against events up to the half-time whistle, so a second-half goal in it is false.
+
+### The referee as an MCP server
+
+`scripts/referee-mcp.mjs` serves the deterministic side as read-only MCP tools on stdio: `check_caption` (the VAR check, for a caption, a line of context or a recap sentence), `extractor_view`, `editor_view`, `analyst_view`, `recap_view`, `line_editor_view`, `caption_from_data`, `list_moments`, `list_insight_moments`, `list_recaps`, `match_info`, `moment_header` and the test agents' outputs for offline runs. The workflow reaches all of them through an MCP client session (`agents/captionvar_agents/factbox.py`), and each `tools/call` is a span in the trace, named and tagged after the OpenTelemetry conventions for MCP.
+
+The same tools work from any MCP client. `.vscode/mcp.json` registers the server for GitHub Copilot agent mode in VS Code, so you can ask Copilot to check a caption against the match.
+
+`scripts/factbox.mjs` serves the same operations as one JSON request per line, without the MCP dependency; set `CAPTIONVAR_FACTBOX=jsonl` to use it. A test runs the workflow both ways and checks the decisions are identical. Either way, Python and the browser share one implementation of spotting, checking and rendering (`scripts/factbox-ops.mjs`).
 
 ## Run it on Microsoft Foundry
 
@@ -53,7 +83,7 @@ $env:FOUNDRY_MODEL = "gpt-4.1-mini"      # your deployment name
 # smoke test: 3 moments, a few cents of a cent
 python agents\run_match.py --limit 3 --out public\traces\smoke.json
 
-# full match (40 captions, a few minutes, roughly $0.05-0.10)
+# full match (40 captions, about 19 lines of context and 2 recaps; a few minutes, roughly $0.10-0.20)
 python agents\run_match.py --out public\traces\foundry-demo.json
 ```
 
@@ -124,6 +154,10 @@ python agents\summarise_baselines.py "public\traces\eval\*.baselines.json" --out
 
 The summary separates **planted** errors (the red team's, known ground truth) from the narrator's **own** errors (false statements it made unasked, mostly build-up details such as who pressed whom), and lists every own-error case and every CaptionVAR caption the re-measurement flagged, for manual review.
 
+## Time to air
+
+Each decision records `timing`: the time from the start of its workflow run to the caption airing (`time_to_air_s`), split into model time, referee time and model calls. Waits on our own rate limiter and `429` back-offs are left out, because they come from a small deployment quota, not from the design; they are recorded separately as `throttle_s`. A line of context has its own `timing`, from the same start to the line airing. `summary.time_to_air` gives the median, p95 and maximum, the median by number of rewrites, and the referee's median in milliseconds. Moments run one at a time (`--concurrency 1`), so nothing else competes for the measured time. The demo airs each caption as late as it did in the recorded run.
+
 ## Trace format
 
-Each decision in the trace carries the narrator's original caption split into claim segments, the verdict on every claim with its evidence event IDs, the red-team label (if any), each attempt (narrator, editor rewrites) with its status, and what aired (`aired.text`, `aired.by`). `usage` records model calls, tokens and the estimated cost of the run.
+Each decision in the trace carries the narrator's original caption split into claim segments, the verdict on every claim with its evidence event IDs, the red-team label (if any), each attempt (narrator, editor rewrites) with its status, what aired (`aired.text`, `aired.by`) and `timing`. Key moments also carry `insight`: the Analyst's first line with its segments and verdict, each attempt, the red-team label and what aired (`null` if it was cut). `recaps` lists the half-time and full-time recaps, each with its sentences in the same shape and `aired_text`. `summary` adds `insights` and `recaps` counts (aired, cut, planted, caught), and `usage` records model calls, tokens and the estimated cost of the run.

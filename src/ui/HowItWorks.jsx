@@ -30,8 +30,12 @@ export default function HowItWorks({ trace, onClose }) {
           </li>
         ))}
       </ol>
+      <p className="how-more">
+        After key moments the <strong>Analyst</strong> <span className="how-kind">LLM</span> adds why it matters, and the <strong>Recap writer</strong> <span className="how-kind">LLM</span> sums up each half.
+        Every line they write goes through steps 2 and 3; one that fails is cut.
+      </p>
       <p className="how-note">
-        A red team tells the narrator to slip an error into about a third of the captions. The extractor and the referee are not told which.
+        A red team tells the agents to slip an error into about a third of what they write. The extractor and the referee are not told which.
         {usage && trace.source === 'foundry-agents' && ` This match ran on Microsoft Foundry (${trace.model}): ${usage.llm_calls} model calls, about $${usage.estimated_cost_usd.toFixed(2)}.`}
         {' '}Clubs, players and events are synthetic.
       </p>
