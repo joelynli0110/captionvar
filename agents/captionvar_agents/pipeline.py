@@ -134,6 +134,8 @@ class Usage:
     input_tokens: int = 0
     output_tokens: int = 0
     throttled: int = 0
+    # Replies that did not parse as the required structured output (retried).
+    invalid_outputs: int = 0
     by_agent: dict = field(default_factory=dict)
     # Seconds spent in model calls, in the referee, and waiting on our own rate
     # limiter or a 429 back-off. The last is an artefact of a small deployment
@@ -148,6 +150,7 @@ class Usage:
         self.input_tokens += o["input_tokens"]
         self.output_tokens += o["output_tokens"]
         self.throttled += o.get("throttled", 0)
+        self.invalid_outputs += o.get("invalid_outputs", 0)
         self.model_s += o.get("model_s", 0.0)
         self.referee_s += o.get("referee_s", 0.0)
         self.throttle_s += o.get("throttle_s", 0.0)
@@ -158,7 +161,7 @@ class Usage:
 
     def as_dict(self) -> dict:
         return {"calls": self.calls, "input_tokens": self.input_tokens, "output_tokens": self.output_tokens,
-                "throttled": self.throttled, "by_agent": self.by_agent,
+                "throttled": self.throttled, "invalid_outputs": self.invalid_outputs, "by_agent": self.by_agent,
                 "model_s": round(self.model_s, 3), "referee_s": round(self.referee_s, 4), "throttle_s": round(self.throttle_s, 3)}
 
     def add(self, agent: str, response: Any) -> None:
@@ -250,6 +253,31 @@ async def ask(agent: Agent, usage: Usage, payload: Any, **options: Any) -> Any:
     return response
 
 
+STRUCTURED_RETRIES = 2
+
+
+def is_invalid_output(exc: BaseException) -> bool:
+    text = str(exc)
+    return "validation error" in text or "Invalid JSON" in text or "json_invalid" in text
+
+
+async def ask_structured(agent: Agent, usage: Usage, payload: Any, model: type, **options: Any) -> Any | None:
+    """A structured reply, retried when the model returns JSON that does not parse
+    (seen with gpt-4.1-nano). Returns None if every try fails, so the caller can
+    fail closed instead of stopping the run."""
+    for attempt in range(STRUCTURED_RETRIES + 1):
+        try:
+            response = await ask(agent, usage, payload, response_format=model, **options)
+            return response.value or model.model_validate_json(response.text)
+        except Exception as exc:  # noqa: BLE001 - only unparseable replies are retried
+            if not is_invalid_output(exc):
+                raise
+            usage.invalid_outputs += 1
+            print(f"    {agent.name} returned output that does not parse; "
+                  f"{'retrying' if attempt < STRUCTURED_RETRIES else 'giving up'} ({attempt + 1}/{STRUCTURED_RETRIES + 1})", flush=True)
+    return None
+
+
 def clean(text: str) -> str:
     return text.strip().strip('"').strip("“”").strip()
 
@@ -309,8 +337,9 @@ class RecapWriterExecutor(Executor):
     async def write(self, task: RecapTask, ctx: WorkflowContext[Draft, dict]) -> None:
         packet = await self.factbox.call("recap_packet", recap=task.recap)
         payload = {**packet, **red_team_line(prompts.RED_TEAM_RECAP, task.plant)}
-        response = await ask(self.agent, self.usage, payload, response_format=prompts.Recap, temperature=0.6)
-        value = response.value or prompts.Recap.model_validate_json(response.text)
+        value = await ask_structured(self.agent, self.usage, payload, prompts.Recap, temperature=0.6)
+        if value is None:
+            raise RuntimeError(f"recap {task.recap}: the recap writer's reply never parsed")
         sentences = [clean(t) for t in value.sentences if clean(t)]
         # Which sentence carries the plant is ground truth for scoring only; the checkers never see it.
         await ctx.yield_output({"kind": "recap_plan", "recap": task.recap, "sentences": sentences,
@@ -327,9 +356,10 @@ class ExtractorExecutor(Executor):
     @handler
     async def extract(self, draft: Draft, ctx: WorkflowContext[Extracted]) -> None:
         packet = await self.factbox.call("extractor_packet", text=draft.text, **draft.where())
-        response = await ask(self.agent, self.usage, packet, response_format=prompts.Extraction, temperature=0)
-        value = response.value or prompts.Extraction.model_validate_json(response.text)
-        claims = [c.model_dump() for c in value.claims]
+        value = await ask_structured(self.agent, self.usage, packet, prompts.Extraction, temperature=0)
+        # No parseable extraction = no checkable claim, and the referee fails
+        # closed on that: the caption is rewritten or airs from the data.
+        claims = [c.model_dump() for c in value.claims] if value else []
         await ctx.send_message(Extracted(draft, claims))
 
 
