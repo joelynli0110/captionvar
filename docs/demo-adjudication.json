@@ -1,0 +1,29 @@
+{
+  "run": {
+    "match_seed": "captionvar-demo-6",
+    "generated_at": "2026-10-25T23:56:13Z",
+    "trace": "public/traces/foundry-demo.json"
+  },
+  "method": "Every caption detail the referee flagged without a red-team instruction behind it, checked by hand against the raw events. 'real': the narrator wrote something false on its own. 'false alarm': the detail was true and the extractor bound it to the wrong player or side, or read colour as a claim. Details that belong to a planted error (a booking credited to the wrong player, and the foul that goes with it) are not listed.",
+  "cases": {
+    "CAP-004": ["false alarm", "Benedetti did press Brandt (PR-0356) right after Reyes's pass to him."],
+    "CAP-007": ["false alarm", "Pell did win the ball (R-0636) and pass it on (P-0637)."],
+    "CAP-013": ["false alarm", "Northbridge did press in the build-up (Vence on Lind, PR-1328)."],
+    "CAP-014": ["false alarm", "'Keeping Riverside on their toes' is colour, read as a claim."],
+    "CAP-021": ["false alarm", "Lind and Abara linked up (P-1751, P-1752) while Reyes and Okafor pressed Lind."],
+    "CAP-030": ["real", "Okafor did give the ball away (P-1940), but not under pressure from Marsh, his own teammate; nobody pressed him."]
+  },
+  "lines": {
+    "note": "Lines of context and recap sentences in the same run, checked the same way.",
+    "planted_not_present": {
+      "CAP-016": "Told to credit a total to the wrong player, the Analyst wrote Reyes's true total (5 shots).",
+      "CAP-020": "Told to add a comparison beyond the match, the Analyst wrote none; every number in the line is true.",
+      "CAP-025": "Same: no comparison beyond the match in the line."
+    },
+    "false_alarms": {
+      "CAP-009": "'Prolongs their wait for a breakthrough' is interpretation, read as a fact.",
+      "CAP-014": "'Keeps them trailing' is true (0-1); the extractor gave the score the wrong way round.",
+      "CAP-017": "'No direct gains from pressing' is true (none of the 3 recoveries came after a press); the extractor read it as a press that happened."
+    }
+  }
+}
