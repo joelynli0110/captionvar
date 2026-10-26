@@ -17,6 +17,7 @@ import asyncio
 import json
 import os
 import shutil
+import sys
 from contextlib import AsyncExitStack
 from pathlib import Path
 from typing import Any
@@ -44,6 +45,15 @@ OP_TO_TOOL = {
     "simulated_insight": "test_analyst_insight",
     "simulated_recap": "test_recap",
 }
+
+
+def _errlog():
+    """Where the MCP server's stderr goes: ours, or the real one when ours is captured (pytest)."""
+    try:
+        sys.stderr.fileno()
+        return sys.stderr
+    except (AttributeError, OSError, ValueError):
+        return sys.__stderr__
 
 
 class FactboxError(RuntimeError):
@@ -97,7 +107,7 @@ class Factbox:
             cwd=str(REPO_ROOT),
         )
         self._stack = AsyncExitStack()
-        read, write = await self._stack.enter_async_context(stdio_client(params))
+        read, write = await self._stack.enter_async_context(stdio_client(params, errlog=_errlog()))
         self._session = await self._stack.enter_async_context(ClientSession(read, write))
         await self._session.initialize()
         tools = {t.name for t in (await self._session.list_tools()).tools}

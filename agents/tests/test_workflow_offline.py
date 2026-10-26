@@ -234,7 +234,7 @@ def test_short_runs_skip_the_recaps(tmp_path):
     assert "recaps" not in run(tmp_path, limit=4)
 
 
-def test_model_comparison_reads_runs_of_the_same_match(tmp_path, capsys):
+def test_model_comparison_reads_runs_of_the_same_match(tmp_path, capfd):
     import compare_models
     run(tmp_path / "a", limit=6)
     run(tmp_path / "b", limit=6)
@@ -247,4 +247,4 @@ def test_model_comparison_reads_runs_of_the_same_match(tmp_path, capsys):
         _sys.argv = argv
     summary = json.loads(out.read_text(encoding="utf-8"))
     assert len(summary["runs"]) == 2 and all(r["planted_not_stopped"] == 0 for r in summary["runs"])
-    assert "| Model |" in capsys.readouterr().out
+    assert "| Model |" in capfd.readouterr().out

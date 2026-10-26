@@ -82,7 +82,14 @@ def main() -> None:
     ap.add_argument("traces", nargs="+", help="trace files (globs are expanded, also on Windows)")
     ap.add_argument("--out")
     args = ap.parse_args()
-    paths = sorted({p for pattern in args.traces for p in (glob.glob(pattern) or [pattern])})
+    paths, missing = set(), []
+    for pattern in args.traces:
+        found = [p for p in glob.glob(pattern) if not p.endswith(".partial.jsonl")]
+        paths.update(found) if found else missing.append(pattern)
+    if missing:
+        raise SystemExit(f"No finished trace matches {', '.join(missing)}. If a run stopped, run the same "
+                         "run_match.py command again: it resumes from <out>.partial.jsonl and then writes the trace.")
+    paths = sorted(paths)
     traces = [(p, json.loads(Path(p).read_text(encoding="utf-8"))) for p in paths]
     seeds = {t["settings"].get("match_seed") for _, t in traces}
     plans = {(t["settings"].get("red_team_rate"), t["summary"]["planted_errors"]) for _, t in traces}
