@@ -2,11 +2,13 @@
 
 **AI match commentary, checked against the data before it airs.**
 
+[![Tests](https://github.com/joelynli0110/captionvar-live-starter/actions/workflows/tests.yml/badge.svg)](https://github.com/joelynli0110/captionvar-live-starter/actions/workflows/tests.yml)
+
 A multi-agent system on **Microsoft Foundry** where one agent writes live football captions, another explains why key moments matter, a third writes the half-time and full-time recaps, and a referee written in code checks every claim they make against the match events before anything reaches the viewer. Built for the Microsoft × Premier League *Inside the Game* hackathon.
 
 **[Open the live demo](https://joelynli0110.github.io/captionvar-live-starter/)**. It needs no sign-in and opens at 72:30 of a synthetic match, playing at 8× speed.
 
-![CaptionVAR: live pitch, score bug and the VAR room catching a wrong substitution](docs/media/demo.gif)
+![CaptionVAR replaying the Foundry run: a wrong substitute corrected before it airs, the line on why the equaliser matters, an error the narrator made on its own caught, and the checked full-time recap](docs/media/demo.gif)
 
 ## The problem
 
@@ -142,6 +144,8 @@ npm install
 npm test          # 37 tests: simulator, referee, context lines and recaps, rendering
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
+
+Every push and pull request runs both suites in GitHub Actions ([`tests.yml`](.github/workflows/tests.yml)): the Node tests and build, and the agent workflow offline with the referee over MCP.
 
 **The agents on Foundry** need Python 3.11+, a Foundry project with a model deployment, and `az login`:
 
