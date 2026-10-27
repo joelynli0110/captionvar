@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import { generateMatch } from '../sim/generateMatch.js';
 import { buildTrace, overlayRecord } from './trace.js';
 import { verifyCaption } from './verify.js';
-import { renderCaption, LANGUAGES } from './render.js';
+import { renderCaption, LANGUAGES, ON_AIR } from './render.js';
 import { spotMoments, indexPeople } from './narrator.js';
 import { INSIGHT_TYPES, recapSpot, contextFacts, RECAPS } from './context.js';
 import { simulateInsight, simulateRecap } from './analyst.js';
 import { verifyStatement } from './statements.js';
+import { tagFor, tagNote } from './overlays.js';
 import { callableClaims, falseClaims, scoreCall } from './game.js';
 
 const match = generateMatch({ seed: 'captionvar-demo-6' });
@@ -456,4 +457,21 @@ test('the red team rate sets how many test captions are planted, and every plant
   assert.ok(all.planted_errors > none.captions / 2);
   assert.equal(all.caught, all.planted_errors);
   assert.equal(all.false_alarms, 0);
+});
+
+test('the on-air graphics have a label in every caption language', () => {
+  for (const { code } of LANGUAGES) {
+    const l = ON_AIR[code];
+    assert.ok(l, code);
+    for (const key of ['ok', 'trim', 'stop', 'live']) assert.ok(typeof l[key] === 'string' && l[key].length > 0, `${code}.${key}`);
+    assert.match(l.fan('Riverside'), /Riverside/);
+  }
+  const match = generateMatch({ seed: 'captionvar-demo-6' });
+  const people = indexPeople(match);
+  const tags = match.events.map(e => tagFor(e, people)).filter(Boolean);
+  for (const kind of ['speed', 'shot', 'pass', 'distance']) {
+    const t = tags.find(x => x.kind === kind);
+    assert.ok(t, kind);
+    for (const { code } of LANGUAGES) assert.ok(tagNote(t, code).length > 0 && !tagNote(t, code).includes('undefined'), `${kind} ${code}`);
+  }
 });
