@@ -13,10 +13,12 @@ Five full matches on Microsoft Foundry with gpt-4.1-mini: 195 captions in all. E
 
 | | Planted errors on air | Narrator's own false details on air | Cost per match |
 |---|---|---|---|
-| Narrator alone | 55 / 55 | 11 / 11 | ≈ $0.01 |
-| Self-check | **0** / 55 | **8** / 11 | ≈ $0.02 |
-| LLM judge | **0** / 55 | **7** / 11 | ≈ $0.025 |
-| CaptionVAR | **0** / 55 | **0** / 11 | ≈ $0.10 |
+| Narrator alone | 61 / 61 | 11 / 11 | ≈ $0.01 |
+| Self-check | **0** / 61 | **8** / 11 | ≈ $0.02 |
+| LLM judge | **0** / 61 | **7** / 11 | ≈ $0.025 |
+| CaptionVAR | **1** / 61 | **0** / 11 | ≈ $0.10 |
+
+CaptionVAR's one planted error on air is a superlative its extractor did not report; see [What this found](#what-this-found-in-captionvar-itself).
 
 **Given the facts, an LLM catches the errors you plant. It misses the ones the model makes on its own.**
 
@@ -34,16 +36,17 @@ Examples that aired with an LLM checker, and why the event record contradicts th
 
 ## How it was measured
 
-- **Planted errors.** The red team's instruction for each caption is recorded, so these are known ground truth. An error counts once the referee found it in the draft (55 of the 62 instructions; the narrator sometimes ignores the instruction, and the referee missed one superlative, see below). It counts as on air if the same kind of claim still fails in what aired.
+- **Planted errors.** The red team's instruction for each caption is recorded: 62 instructions over the five matches. The automatic count takes an error as present when the referee's flags on the draft show the planted kind (55). We read the other 7 drafts by hand: 6 carry the error in a form the count did not see (3 superlatives worded differently, "Brandt scores" when Reyes scored, "levels at 3-2" at 2-2, a sprint credited to Lind), and in 1 the narrator ignored the instruction (it named Pell, who was booked). That makes **61** planted errors. An error counts as on air if the same kind of claim still fails in what aired, or, for the 6, if a hand reading finds it there.
 - **The narrator's own errors.** These are false statements the narrator made without being told to, found by the referee in the drafts. The referee flagged 39. **We checked every one against the raw events by hand.** 11 are real errors. The other 28 are true details the extractor tied to the wrong player, for example reading "X under pressure from Y" as X pressing. The verdict and the reason for each case are in [`eval-adjudication.json`](eval-adjudication.json).
-- **On air or not.** For each set-up, the aired caption was extracted again and checked by the same referee. We also checked whether the false words still appear in it word for word. Each of the 11 real cases was then read by hand.
+- **On air or not.** For each set-up, the aired caption was extracted again and checked by the same referee, and we checked whether the false words still appear word for word. Each of the 11 real cases was then read by hand. Hand and code disagree once: the re-check flags CaptionVAR's eval-3 70' caption ("Ashkenazi's press leads to Abara's giveaway"), which is true (PR-1690, P-1691), so it is not counted.
+- **Reproduce the numbers.** `python agents/summarise_baselines.py "public/traces/eval/*.baselines.json"` prints both sets: the automatic counts (every flag, false alarms included: own errors on air 36/22/28/1 of 39) and the hand-checked ones quoted above. [`baselines-summary.json`](../public/traces/baselines-summary.json) stores both, under `automatic` and `reported`, with every case.
 - **Cost** is the published gpt-4.1-mini price for the tokens used, narrator included.
 
 Reproduce: [AGENTS.md → Baselines](AGENTS.md#baselines-what-the-multi-agent-design-adds). The raw reports are in `public/traces/eval/`, and `public/traces/baselines-summary.json` lists every case.
 
 ## What this found in CaptionVAR itself
 
-- **One planted error got through.** A superlative ("could've been the best strike attempt of the entire league season") aired because the extractor did not report it as a claim. A code guard now flags comparisons beyond the match whether or not the extractor reports them (`checkSweepingClaims` in `src/broadcast/verify.js`). Run over all 312 drafts and rewrites from these matches, it flags exactly the 16 planted superlatives and nothing else.
+- **One planted error got through.** A superlative ("could've been the best strike attempt of the entire league season") aired because the extractor did not report it as a claim. A code guard now flags comparisons beyond the match whether or not the extractor reports them (`checkSweepingClaims` in `src/broadcast/verify.js`). With it, CaptionVAR's count would be 0 / 61; the table keeps 1 / 61, because that is what the run aired. We check the guard over every text recorded in this repository: 738 drafts, rewrites, lines of context and recap sentences from the five evaluation matches and the published Foundry runs (gpt-4.1-mini and gpt-4.1-nano). It flags all 24 planted superlatives actually written and no other text (`node scripts/check_superlative_guard.mjs`). In 5 more lines the red team asked for one and the Analyst did not write it.
 - **It is strict at the cost of some true detail.** In 28 of the 195 captions, a true build-up detail was flagged because the extractor tied it to the wrong player, and the editor trimmed it. Nothing false aired; some true colour was lost. Better role rules in the extractor prompt (passive voice, "under pressure from", "forces X into") are the obvious next step.
 - **The measurement has noise too.** Re-checking CaptionVAR's own aired captions flagged 6 of 195. All 6 are measurement mistakes: three colour phrases read as claims, two true details checked wrongly (a giveaway, a lead), and a count checked against the wrong metric. They are listed in the summary file.
 
