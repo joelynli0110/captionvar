@@ -215,6 +215,8 @@ Add `--trace` to send one OpenTelemetry trace per caption to the Application Ins
 
 To replay a run you made, put it in `public/traces/` and open the demo with `?trace=<file>.json`. `?at=77`, `?at=HT` or `?at=FT` starts playback at that point.
 
+**Live mode**: `python agents/live_server.py` serves the site and runs four moments of the match on Foundry while you watch, streamed to the page; `infra/deploy.ps1` deploys it to Azure Container Apps with a managed identity ([docs/LIVE.md](docs/LIVE.md)).
+
 **The referee over MCP** needs only Node.js: `node scripts/referee-mcp.mjs` serves it on stdio. In VS Code, open the repository and start `captionvar-referee` from `.vscode/mcp.json`; Copilot agent mode can then check a caption with `check_caption`.
 
 ## Repository layout
