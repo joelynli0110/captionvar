@@ -6,7 +6,7 @@
 
 A multi-agent system on **Microsoft Foundry** where one agent writes live football captions, another explains why key moments matter, a third writes the half-time and full-time recaps, and a referee written in code checks every claim they make against the match events before anything reaches the viewer. Built for the Microsoft × Premier League *Inside the Game* hackathon.
 
-**[Open the live demo](https://joelynli0110.github.io/captionvar-live-starter/)**. It needs no sign-in and opens just before the 24th minute of a synthetic match, playing at 8× speed: the narrator calls the first goal 0-2, and the VAR check stops it on screen and airs the corrected 0-1. **Production** shows the check as it happens; **Viewer feed** shows only what airs. Add `?at=77` to jump to a minute, or `?intro=1` for the team sheet of agents.
+**[Open the live demo](https://joelynli0110.github.io/captionvar-live-starter/)**, no sign-in. Within about 10 seconds the narrator calls the first goal 0-2, the VAR check stops it on screen, and the corrected 0-1 airs. Then click the check's record to see why, and **Next VAR call** for the next one.
 
 ![CaptionVAR replaying the Foundry run: the narrator's 0-2 is stopped on screen, the play is replayed to the evidence and the corrected 0-1 airs; the record of the check opens; the next VAR call; the line on why the equaliser matters; the checked full-time recap](docs/media/demo.gif)
 
@@ -146,19 +146,33 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ## Viewer features
 
-- **The VAR replay.** When a check changes a caption, the picture freezes, runs back to the first piece of evidence and plays the move again, slowed, while the false words are struck. Turn on **Sound** for the cue tones; they are synthesised in the browser, with no recorded audio.
+- **The VAR moment.** When a check changes a caption, the rest of the page steps back and the picture freezes. The play runs back to the first piece of evidence and replays slowed, while the false words are struck. The decision is stamped, and the corrected caption wipes in.
+- **One next step at a time.** A first-time viewer gets one hint: open the record of the check, then go to the next VAR call. Everything else is folded away until asked for.
+
+<details>
+<summary><b>More to explore</b>: Beat the VAR, red team slider, voice, two fans, player tags, languages, following a player, the timeline</summary>
+
+Under **Play along**:
+
 - **Beat the VAR** (or open with `?game=1`). Each caption waits on screen before its check. Tap the words you think are false, lock in your call, and see it scored against the referee's verdict, claim by claim.
 - **Red team slider.** Set what share of captions are planted wrong, from none to all. The match is then replayed with the in-browser test narrator, and the same referee code checks it in your browser, so you can see the checks hold as the error rate rises. The Foundry run itself stays as recorded.
-- **Commentary voice.** Turn on **Voice** and the browser reads each caption aloud in the caption language, using its built-in speech synthesis. It is given only the caption after its VAR check, then the line of context and the recaps, so a draft the referee rejected is never spoken.
-- **Two fans.** One checked caption on a split screen: a Northbridge fan in English and a Riverside fan in Chinese, each written from the same verified facts.
-- **Player tags at fixed thresholds**, straight from the event feed (on screen: every shot, standout passes, and everything for a player you follow): a sprint of 33 km/h or more, a completed pass of 40 m or more or with difficulty 60/100 or more, every shot with its xG and speed, and distance milestones. `npm run overlays` writes them as a timed, machine-readable overlay feed (JSON lines) for a graphics renderer.
-- **The move in progress and both teams' shape** on the pitch: every touch of the current possession, and each player at his last touch (positions are not tracked, so these fade with age).
-- **One thing at a time.** During a VAR check everything but the pitch steps back. A first-time viewer gets one hint at a time: open the record of the check, then go to the next VAR call. Speed, language and goal jumps are in the settings menu; the play-along tools fold away under **Play along**. Pass quality (long and difficult passes, fastest shot) is in the analyst panel.
+- **Commentary voice.** The browser reads each caption aloud in the caption language, using its built-in speech synthesis. It is given only the caption after its VAR check, then the line of context and the recaps, so a draft the referee rejected is never spoken. **Sound** adds cue tones, synthesised in the browser with no recorded audio.
 
-- **Fan or analyst** wording, with neutral or partisan framing.
-- **Follow a player**: the pitch traces their recent actions, and a card shows their live numbers.
+In the picture switch and the settings menu:
+
+- **Production, Viewer feed, Two fans.** Production shows the check as it happens; the viewer feed shows only what airs. Two fans puts one checked caption on a split screen: a Northbridge fan in English and a Riverside fan in Chinese, each written from the same verified facts.
 - **English, Spanish, German and Chinese.** The analyst view and the other languages are built from the verified facts, not machine-translated from the caption, so they can't reintroduce an error.
+- **Fan or analyst** wording, with neutral or partisan framing. The analyst panel adds pass quality (long and difficult passes, fastest shot).
+- **Follow a player**: the pitch traces their recent actions, and a card shows their live numbers.
+- **Speed and jumps** to each goal. `?at=77` opens at a minute, `?at=HT` or `?at=FT` at the break or the final whistle, `?intro=1` with the team sheet of agents.
+
+On the pitch and below it:
+
+- **Player tags at fixed thresholds**, straight from the event feed: a sprint of 33 km/h or more, a completed pass of 40 m or more or with difficulty 60/100 or more, every shot with its xG and speed, and distance milestones. Shown for every shot, standout passes and the player you follow. `npm run overlays` writes them all as a timed, machine-readable overlay feed (JSON lines) for a graphics renderer.
+- **The move in progress and both teams' shape**: every touch of the current possession, and each player at his last touch (positions are not tracked, so these fade with age).
 - A **timeline** of final-third pressure per minute, with goals, cards and VAR interventions marked. Drag it to move through the match.
+
+</details>
 
 ## Run it
 
