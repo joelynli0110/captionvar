@@ -181,7 +181,7 @@ export function PlayerCard({ player, stats, team, onClose }) {
  * Play along: Beat the VAR (call the false words before the check), the red
  * team's plant rate for the in-browser test narrator, and cue sounds.
  */
-export function PlayAlong({ game, onGame, tally, rate, onRate, sound, onSound, agentsOn }) {
+export function PlayAlong({ game, onGame, tally, rate, onRate, sound, onSound, voice, onVoice, agentsOn }) {
   const pct = Math.round(rate * 100);
   return (
     <section className="play-along" aria-label="Play along">
@@ -199,6 +199,10 @@ export function PlayAlong({ game, onGame, tally, rate, onRate, sound, onSound, a
         <span className="pa-value">{pct}%</span>
         <span className="pa-note" id="pa-red-note">{agentsOn ? 'Showing the Foundry run as recorded. Move this to replay the match with the test narrator in your browser, with that share of captions planted wrong.' : 'of the test narrator\'s captions are planted wrong, then checked by the same referee in your browser.'}</span>
       </label>
+      {onVoice && (
+        <button type="button" className={`pa-toggle pa-voice${voice ? ' on' : ''}`} aria-pressed={voice} onClick={() => onVoice(!voice)}
+          title="Reads out each caption after its VAR check, in the caption language">{voice ? 'Voice on' : 'Voice off'}</button>
+      )}
       <button type="button" className={`pa-toggle pa-sound${sound ? ' on' : ''}`} aria-pressed={sound} onClick={() => onSound(!sound)}>{sound ? 'Sound on' : 'Sound off'}</button>
     </section>
   );

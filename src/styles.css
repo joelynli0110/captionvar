@@ -327,7 +327,9 @@ button { cursor: pointer; }
 .pa-red { flex: 1 1 340px; }
 .pa-toggle { border: 1px solid var(--rule); background: none; color: var(--chalk); padding: 7px 12px; font: 800 var(--step--1)/1 var(--broadcast); text-transform: uppercase; letter-spacing: 0.06em; }
 .pa-toggle.on { background: var(--var); color: var(--var-ink); border-color: var(--var); }
-.pa-sound { margin-left: auto; }
+.pa-voice { margin-left: auto; }
+.pa-voice.on { background: var(--chalk); border-color: var(--chalk); color: var(--var-ink); }
+.pa-sound.on { color: var(--var-ink); }
 .pa-sound.on { background: var(--chalk); border-color: var(--chalk); }
 .pa-label { font: 800 var(--step--1)/1 var(--broadcast); text-transform: uppercase; letter-spacing: 0.06em; color: var(--stop); }
 .pa-value { font: 600 0.85rem/1 var(--mono); min-width: 3.5ch; }
@@ -550,7 +552,7 @@ button { cursor: pointer; }
   .lt-body { padding: 8px 12px 12px; }
   .fan-split { position: static; grid-template-columns: 1fr; gap: 0; }
   .replay-bug { top: 44px; right: 8px; }
-  .pa-sound { margin-left: 0; }
+  .pa-voice { margin-left: 0; }
   .lt-text { font-size: var(--step-1); }
   .recap-card { position: static; transform: none; width: auto; max-height: none; border-radius: 0; animation: none; }
   .player-card { position: static; width: auto; border-radius: 0; }

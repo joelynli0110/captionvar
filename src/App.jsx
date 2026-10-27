@@ -3,6 +3,7 @@ import { loadBroadcast, loadAgentTrace, loadBenchmark, indexAt, clockLabel, plac
 import { buildTrace } from './broadcast/trace.js';
 import { LANGUAGES } from './broadcast/render.js';
 import { cue, unlockAudio } from './ui/sound.js';
+import { speak, hush, voiceSupported } from './ui/voice.js';
 import { matchStats, playerStats } from './sim/stats.js';
 import { renderCaption } from './broadcast/render.js';
 import { summarise } from './broadcast/trace.js';
@@ -43,11 +44,11 @@ const FANS = [
   { key: 'away', follow: 'away', lang: 'zh' },
 ];
 
-function loadSound() {
-  try { return window.localStorage.getItem('captionvar-sound') === '1'; } catch { return false; }
+function loadFlag(key) {
+  try { return window.localStorage.getItem(key) === '1'; } catch { return false; }
 }
-function saveSound(on) {
-  try { window.localStorage.setItem('captionvar-sound', on ? '1' : '0'); } catch { /* storage unavailable */ }
+function saveFlag(key, on) {
+  try { window.localStorage.setItem(key, on ? '1' : '0'); } catch { /* storage unavailable */ }
 }
 
 /**
@@ -184,7 +185,9 @@ export default function App() {
   const [game, setGame] = useState(() => param('game') === '1');
   const [flagged, setFlagged] = useState(() => new Set());
   const [calls, setCalls] = useState(() => new Map());
-  const [sound, setSound] = useState(loadSound);
+  const [sound, setSound] = useState(() => loadFlag('captionvar-sound'));
+  const [voice, setVoice] = useState(() => voiceSupported() && loadFlag('captionvar-voice'));
+  const spoken = useRef({ caption: null, insight: null, recap: null });
   const [benchmark, setBenchmark] = useState(null);
   useEffect(() => { loadBenchmark().then(setBenchmark); }, []);
   useEffect(() => {
@@ -261,6 +264,26 @@ export default function App() {
   useEffect(() => {
     if (sound && phase === 'aired' && callResult) cue(callResult.right ? 'win' : 'miss');
   }, [phase, sound, callResult]);
+
+  // The voice reads only what airs: the caption once its check is done (never
+  // the draft), then its line of context, and each recap's checked sentences.
+  const airedText = onAir && phase === 'aired' ? renderCaption(onAir, onAir.verdict, PEOPLE, view) : null;
+  useEffect(() => {
+    if (!voice || !airedText || spoken.current.caption === airedText) return;
+    spoken.current.caption = airedText;
+    speak(airedText, view.lang);
+  }, [voice, airedText, view.lang]);
+  useEffect(() => {
+    if (!voice || !insight || phase !== 'aired' || spoken.current.insight === insight) return;
+    spoken.current.insight = insight;
+    speak(insight, 'en', { interrupt: false });
+  }, [voice, insight, phase]);
+  useEffect(() => {
+    if (!voice || !recapOnAir || spoken.current.recap === recapOnAir) return;
+    spoken.current.recap = recapOnAir;
+    speak(recapOnAir.aired_text, 'en');
+  }, [voice, recapOnAir]);
+  useEffect(() => { if (!voice) hush(); }, [voice]);
 
   const renderAired = useCallback(d => renderCaption(d, d.verdict, PEOPLE, view), [view]);
 
@@ -382,7 +405,9 @@ export default function App() {
             rate={rate}
             onRate={changeRate}
             sound={sound}
-            onSound={on => { if (on) unlockAudio(); setSound(on); saveSound(on); }}
+            onSound={on => { if (on) unlockAudio(); setSound(on); saveFlag('captionvar-sound', on); }}
+            voice={voice}
+            onVoice={voiceSupported() ? on => { setVoice(on); saveFlag('captionvar-voice', on); if (on) speak('Commentary on. Only checked captions are read out.', 'en'); } : null}
             agentsOn={source === 'agents' && Boolean(agentTrace)}
           />
 
