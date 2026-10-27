@@ -37,7 +37,7 @@ The **Recaps** tab shows each recap sentence by sentence, with any the check cut
 
 ## Results
 
-**Against simpler set-ups.** Five matches on Foundry (gpt-4.1-mini), 195 captions. Each set-up checks the same narrator drafts:
+**Against simpler set-ups.** Evaluation v1, run on 24–25 October 2026 (UTC): five synthetic matches on Foundry (gpt-4.1-mini), 195 captions, with the referee code as it was at that run. Each set-up checks the same narrator drafts:
 
 | | Planted errors on air | Narrator's own false details on air | Cost per match |
 |---|---|---|---|
@@ -46,7 +46,7 @@ The **Recaps** tab shows each recap sentence by sentence, with any the check cut
 | Second LLM as judge + editor | 0 / 61 | 7 / 11 | ≈ $0.025 |
 | **CaptionVAR** | **1 / 61** ¹ | **0 / 11** | ≈ $0.10 |
 
-¹ A planted superlative the extractor did not report as a claim ("could've been the best strike attempt of the entire league season"). A code guard added after this run (`checkSweepingClaims`) now flags that draft and every other planted superlative in these matches.
+¹ A planted superlative the extractor did not report as a claim ("could've been the best strike attempt of the entire league season"). A code guard (`checkSweepingClaims`) was added after this run. Applied to the recorded texts, it flags this draft and the other planted superlatives, and nothing else. The five matches have not been re-run with it, so the table shows what v1 aired, not a zero.
 
 These costs cover the captions; the Analyst and the recaps add about $0.08 a match.
 
@@ -80,7 +80,7 @@ Times leave out waits on our own rate limiter, which paces calls for a small dep
 | Time to air, median | 3.7 s | 6.9 s |
 | Cost for the match | ≈ $0.18 | ≈ $0.07 |
 
-The cheaper model fails the check far more often, so more captions fall back to plain ones built from the data and most lines of context are cut. Nothing false gets through either way. Details: [docs/EVALUATION.md](docs/EVALUATION.md#a-cheaper-model).
+The cheaper model fails the check far more often, so more captions fall back to plain ones built from the data and most lines of context are cut. In this match no planted error aired with either model, and every caption nano wrote that aired was checked by hand and is true. One match is a small sample. Details: [docs/EVALUATION.md](docs/EVALUATION.md#a-cheaper-model).
 
 ## How it works
 
@@ -166,7 +166,7 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ```bash
 npm install
-npm test          # 41 tests: simulator, referee, context lines and recaps, rendering, Beat the VAR
+npm test          # 44 tests: simulator, referee, context lines and recaps, rendering, Beat the VAR
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
 
@@ -205,7 +205,7 @@ docs/            agent design, data schema, media
 - **The match is synthetic.** Clubs, players and events are fictional, and positions are generated, not tracked. The design assumes an event feed with stable IDs, which official data providers supply, but it has not been run on one.
 - **The referee covers the claim types listed above.** Anything else ("their finest chance all season") is reported as uncheckable and trimmed, so a true remark can be dropped. That is the intended trade-off.
 - **The demo replays a recorded run.** The agents ran on Foundry and the site replays that trace, so no API key ships with the page. Run `run_match.py` to generate a new one.
-- **Strict, at the cost of some true detail.** The extractor sometimes ties a build-up action to the wrong player ("X under pressure from Y"). The referee then flags a true detail and the editor trims it. In the five-match comparison this cost 28 true details in 195 captions, and no false ones aired.
+- **Strict, at the cost of some true detail.** The extractor sometimes ties a build-up action to the wrong player ("X under pressure from Y"). The referee then flags a true detail and the editor trims it. In the five-match comparison this cost 28 true details in 195 captions: true colour lost, nothing false added.
 - **Lines of context have the same extractor weakness.** In the demo run, 3 of 19 lines were rewritten over a true detail the extractor misread (a score the wrong way round, a "none after pressing" read as a press). The rewrites aired, and no planted error did.
 - **The comparison is small.** It covers 5 matches, one model and 11 of the narrator's own errors. The direction is clear, but it is not a benchmark.
 - **English drafts only.** The agents write in English, and the other languages are rendered from the checked facts. Lines of context are free text, so they show in English only.
