@@ -119,6 +119,7 @@ function Attempts({ decision }) {
 }
 
 const lineFlagged = d => Boolean(d.insight) && d.insight.verdict.status !== 'VERIFY';
+const linePlanted = d => Boolean(d.insight?.planted_error && !d.insight.planted_error.not_present);
 const isCall = d => d.verdict.status !== 'VERIFY' || lineFlagged(d);
 
 /** One line per caption: what the check objected to, or what aired. */
@@ -145,9 +146,13 @@ function Gist({ decision, aired }) {
 function Origin({ decision }) {
   return (
     <>
-      {(decision.planted_error || (decision.insight?.planted_error && !decision.insight.planted_error.not_present)) && <span className="vr-origin is-planted" title="The red team planted this error on purpose to test the check">Planted</span>}
+      {decision.planted_error && <span className="vr-origin is-planted" title="The red team planted this error in the caption on purpose to test the check">Planted</span>}
       {decision.own_error && <span className="vr-origin is-own" title="An error the narrator made unprompted, checked by hand against the events">Narrator's own</span>}
-      {lineFlagged(decision) && <span className="vr-origin is-line" title="The line on why it matters failed the check">{decision.insight.aired ? 'Why: fixed' : 'Why: cut'}</span>}
+      {lineFlagged(decision) && (
+        <span className="vr-origin is-line" title={linePlanted(decision) ? 'The red team planted an error in the line on why it matters; the check stopped it' : 'The line on why it matters failed the check'}>
+          {`Why: ${linePlanted(decision) ? 'planted, ' : ''}${decision.insight.aired ? 'fixed' : 'cut'}`}
+        </span>
+      )}
     </>
   );
 }
