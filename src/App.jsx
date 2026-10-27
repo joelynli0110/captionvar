@@ -384,7 +384,7 @@ export default function App() {
           <div className={`screen${varMoment ? ' is-var' : ''}${replay?.mode === 'rewind' ? ' is-rewind' : ''}${view.feed === 'fans' ? ' is-fans' : ''}`}>
             <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected)} drawEvidence={varMoment} quiet={varMoment} people={PEOPLE} focus={focus} tag={tag} teamColor={teamColor} />
             <ScoreBug teams={B.teams} score={stats.score} clock={clockLabel(g, B.halfG)} />
-            {focusPlayer && focusStats && (
+            {focusPlayer && focusStats && !varMoment && (
               <PlayerCard player={focusPlayer} stats={focusStats} team={B.teams[focusPlayer.side]} onClose={() => setView(v => ({ ...v, player: '' }))} />
             )}
             {varMoment && <VarCheck decision={onAir} clock={clockLabel(g, B.halfG)} replay={replay?.mode ?? null} />}
