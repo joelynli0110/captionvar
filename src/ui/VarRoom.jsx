@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { VERDICT, firstDraft } from './data.js';
 import { Draft, LineDraft } from './Broadcast.jsx';
 import { overlayRecord } from '../broadcast/trace.js';
@@ -11,6 +11,7 @@ function Detail({ decision, people, view, aired, onInspect }) {
   const changed = decision.verdict.status !== 'VERIFY';
   return (
     <div className="detail">
+      <p className="detail-origin"><Origin decision={decision} /></p>
       <p className="detail-label">{changed ? 'Narrator wrote' : 'On air'}</p>
       <Draft decision={decision} />
       {changed && <p className="aired"><span>On air instead</span>{aired}</p>}
@@ -151,66 +152,32 @@ function Origin({ decision }) {
   );
 }
 
-/** Three numbers at most: VAR calls are counted on the tab when space is short. */
-function Kpis({ summary, own, lines, calls }) {
-  const planted = summary.planted_errors + lines.planted;
-  return (
-    <dl className="kpis">
-      {planted > 0 && (
-        <div className="kpi-main">
-          <dd>{summary.caught + lines.caught}<small>/{planted}</small></dd>
-          <dt>planted caught</dt>
-        </div>
-      )}
-      {own > 0 && <div className="kpi-own"><dd>{own}</dd><dt>own stopped</dt></div>}
-      {!(own > 0) && <div><dd>{calls}</dd><dt>VAR calls</dt></div>}
-      <div><dd>{summary.captions}</dd><dt>checked</dt></div>
-    </dl>
-  );
-}
-
-function sourceLine(source) {
-  const t = source.kind === 'agents' ? source.agentTrace : null;
-  if (!t) return 'Test narrator with deliberate mistakes. The checks are real.';
-  if (t.source !== 'foundry-agents') return 'Agent workflow run offline, no model.';
-  const cost = t.usage?.estimated_cost_usd;
-  const air = t.summary?.time_to_air;
-  return `Foundry agents · ${t.model}${cost != null ? ` · $${cost.toFixed(2)} for the whole match` : ''}${air ? ` · ${air.p50_s.toFixed(1)} s median to air` : ''}`;
-}
-
-/** Red-team score over lines of context and recap sentences aired so far. */
-function lineScore(decisions, recaps) {
-  const lines = [...decisions.map(d => d.insight).filter(Boolean), ...recaps.flatMap(r => r.sentences)];
-  const planted = lines.filter(l => l.planted_error && !l.planted_error.not_present);
-  return { planted: planted.length, caught: planted.filter(l => l.verdict.status !== 'VERIFY').length };
-}
-
-export default function VarRoom({ decisions, recaps = [], liveId, selectedId, onSelect, summary, people, view, renderAired, onInspect, source, onExplain }) {
+export default function VarRoom({ decisions, recaps = [], liveId, selectedId, onSelect, hintId = null, people, view, renderAired, onInspect, onExplain }) {
   const [filter, setFilter] = useState('calls');
   const calls = decisions.filter(isCall);
   const shown = filter === 'calls' ? calls : decisions;
+  // The first-visit hint sits beside its record, outside the scrolling list.
+  const room = useRef(null);
+  const [hintTop, setHintTop] = useState(null);
+  useLayoutEffect(() => {
+    const row = hintId ? room.current?.querySelector('.vr-item[data-hint]') : null;
+    setHintTop(row ? row.getBoundingClientRect().top - room.current.getBoundingClientRect().top + 10 : null);
+  }, [hintId, decisions.length, filter]);
   const tabs = [['calls', `VAR calls · ${calls.length}`], ['all', `All captions · ${decisions.length}`]];
   if (recaps.length) tabs.push(['recaps', `Recaps · ${recaps.length}`]);
   return (
-    <section className="var-room" aria-label="VAR room">
+    <section className="var-room" aria-label="VAR room" ref={room}>
+      {hintTop != null && <span className="hint hint-row" aria-hidden="true" style={{ top: hintTop }}>Click to see why it was stopped →</span>}
       <header className="vr-head">
         <div className="vr-title">
           <h2>VAR room <span className="rec">REC</span></h2>
           <button type="button" className="link" onClick={onExplain}>How it works</button>
         </div>
-        <Kpis summary={summary} own={decisions.filter(d => d.own_error && d.verdict.status !== 'VERIFY').length} lines={lineScore(decisions, recaps)} calls={calls.length} />
-        <p className="vr-source">{sourceLine(source)}</p>
         <div className="vr-tabs" role="tablist" aria-label="Captions to show">
           {tabs.map(([value, label]) => (
             <button key={value} type="button" role="tab" aria-selected={filter === value} className={filter === value ? 'on' : ''} onClick={() => setFilter(value)}>{label}</button>
           ))}
         </div>
-        {filter !== 'recaps' && calls.some(d => d.planted_error || (d.insight?.planted_error && !d.insight.planted_error.not_present)) && (
-          <p className="vr-legend">
-            <span><span className="vr-origin is-planted">Planted</span> by the red team</span>
-            {calls.some(d => d.own_error) && <span><span className="vr-origin is-own">Narrator's own</span> unprompted, checked by hand</span>}
-          </p>
-        )}
       </header>
       {filter === 'recaps' && <RecapList recaps={recaps} />}
       {filter !== 'recaps' && shown.length === 0 && (
@@ -222,15 +189,13 @@ export default function VarRoom({ decisions, recaps = [], liveId, selectedId, on
           const open = d.id === selectedId;
           const aired = renderAired(d);
           return (
-            <li key={d.id} className={`vr-item tone-${v.tone}${open ? ' is-open' : ''}${d.id === liveId ? ' is-live' : ''}`}>
+            <li key={d.id} data-hint={d.id === hintId && !open ? '' : undefined} className={`vr-item tone-${v.tone}${open ? ' is-open' : ''}${d.id === liveId ? ' is-live' : ''}`}>
               <button type="button" className="vr-row" onClick={() => onSelect(open ? null : d.id)} aria-expanded={open}>
                 <span className="vr-minute">{d.display_minute}</span>
-                <span className="vr-verdict">
-                  {v.label}
-                  <Origin decision={d} />
-                </span>
+                <span className="vr-verdict">{v.label}</span>
                 <Gist decision={d} aired={aired} />
               </button>
+              {d.id === hintId && !open && <span className="hint hint-inline" role="note">↑ Tap to see why it was stopped</span>}
               {open && <Detail decision={d} people={people} view={view} aired={aired} onInspect={onInspect} />}
             </li>
           );

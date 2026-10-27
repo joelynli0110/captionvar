@@ -11,7 +11,7 @@ const SHEET = [
   { n: 7, name: 'Line editor', kind: 'LLM', text: 'Gives a failed line one rewrite; otherwise it is cut.' },
 ];
 
-export default function HowItWorks({ trace, onClose }) {
+export default function HowItWorks({ trace, result, onClose }) {
   const ref = useRef(null);
   // No close() on cleanup: closing fires the dialog's close event, which would
   // count as the viewer dismissing it (React runs effects twice in dev).
@@ -36,9 +36,16 @@ export default function HowItWorks({ trace, onClose }) {
       </ol>
       <p className="how-note">
         A red team tells the agents to slip an error into about a third of what they write. The extractor and the referee are not told which.
-        {usage && trace.source === 'foundry-agents' && ` This match ran on Microsoft Foundry (${trace.model}): ${usage.llm_calls} model calls, about $${usage.estimated_cost_usd.toFixed(2)}.`}
+        {usage && trace.source === 'foundry-agents' && ` This match ran on Microsoft Foundry (${trace.model}): ${usage.llm_calls} model calls, about $${usage.estimated_cost_usd.toFixed(2)}${trace.summary?.time_to_air ? `, ${trace.summary.time_to_air.p50_s.toFixed(1)} s median from moment to air` : ''}.`}
         {' '}Clubs, players and events are synthetic.
       </p>
+      {result && (
+        <p className="how-result">
+          <b>The result.</b> Over five matches the narrator made {result.own} errors of its own, each confirmed by hand against the events.
+          A self-check stopped {result.selfCheck}, an LLM judge {result.judge}, CaptionVAR {result.captionvar}.
+          {' '}<a href="https://github.com/joelynli0110/captionvar-live-starter/blob/master/docs/EVALUATION.md">Method and raw reports</a>
+        </p>
+      )}
       <button type="button" className="how-close" onClick={onClose} autoFocus>Kick off</button>
     </dialog>
   );
