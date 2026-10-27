@@ -4,7 +4,7 @@ Live on Azure Container Apps: <URL added after deploy>
 
 The demo on GitHub Pages replays a recorded Foundry run. Live mode runs the same agents on Microsoft Foundry while you watch: one container serves the site, runs the Agent Framework workflow and the referee MCP server, and streams each decision to the page as it is made.
 
-- **What runs.** Four moments of the demo match from 24' (the goal, a sprint, a possession report, a chance), with the lines on why they matter. With the default seed the red team plants a wrong score in the goal caption, as in the recorded run, and two more errors. Offline the run makes 30 model calls; on Foundry it is usually fewer, and never more than the cap of 60.
+- **What runs.** Four moments of the demo match from 24' (the goal, a sprint, a possession report, a chance), with the lines on why they matter. With the default seed the red team plants a wrong score in the goal caption, as in the recorded run, and two more errors. Offline the run makes about 30 model calls; on Foundry it is usually fewer, and never more than the cap of 60.
 - **What you see.** The page shows **LIVE · Microsoft Foundry · \<model\>** above the pitch. The match clock waits just after each moment until its caption has been through the check. **Back to the replay** returns to the recorded run. On GitHub Pages none of this appears.
 - **No keys.** The app signs in to Foundry with its system-assigned managed identity. Nothing secret is in the repository or the image.
 
