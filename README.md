@@ -195,7 +195,7 @@ On the pitch and below it:
 
 ```bash
 npm install
-npm test          # 45 tests: simulator, referee, context lines and recaps, rendering, Beat the VAR
+npm test          # 46 tests: simulator, referee, context lines and recaps, rendering, Beat the VAR
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
 
@@ -237,7 +237,7 @@ docs/            agent design, data schema, evaluation, submission text, media
 - **Strict, at the cost of some true detail.** The extractor sometimes ties a build-up action to the wrong player ("X under pressure from Y"). The referee then flags a true detail and the editor trims it. In the five-match comparison this cost 28 true details in 195 captions: true colour lost, nothing false added.
 - **Lines of context have the same extractor weakness.** In the demo run, 3 of 19 lines were rewritten over a true detail the extractor misread (a score the wrong way round, a "none after pressing" read as a press). The rewrites aired, and no planted error did.
 - **The comparison is small.** It covers 5 matches, one model and 11 of the narrator's own errors. The direction is clear, but it is not a benchmark.
-- **English drafts only.** The agents write in English, and the other languages are rendered from the checked facts. Lines of context are free text, so they show in English only.
+- **English drafts only.** The agents write in English, and the other languages are rendered from the checked facts. Lines of context and the recaps are free text, so they show in English only. The on-air graphics (the tag beside a caption, the Live tag, the fan labels) follow the caption language; the VAR room is the production tool and stays in English.
 
 ## License
 

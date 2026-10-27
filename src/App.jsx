@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadBroadcast, loadAgentTrace, loadBenchmark, indexAt, clockLabel, placeLines, DEMO } from './ui/data.js';
 import { buildTrace } from './broadcast/trace.js';
-import { LANGUAGES } from './broadcast/render.js';
+import { LANGUAGES, onAir as onAirLabels } from './broadcast/render.js';
 import { cue, unlockAudio } from './ui/sound.js';
 import { speak, hush, voiceSupported } from './ui/voice.js';
 import { matchStats, playerStats } from './sim/stats.js';
@@ -12,7 +12,7 @@ import VarRoom from './ui/VarRoom.jsx';
 import Timeline from './ui/Timeline.jsx';
 import { ViewerSettings, StatsPanel, PlayerCard, FeedSwitch, Scoreboard, PlayAlong, FanSplit } from './ui/Panels.jsx';
 import HowItWorks from './ui/HowItWorks.jsx';
-import { tagFor } from './broadcast/overlays.js';
+import { tagFor, tagNote } from './broadcast/overlays.js';
 
 const B = loadBroadcast();
 const PEOPLE = B.trace.people;
@@ -327,12 +327,13 @@ export default function App() {
   const tagEvent = recent(idx, e => g - B.eventG[e.seq - 1] <= TAG_REAL_S * speed && tagFor(e, PEOPLE), 1, 30)[0];
   const tagWanted = tagEvent && production && !varMoment && (
     (view.player && tagEvent.player_id === view.player) || standout(tagEvent));
-  const tag = tagWanted ? { ...tagFor(tagEvent, PEOPLE), at: placeOf(tagEvent, shape) } : null;
+  const tagBase = tagWanted ? tagFor(tagEvent, PEOPLE) : null;
+  const tag = tagBase ? { ...tagBase, note: tagNote(tagBase, view.lang), at: placeOf(tagEvent, shape) } : null;
 
   // Two fans: the caption on air, rendered for each from the same checked facts.
   const fans = FANS.map(f => ({
     ...f,
-    label: `${B.teams[f.follow].short_name} fan`,
+    label: onAirLabels(f.lang).fan(B.teams[f.follow].short_name),
     langName: LANGUAGES.find(l => l.code === f.lang)?.label ?? f.lang,
     color: teamColor(f.follow),
   }));

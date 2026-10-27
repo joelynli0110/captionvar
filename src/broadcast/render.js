@@ -15,6 +15,19 @@ export const LANGUAGES = [
 ];
 
 /**
+ * The on-air graphics follow the caption language: the tag beside an aired
+ * caption, the viewer feed's Live tag, and the fan labels. The VAR room is
+ * the production tool and stays in English, like the narrator's drafts.
+ */
+export const ON_AIR = {
+  en: { ok: 'VAR checked', trim: 'VAR trimmed', stop: 'VAR corrected', live: 'Live', fan: team => `${team} fan` },
+  es: { ok: 'VAR verificado', trim: 'VAR recortado', stop: 'VAR corregido', live: 'En directo', fan: team => `Afición del ${team}` },
+  de: { ok: 'VAR geprüft', trim: 'VAR gekürzt', stop: 'VAR korrigiert', live: 'Live', fan: team => `${team}-Fan` },
+  zh: { ok: 'VAR 已核实', trim: 'VAR 已删减', stop: 'VAR 已更正', live: '直播', fan: team => `${team} 球迷` },
+};
+export const onAir = lang => ON_AIR[lang] ?? ON_AIR.en;
+
+/**
  * Facts the screen may show. Core facts always come from the spotter's record
  * of what happened (so a withheld caption airs the truth); an optional detail
  * airs only if the caption made that claim and it was verified.

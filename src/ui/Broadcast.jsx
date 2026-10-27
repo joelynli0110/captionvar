@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { VERDICT, firstDraft } from './data.js';
 import { callableClaims } from '../broadcast/game.js';
+import { onAir as onAirLabels } from '../broadcast/render.js';
 
 export { scoreCall } from '../broadcast/game.js';
 
@@ -144,7 +145,7 @@ export function LowerThird({ decision, text, lang, phase, insight, feed = 'produ
   if (feed === 'viewer') {
     return (
       <div className="lower-third tone-live" aria-live="polite" lang={lang}>
-        <div className="lt-tag">Live<span className="lt-minute">{decision.display_minute}</span></div>
+        <div className="lt-tag">{onAirLabels(lang).live}<span className="lt-minute">{decision.display_minute}</span></div>
         <div className="lt-body">
           <p className="lt-text">{text}</p>
           {insight && <p className="lt-why" lang="en"><span>Why it matters</span>{insight}</p>}
@@ -162,10 +163,11 @@ export function LowerThird({ decision, text, lang, phase, insight, feed = 'produ
   }
   const checking = phase === 'checking';
   const review = phase === 'review';
+  const air = onAirLabels(lang)[v.tone];
   return (
     <div className={`lower-third ${checking || review ? 'is-checking' : `tone-${v.tone}`}${review ? ` is-review tone-${v.tone}` : ''}`} aria-live="polite" lang={lang} style={{ '--swap-ms': `${SWAP_MS}ms` }}>
       <div className="lt-tag">
-        {checking ? 'VAR check' : review ? <span className="lt-flip" style={{ animationDelay: `${SWAP_MS}ms` }}><span>VAR check</span><span>{v.air}</span></span> : v.air}
+        {checking ? 'VAR check' : review ? <span className="lt-flip" style={{ animationDelay: `${SWAP_MS}ms` }}><span>VAR check</span><span>{air}</span></span> : air}
         <span className="lt-minute">{decision.display_minute}</span>
       </div>
       <div className="lt-body">

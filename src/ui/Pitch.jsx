@@ -74,10 +74,13 @@ function Chain({ trail, teamColor }) {
   );
 }
 
+/** Text length in Latin-character widths: a CJK character is about two. */
+const textLength = text => [...text].reduce((n, c) => n + (c.codePointAt(0) >= 0x2e80 ? 1.9 : 1), 0);
+
 /** A threshold tag (sprint, long or difficult pass, shot, distance) beside the player. */
 function Tag({ tag, teamColor }) {
   if (!tag?.at) return null;
-  const width = Math.max(tag.title.length * 1.05, (tag.value.length + tag.note.length) * 0.82) + 4;
+  const width = Math.max(textLength(tag.title) * 1.05, (textLength(tag.value) + textLength(tag.note)) * 0.82) + 4;
   const right = X(tag.at.x) > 105 - width - 4;
   const x = right ? X(tag.at.x) - width - 2.4 : X(tag.at.x) + 2.4;
   // Above the player, unless that would sit under the score bug (top left): then below.
