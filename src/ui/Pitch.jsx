@@ -99,7 +99,7 @@ function Tag({ tag, teamColor }) {
  * progress, the ball and the acting player, threshold tags, and, when a
  * caption is under review, its evidence drawn as VAR lines.
  */
-export default function Pitch({ ball, actor, trail, shape = [], evidence, evidenceLabels, drawEvidence = false, people, focus, tag, teamColor }) {
+export default function Pitch({ ball, actor, trail, shape = [], evidence, evidenceLabels, drawEvidence = false, quiet = false, people, focus, tag, teamColor }) {
   return (
     <svg className="pitch" viewBox="0 0 105 68" role="img" aria-label="Live pitch view of the synthetic match">
       <Markings />
@@ -136,7 +136,7 @@ export default function Pitch({ ball, actor, trail, shape = [], evidence, eviden
           {actor && (
             <g>
               <circle cx={X(ball.x)} cy={Y(ball.y)} r="2.1" fill={teamColor(actor.side)} opacity="0.35" />
-              <text x={X(ball.x)} y={Y(ball.y) - 3} textAnchor="middle" className="actor-label">{actor.number} {actor.short_name}</text>
+              {!quiet && <text x={X(ball.x)} y={Y(ball.y) - 3} textAnchor="middle" className="actor-label">{actor.number} {actor.short_name}</text>}
             </g>
           )}
           <circle cx={X(ball.x)} cy={Y(ball.y)} r="0.85" fill="#fff" stroke="#0d1320" strokeWidth="0.22" />

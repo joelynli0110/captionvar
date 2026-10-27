@@ -6,12 +6,11 @@ import { cue, unlockAudio } from './ui/sound.js';
 import { speak, hush, voiceSupported } from './ui/voice.js';
 import { matchStats, playerStats } from './sim/stats.js';
 import { renderCaption } from './broadcast/render.js';
-import { summarise } from './broadcast/trace.js';
 import Pitch from './ui/Pitch.jsx';
 import { ScoreBug, LowerThird, VarCheck, RecapCard, useOnAirPhase, scoreCall, reduceMotion, REWIND_MS, REPLAY_MS, STAMP_MS } from './ui/Broadcast.jsx';
 import VarRoom from './ui/VarRoom.jsx';
 import Timeline from './ui/Timeline.jsx';
-import { ViewerSettings, StatsPanel, PlayerCard, LanguageChips, FeedSwitch, Scoreboard, PlayAlong, FanSplit } from './ui/Panels.jsx';
+import { ViewerSettings, StatsPanel, PlayerCard, FeedSwitch, Scoreboard, PlayAlong, FanSplit } from './ui/Panels.jsx';
 import HowItWorks from './ui/HowItWorks.jsx';
 import { tagFor } from './broadcast/overlays.js';
 
@@ -26,6 +25,17 @@ const TAG_REAL_S = 2.8; // real seconds a player tag stays on screen, whatever t
 const SHAPE_WINDOW_S = 240; // match seconds a player's last touch still marks where he is
 
 const teamColor = side => B.teams[side].colors.primary;
+
+/** Tags shown without following a player: every shot, and the standout passes only. */
+const STANDOUT_PASS = { difficulty: 0.8, distance_m: 55 };
+const standout = e => e.type === 'shot'
+  || (e.type === 'pass' && (e.difficulty >= STANDOUT_PASS.difficulty || e.distance_m >= STANDOUT_PASS.distance_m));
+
+/**
+ * One hint at a time, for a first-time viewer: after the first VAR check,
+ * open its record; after that, go to the next call; then nothing.
+ */
+const HINT = { WAIT: 'wait', ROW: 'row', NEXT: 'next', DONE: 'done' };
 
 /** First visit shows the explainer before play starts; ?intro=0 skips it. */
 /** The page opens on the match itself; ?intro=1 opens the team sheet first. */
@@ -206,7 +216,6 @@ export default function App() {
 
   const aired = useMemo(() => decisions.filter(d => d.g <= g), [decisions, g]);
   const airedNewestFirst = useMemo(() => [...aired].reverse(), [aired]);
-  const summary = useMemo(() => summarise(aired), [aired]);
   const latest = aired.at(-1);
   const hold = latest?.insight?.aired ? WITH_LINE_HOLD_S : CAPTION_HOLD_S;
   const onAir = latest && g - latest.g <= hold ? latest : null;
@@ -226,6 +235,13 @@ export default function App() {
   held.current = phase === 'review' || phase === 'guess';
   const varMoment = phase === 'review' && Boolean(onAir);
   useEffect(() => { setFlagged(new Set()); }, [onAir]);
+
+  const [hint, setHint] = useState({ step: HINT.WAIT, id: null });
+  const lastPhase = useRef(phase);
+  useEffect(() => {
+    if (lastPhase.current === 'review' && phase === 'aired' && onAir && hint.step === HINT.WAIT) setHint({ step: HINT.ROW, id: onAir.id });
+    lastPhase.current = phase;
+  }, [phase, onAir, hint.step]);
   const callResult = game && onAir ? calls.get(onAir) ?? null : null;
   const tally = useMemo(() => {
     const all = [...calls.values()];
@@ -309,7 +325,9 @@ export default function App() {
     : [];
   // A player tag when an event crosses a threshold (sprint, long or difficult pass, shot, distance).
   const tagEvent = recent(idx, e => g - B.eventG[e.seq - 1] <= TAG_REAL_S * speed && tagFor(e, PEOPLE), 1, 30)[0];
-  const tag = tagEvent && !replay && production ? { ...tagFor(tagEvent, PEOPLE), at: placeOf(tagEvent, shape) } : null;
+  const tagWanted = tagEvent && production && !varMoment && (
+    (view.player && tagEvent.player_id === view.player) || standout(tagEvent));
+  const tag = tagWanted ? { ...tagFor(tagEvent, PEOPLE), at: placeOf(tagEvent, shape) } : null;
 
   // Two fans: the caption on air, rendered for each from the same checked facts.
   const fans = FANS.map(f => ({
@@ -345,13 +363,17 @@ export default function App() {
   }, [setPlaying]);
 
   return (
-    <div className="app">
+    <div className={`app${varMoment ? ' is-var-moment' : ''}`}>
       <header className="masthead">
         <div className="wordmark" aria-label="CaptionVAR">Caption<span>VAR</span></div>
         <p className="tagline">AI match commentary, checked against the data before it airs.</p>
         <div className="mast-controls">
           <FeedSwitch value={view.feed} onChange={feed => setView(v => ({ ...v, feed }))} />
-          <ViewerSettings view={view} setView={setView} teams={B.teams} players={PLAYERS} source={sourceControl} />
+          <ViewerSettings
+            view={view} setView={setView} teams={B.teams} players={PLAYERS} source={sourceControl}
+            speed={speed} speeds={SPEEDS} onSpeed={setSpeed}
+            moments={keyMoments} onJump={m => { seek(m.g); setSelectedId(null); setPlaying(true); }}
+          />
         </div>
       </header>
       {benchmark && <Scoreboard result={benchmark} />}
@@ -359,7 +381,7 @@ export default function App() {
       <main className="stage">
         <div className="broadcast">
           <div className={`screen${varMoment ? ' is-var' : ''}${replay?.mode === 'rewind' ? ' is-rewind' : ''}${view.feed === 'fans' ? ' is-fans' : ''}`}>
-            <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected) || varMoment} drawEvidence={varMoment} people={PEOPLE} focus={focus} tag={tag} teamColor={teamColor} />
+            <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected)} drawEvidence={varMoment} quiet={varMoment} people={PEOPLE} focus={focus} tag={tag} teamColor={teamColor} />
             <ScoreBug teams={B.teams} score={stats.score} clock={clockLabel(g, B.halfG)} />
             {focusPlayer && focusStats && (
               <PlayerCard player={focusPlayer} stats={focusStats} team={B.teams[focusPlayer.side]} onClose={() => setView(v => ({ ...v, player: '' }))} />
@@ -376,27 +398,18 @@ export default function App() {
               {playing ? <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" /><rect x="9.5" y="2" width="3.5" height="12" /></svg>
                 : <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" /></svg>}
             </button>
-            <label className="speed">
-              <span className="sr-only">Playback speed</span>
-              <select value={speed} onChange={e => setSpeed(Number(e.target.value))}>
-                {SPEEDS.map(s => <option key={s} value={s}>{s}× speed</option>)}
-              </select>
-            </label>
             <button
               type="button"
               className="next-call"
               disabled={!nextCall}
-              onClick={() => { seek(nextCall.g - 4); setSelectedId(null); setPlaying(true); }}
+              onClick={() => { seek(nextCall.g - 4); setSelectedId(null); setPlaying(true); if (hint.step !== HINT.DONE) setHint({ step: HINT.DONE, id: null }); }}
             >
               Next VAR call<span aria-hidden="true"> ›</span>
             </button>
-            <LanguageChips value={view.lang} onChange={lang => setView(v => ({ ...v, lang }))} />
-            <nav className="jumps" aria-label="Key moments">
-              {keyMoments.map(m => (
-                <button key={m.label} type="button" onClick={() => { seek(m.g); setSelectedId(null); setPlaying(true); }}>{m.label}</button>
-              ))}
-            </nav>
+            {hint.step === HINT.NEXT && nextCall && <span className="hint hint-next" role="note">← See the next error it stops</span>}
           </div>
+
+          <Timeline events={B.events} eventG={B.eventG} endG={B.endG} halfG={B.halfG} decisions={aired} g={g} onSeek={seek} teamColor={teamColor} />
 
           <PlayAlong
             game={game}
@@ -411,8 +424,6 @@ export default function App() {
             agentsOn={source === 'agents' && Boolean(agentTrace)}
           />
 
-          <Timeline events={B.events} eventG={B.eventG} endG={B.endG} halfG={B.halfG} decisions={aired} g={g} onSeek={seek} teamColor={teamColor} />
-
           {view.persona === 'analyst' && <StatsPanel stats={stats} teams={B.teams} />}
         </div>
 
@@ -422,18 +433,17 @@ export default function App() {
           liveId={onAir?.id}
           onExplain={() => { setPlaying(false); setExplaining(true); }}
           selectedId={selectedId}
-          onSelect={id => { setSelectedId(id); if (id) setPlaying(false); }}
-          summary={summary}
+          onSelect={id => { setSelectedId(id); if (id) setPlaying(false); if (id && hint.step === HINT.ROW) setHint({ step: HINT.NEXT, id: null }); }}
+          hintId={hint.step === HINT.ROW ? hint.id : null}
           people={PEOPLE}
           view={view}
           renderAired={renderAired}
-          source={sourceControl}
           onInspect={inspect}
         />
       </main>
 
       {explaining && (
-        <HowItWorks trace={agentTrace} onClose={() => { setExplaining(false); markIntroSeen(); setPlaying(true); }} />
+        <HowItWorks trace={agentTrace} result={benchmark} onClose={() => { setExplaining(false); markIntroSeen(); setPlaying(true); }} />
       )}
 
       <footer className="colophon">

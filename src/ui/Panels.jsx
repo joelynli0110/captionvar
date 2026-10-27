@@ -21,7 +21,7 @@ function Segmented({ label, value, options, onChange }) {
  * Viewer options live behind one button so the broadcast stays the focus.
  * The button shows what is currently set, so nothing is hidden by surprise.
  */
-export function ViewerSettings({ view, setView, teams, players, source }) {
+export function ViewerSettings({ view, setView, teams, players, source, speed, speeds = [], onSpeed, moments = [], onJump }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -33,7 +33,7 @@ export function ViewerSettings({ view, setView, teams, players, source }) {
   }, [open]);
   const set = key => value => setView(v => ({ ...v, [key]: value }));
   const lang = LANGUAGES.find(l => l.code === view.lang)?.label;
-  const summary = [view.persona === 'analyst' ? 'Analyst' : 'Fan', lang, view.follow !== 'neutral' && teams[view.follow].short_name, view.player && players.find(p => p.id === view.player)?.short_name]
+  const summary = [view.persona === 'analyst' ? 'Analyst' : 'Fan', lang, view.follow !== 'neutral' && teams[view.follow].short_name, view.player && players.find(p => p.id === view.player)?.short_name, speed && `${speed}×`]
     .filter(Boolean).join(' · ');
   return (
     <div className="settings" ref={ref}>
@@ -62,6 +62,15 @@ export function ViewerSettings({ view, setView, teams, players, source }) {
             </select>
           </div>
           <Segmented label="Language" value={view.lang} onChange={set('lang')} options={LANGUAGES.map(l => ({ value: l.code, label: l.label }))} />
+          {onSpeed && <Segmented label="Speed" value={speed} onChange={onSpeed} options={speeds.map(s => ({ value: s, label: `${s}×` }))} />}
+          {onJump && moments.length > 0 && (
+            <div className="control">
+              <span className="control-label">Jump to</span>
+              <div className="jumps">
+                {moments.map(m => <button key={m.label} type="button" onClick={() => { onJump(m); setOpen(false); }}>{m.label}</button>)}
+              </div>
+            </div>
+          )}
           {source.agentTrace && (
             <Segmented
               label="Captions by"
@@ -72,24 +81,6 @@ export function ViewerSettings({ view, setView, teams, players, source }) {
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-/**
- * Caption language, one tap away beside the transport: the four languages are
- * rendered from the checked facts, so switching never re-opens a checked claim.
- */
-export function LanguageChips({ value, onChange }) {
-  const SHORT = { en: 'EN', es: 'ES', de: 'DE', zh: '中文' };
-  return (
-    <div className="lang-chips" role="radiogroup" aria-label="Caption language">
-      {LANGUAGES.map(l => (
-        <button key={l.code} type="button" role="radio" aria-checked={value === l.code} title={l.label}
-          className={value === l.code ? 'on' : ''} onClick={() => onChange(l.code)}>
-          {SHORT[l.code] ?? l.code.toUpperCase()}
-        </button>
-      ))}
     </div>
   );
 }
@@ -114,11 +105,10 @@ export function FeedSwitch({ value, onChange }) {
 export function Scoreboard({ result }) {
   return (
     <section className="scoreboard" aria-label={`Result over five matches: of ${result.own} errors the narrator made on its own, an LLM judge stopped ${result.judge}, CaptionVAR stopped ${result.captionvar}.`}>
-      <span className="sb-label">Full time · 5 matches<small>The narrator's own errors stopped, of {result.own}</small></span>
+      <span className="sb-label">Own errors stopped</span>
       <span className="sb-team">LLM judge</span>
       <span className="sb-score"><b>{result.judge}</b><i>–</i><b className="win">{result.captionvar}</b></span>
       <span className="sb-team win">CaptionVAR</span>
-      <a className="sb-more" href="https://github.com/joelynli0110/captionvar-live-starter/blob/master/docs/EVALUATION.md">Self-check {result.selfCheck} · checked by hand · method</a>
     </section>
   );
 }
@@ -183,8 +173,17 @@ export function PlayerCard({ player, stats, team, onClose }) {
  */
 export function PlayAlong({ game, onGame, tally, rate, onRate, sound, onSound, voice, onVoice, agentsOn }) {
   const pct = Math.round(rate * 100);
+  const [open, setOpen] = useState(game);
+  if (!open) {
+    return (
+      <button type="button" className="play-along-open" aria-expanded="false" onClick={() => setOpen(true)}>
+        Play along<span> · Beat the VAR · red team · voice</span><b aria-hidden="true">+</b>
+      </button>
+    );
+  }
   return (
     <section className="play-along" aria-label="Play along">
+      <button type="button" className="pa-close" aria-label="Hide play along" onClick={() => setOpen(false)}>×</button>
       <div className="pa-block">
         <button type="button" className={`pa-toggle${game ? ' on' : ''}`} aria-pressed={game} onClick={() => onGame(!game)}>Beat the VAR</button>
         <span className="pa-note">
