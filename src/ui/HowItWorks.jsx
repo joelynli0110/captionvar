@@ -43,7 +43,7 @@ export default function HowItWorks({ trace, result, onClose }) {
         <p className="how-result">
           <b>The result.</b> Over five matches the narrator made {result.own} errors of its own, each confirmed by hand against the events.
           A self-check stopped {result.selfCheck}, an LLM judge {result.judge}, CaptionVAR {result.captionvar}.
-          {' '}<a href="https://github.com/joelynli0110/captionvar-live-starter/blob/master/docs/EVALUATION.md">Method and raw reports</a>
+          {' '}<a href="https://github.com/joelynli0110/captionvar/blob/master/docs/EVALUATION.md">Method and raw reports</a>
         </p>
       )}
       <button type="button" className="how-close" onClick={onClose} autoFocus>Kick off</button>
