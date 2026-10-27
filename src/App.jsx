@@ -13,6 +13,9 @@ import Timeline from './ui/Timeline.jsx';
 import { ViewerSettings, StatsPanel, PlayerCard, FeedSwitch, Scoreboard, PlayAlong, FanSplit } from './ui/Panels.jsx';
 import HowItWorks from './ui/HowItWorks.jsx';
 import { tagFor, tagNote } from './broadcast/overlays.js';
+import { globalT } from './broadcast/narrator.js';
+import { liveStatus, startLive, streamLive, liveReducer, pendingMoment } from './ui/live.js';
+import LiveBar from './ui/LiveBar.jsx';
 
 const B = loadBroadcast();
 const PEOPLE = B.trace.people;
@@ -202,13 +205,53 @@ export default function App() {
   useEffect(() => { loadBenchmark().then(setBenchmark); }, []);
   useEffect(() => {
     loadAgentTrace(B.match, B.endG).then(trace => {
-      if (trace) { setAgentTrace(trace); setSource('agents'); }
+      if (trace) { setAgentTrace(trace); setSource(prev => (prev === 'live' ? prev : 'agents')); }
     });
   }, []);
-  const decisions = source === 'agents' && agentTrace ? agentTrace.decisions : testTrace.decisions;
-  const recaps = (source === 'agents' && agentTrace ? agentTrace.recaps : testTrace.recaps) ?? [];
+  // Live mode: only when the page is served by agents/live_server.py (never on GitHub Pages).
+  const [liveInfo, setLiveInfo] = useState(null);
+  const [live, setLive] = useState(null);
+  const closeLive = useRef(null);
+  const goLive = useCallback(async () => {
+    closeLive.current?.();
+    const res = await startLive();
+    setLiveInfo(info => (info ? { ...info, ...res } : res));
+    if (!res?.available) { setLive({ unavailable: res?.reason ?? 'Live mode is not available. This is the recorded run.' }); return; }
+    setLive({ model: res.model, decisions: [], done: false });
+    setSource('live');
+    setSelectedId(null);
+    let placed = false;
+    closeLive.current = streamLive(event => {
+      setLive(prev => liveReducer(prev ?? { decisions: [] }, event, B.endG));
+      if (event.type === 'start' && !placed && event.moments?.length) {
+        // Start a few seconds before the first moment of the run, and play.
+        placed = true;
+        setG(Math.max(0, globalT(event.moments[0]) - 8));
+        setPlaying(true);
+      }
+      if (event.type === 'unavailable') setSource(prev => (prev === 'live' ? 'agents' : prev));
+    });
+  }, [setG, setPlaying]);
+  const backToReplay = useCallback(() => {
+    closeLive.current?.();
+    closeLive.current = null;
+    setLive(null);
+    setSource(prev => (prev === 'live' ? 'agents' : prev));
+    setSelectedId(null);
+  }, []);
+  useEffect(() => {
+    liveStatus().then(status => {
+      if (!status) return;
+      setLiveInfo(status);
+      if (param('live') === '1') goLive();
+    });
+    return () => closeLive.current?.();
+  }, [goLive]);
+  const liveOn = source === 'live' && Boolean(live) && !live.unavailable;
+  const decisions = liveOn ? live.decisions : source === 'agents' && agentTrace ? agentTrace.decisions : testTrace.decisions;
+  const recaps = (liveOn ? [] : source === 'agents' && agentTrace ? agentTrace.recaps : testTrace.recaps) ?? [];
   const [closedRecap, setClosedRecap] = useState(null);
-  const sourceControl = { kind: source, agentTrace, onChange: value => { setSource(value); setSelectedId(null); } };
+  const sourceControl = { kind: source, agentTrace, live: liveOn, onChange: value => { if (value !== 'live') backToReplay(); setSource(value); setSelectedId(null); } };
 
   const idx = indexAt(B.eventG, g);
   const observed = useMemo(() => B.events.slice(0, idx + 1), [idx]);
@@ -232,7 +275,10 @@ export default function App() {
   // Beat the VAR: a fresh caption waits for the viewer's call before its check.
   const awaiting = game && production && Boolean(onAir) && !selected && !calls.has(onAir) && g - onAir.g < 8;
   const phase = useOnAirPhase(production ? onAir : null, awaiting);
-  held.current = phase === 'review' || phase === 'guess';
+  // A live run: the match clock waits just after each moment until its decision arrives.
+  const pending = liveOn ? pendingMoment(live) : null;
+  const liveWaiting = Boolean(pending) && g >= globalT(pending) + 1;
+  held.current = phase === 'review' || phase === 'guess' || liveWaiting;
   const varMoment = phase === 'review' && Boolean(onAir);
   useEffect(() => { setFlagged(new Set()); }, [onAir]);
 
@@ -381,6 +427,7 @@ export default function App() {
 
       <main className="stage">
         <div className="broadcast">
+          {liveInfo && <LiveBar status={liveInfo} live={live} on={liveOn} waiting={liveWaiting} onStart={goLive} onReplay={backToReplay} />}
           <div className={`screen${varMoment ? ' is-var' : ''}${replay?.mode === 'rewind' ? ' is-rewind' : ''}${view.feed === 'fans' ? ' is-fans' : ''}`}>
             <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected)} drawEvidence={varMoment} quiet={varMoment} people={PEOPLE} focus={focus} tag={tag} teamColor={teamColor} />
             <ScoreBug teams={B.teams} score={stats.score} clock={clockLabel(g, B.halfG)} />
