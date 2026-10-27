@@ -39,3 +39,12 @@ test('README counts match the summary in its prose too', () => {
   assert.ok(doc.includes(`The ${planted} are the red team's ${summary.red_team_instructions} instructions less ${summary.not_followed.length === 1 ? 'one' : summary.not_followed.length}`));
   assert.ok(doc.includes(`the ${summary.captionvar.own_real} are the narrator's own errors confirmed by hand among ${summary.own_flagged}`));
 });
+
+test('the one-line positioning quotes the measured result', () => {
+  const own = summary.captionvar.own_real;
+  const judgeStopped = summary.llm_judge.own_real - summary.llm_judge.own_real_on_air;
+  const varStopped = summary.captionvar.own_real - summary.captionvar.own_real_on_air;
+  const line = `of the ${own} errors our narrator made on its own weren't numbers: they were who did what to whom. CaptionVAR checks those too, and we measured it: an LLM judge stopped ${judgeStopped} of the ${own}, CaptionVAR stopped ${varStopped === own ? `all ${own}` : `${varStopped} of the ${own}`}.`;
+  for (const file of ['README.md', 'docs/SUBMISSION.md']) assert.ok(read(file).includes(line), `${file} positioning line`);
+  assert.ok(read('docs/SUBMISSION.md').includes(`stopped only ${judgeStopped} of the ${own} errors`));
+});
