@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { loadBroadcast, loadAgentTrace, loadBenchmark, indexAt, clockLabel, DEMO } from './ui/data.js';
+import { loadBroadcast, loadAgentTrace, loadBenchmark, indexAt, clockLabel, placeLines, DEMO } from './ui/data.js';
+import { buildTrace } from './broadcast/trace.js';
+import { LANGUAGES } from './broadcast/render.js';
+import { cue, unlockAudio } from './ui/sound.js';
 import { matchStats, playerStats } from './sim/stats.js';
 import { renderCaption } from './broadcast/render.js';
 import { summarise } from './broadcast/trace.js';
 import Pitch from './ui/Pitch.jsx';
-import { ScoreBug, LowerThird, VarCheck, RecapCard, useOnAirPhase } from './ui/Broadcast.jsx';
+import { ScoreBug, LowerThird, VarCheck, RecapCard, useOnAirPhase, scoreCall, reduceMotion, REWIND_MS, REPLAY_MS, STAMP_MS } from './ui/Broadcast.jsx';
 import VarRoom from './ui/VarRoom.jsx';
 import Timeline from './ui/Timeline.jsx';
-import { ViewerSettings, StatsPanel, PlayerCard, LanguageChips, FeedSwitch, Scoreboard } from './ui/Panels.jsx';
+import { ViewerSettings, StatsPanel, PlayerCard, LanguageChips, FeedSwitch, Scoreboard, PlayAlong, FanSplit } from './ui/Panels.jsx';
 import HowItWorks from './ui/HowItWorks.jsx';
 import { tagFor } from './broadcast/overlays.js';
 
@@ -32,6 +35,48 @@ function introWanted() {
     return false;
   }
 }
+const param = name => { try { return new URLSearchParams(window.location.search).get(name); } catch { return null; } };
+const DEFAULT_RATE = 0.38; // the test narrator's default plant rate (narrate in narrator.js)
+// Two fans watching the same checked caption, each in their own language.
+const FANS = [
+  { key: 'home', follow: 'home', lang: 'en' },
+  { key: 'away', follow: 'away', lang: 'zh' },
+];
+
+function loadSound() {
+  try { return window.localStorage.getItem('captionvar-sound') === '1'; } catch { return false; }
+}
+function saveSound(on) {
+  try { window.localStorage.setItem('captionvar-sound', on ? '1' : '0'); } catch { /* storage unavailable */ }
+}
+
+/**
+ * The VAR replay: while the decision is reviewed, the pitch runs back to the
+ * first piece of evidence and plays the move again, slowed down. Returns the
+ * match time to draw the pitch at, or null when the pitch shows live play.
+ */
+function useReplay(active, from, to) {
+  const [state, setState] = useState(null);
+  useEffect(() => {
+    if (!active || reduceMotion() || !(to > from)) { setState(null); return undefined; }
+    let frame;
+    const t0 = performance.now();
+    const tick = now => {
+      const el = now - t0;
+      if (el < REWIND_MS) {
+        const f = 1 - (1 - el / REWIND_MS) ** 2;
+        setState({ g: to + (from - to) * f, mode: 'rewind' });
+      } else if (el < REWIND_MS + REPLAY_MS) {
+        setState({ g: from + (to - from) * ((el - REWIND_MS) / REPLAY_MS), mode: 'replay' });
+      } else { setState(null); return; }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [active, from, to]);
+  return state;
+}
+
 function markIntroSeen() {
   try { window.localStorage.setItem('captionvar-intro-seen', '1'); } catch { /* storage unavailable */ }
 }
@@ -120,6 +165,26 @@ export default function App() {
   // the site; otherwise (or on request) from the built-in test narrator.
   const [agentTrace, setAgentTrace] = useState(null);
   const [source, setSource] = useState('test');
+  // The red team's plant rate rebuilds the test narrator's trace in the browser.
+  const [testTrace, setTestTrace] = useState(B.trace);
+  const [rate, setRate] = useState(DEFAULT_RATE);
+  const rateTimer = useRef(null);
+  const changeRate = useCallback(r => {
+    setRate(r);
+    clearTimeout(rateTimer.current);
+    rateTimer.current = setTimeout(() => {
+      const t = buildTrace(B.match, { seed: DEMO.narratorSeed, errorRate: r });
+      placeLines(t, B.endG);
+      setTestTrace(t);
+      setSource('test');
+      setSelectedId(null);
+    }, 200);
+  }, []);
+  // Beat the VAR, and the cue sounds.
+  const [game, setGame] = useState(() => param('game') === '1');
+  const [flagged, setFlagged] = useState(() => new Set());
+  const [calls, setCalls] = useState(() => new Map());
+  const [sound, setSound] = useState(loadSound);
   const [benchmark, setBenchmark] = useState(null);
   useEffect(() => { loadBenchmark().then(setBenchmark); }, []);
   useEffect(() => {
@@ -127,8 +192,8 @@ export default function App() {
       if (trace) { setAgentTrace(trace); setSource('agents'); }
     });
   }, []);
-  const decisions = source === 'agents' && agentTrace ? agentTrace.decisions : B.trace.decisions;
-  const recaps = (source === 'agents' && agentTrace ? agentTrace.recaps : B.trace.recaps) ?? [];
+  const decisions = source === 'agents' && agentTrace ? agentTrace.decisions : testTrace.decisions;
+  const recaps = (source === 'agents' && agentTrace ? agentTrace.recaps : testTrace.recaps) ?? [];
   const [closedRecap, setClosedRecap] = useState(null);
   const sourceControl = { kind: source, agentTrace, onChange: value => { setSource(value); setSelectedId(null); } };
 
@@ -151,35 +216,86 @@ export default function App() {
     && (lastRecap.recap === 'HT' ? g < B.halfG.start2 : g >= B.endG - 1) ? lastRecap : null;
   const selected = selectedId ? decisions.find(d => d.id === selectedId) : null;
   const reviewed = selected || onAir;
-  const phase = useOnAirPhase(view.feed === 'viewer' ? null : onAir);
-  held.current = phase === 'review';
+  const production = view.feed === 'production';
+  // Beat the VAR: a fresh caption waits for the viewer's call before its check.
+  const awaiting = game && production && Boolean(onAir) && !selected && !calls.has(onAir) && g - onAir.g < 8;
+  const phase = useOnAirPhase(production ? onAir : null, awaiting);
+  held.current = phase === 'review' || phase === 'guess';
   const varMoment = phase === 'review' && Boolean(onAir);
+  useEffect(() => { setFlagged(new Set()); }, [onAir]);
+  const callResult = game && onAir ? calls.get(onAir) ?? null : null;
+  const tally = useMemo(() => {
+    const all = [...calls.values()];
+    const sum = k => all.reduce((n, r) => n + r[k], 0);
+    return { calls: all.length, right: all.filter(r => r.right).length, caught: sum('caught'), total: sum('total'), falseAlarms: sum('falseAlarms') };
+  }, [calls]);
+  const gameControls = awaiting ? {
+    flagged,
+    onToggle: id => setFlagged(f => { const n = new Set(f); if (n.has(id)) n.delete(id); else n.add(id); return n; }),
+    onLock: () => setCalls(m => new Map(m).set(onAir, scoreCall(onAir, flagged))),
+  } : null;
+
+  // The replay runs from a few seconds before the first piece of evidence.
+  const replayFrom = useMemo(() => {
+    if (!varMoment) return 0;
+    const gs = onAir.verdict.evidence.map(id => B.byId.get(id))
+      .filter(e => e && e.x != null && e.period === onAir.period && Math.abs(e.t - onAir.t) <= 150)
+      .map(e => B.eventG[e.seq - 1]);
+    const first = gs.length ? Math.min(...gs) - 3 : g - 12;
+    return Math.max(g - 40, Math.min(g - 6, first));
+  }, [varMoment, onAir, g]);
+  const replay = useReplay(varMoment, replayFrom, g);
+  const pg = replay ? replay.g : g; // the time the pitch is drawn at
+  const pidx = indexAt(B.eventG, pg);
+
+  // Cue sounds: the check, the rewind, the stamp; and the viewer's result.
+  useEffect(() => {
+    if (!sound) return undefined;
+    if (phase === 'review') {
+      cue('check');
+      const timers = [setTimeout(() => cue('rewind'), 250), setTimeout(() => cue('stamp'), STAMP_MS)];
+      return () => timers.forEach(clearTimeout);
+    }
+    return undefined;
+  }, [phase, sound]);
+  useEffect(() => {
+    if (sound && phase === 'aired' && callResult) cue(callResult.right ? 'win' : 'miss');
+  }, [phase, sound, callResult]);
 
   const renderAired = useCallback(d => renderCaption(d, d.verdict, PEOPLE, view), [view]);
 
-  const ball = ballAt(idx, g);
-  const actorEvent = recent(idx, e => ON_BALL.has(e.type) && e.player_id, 1, 6)[0];
+  const ball = ballAt(pidx, pg);
+  const actorEvent = recent(pidx, e => ON_BALL.has(e.type) && e.player_id, 1, 6)[0];
   const actor = actorEvent ? { ...PEOPLE.players.get(actorEvent.player_id), side: actorEvent.side } : null;
   // The move in progress: every touch of the current possession, in order.
   const possession = ball?.event?.possession_id;
   const chain = useMemo(
-    () => recent(idx, e => ON_BALL.has(e.type) && e.x != null && e.possession_id === possession, view.persona === 'analyst' ? 14 : 8, 60),
-    [idx, possession, view.persona],
+    () => recent(pidx, e => ON_BALL.has(e.type) && e.x != null && e.possession_id === possession, view.persona === 'analyst' ? 14 : 8, 60),
+    [pidx, possession, view.persona],
   );
-  const trail = chain.length >= 2 ? chain : recent(idx, e => ON_BALL.has(e.type) && e.x != null, 6, 40);
-  const shape = useMemo(() => lastTouches(idx), [idx]);
-  const focus = view.player ? recent(idx, e => e.player_id === view.player && e.x != null, 6) : [];
+  const trail = chain.length >= 2 ? chain : recent(pidx, e => ON_BALL.has(e.type) && e.x != null, 6, 40);
+  const shape = useMemo(() => lastTouches(pidx), [pidx]);
+  const focus = view.player ? recent(pidx, e => e.player_id === view.player && e.x != null, 6) : [];
   // Draw only the evidence that belongs to this moment (same half, within
   // 150 s); older supporting events, such as earlier goals behind a score
   // claim, stay in the VAR room list.
-  const evidence = reviewed && view.feed !== 'viewer'
+  const evidence = reviewed && production
     ? reviewed.verdict.evidence.map(id => B.byId.get(id))
       .filter(e => e && e.x != null && e.period === reviewed.period && Math.abs(e.t - reviewed.t) <= 150)
       .sort((a, b) => a.seq - b.seq)
     : [];
   // A player tag when an event crosses a threshold (sprint, long or difficult pass, shot, distance).
   const tagEvent = recent(idx, e => g - B.eventG[e.seq - 1] <= TAG_REAL_S * speed && tagFor(e, PEOPLE), 1, 30)[0];
-  const tag = tagEvent ? { ...tagFor(tagEvent, PEOPLE), at: placeOf(tagEvent, shape) } : null;
+  const tag = tagEvent && !replay && production ? { ...tagFor(tagEvent, PEOPLE), at: placeOf(tagEvent, shape) } : null;
+
+  // Two fans: the caption on air, rendered for each from the same checked facts.
+  const fans = FANS.map(f => ({
+    ...f,
+    label: `${B.teams[f.follow].short_name} fan`,
+    langName: LANGUAGES.find(l => l.code === f.lang)?.label ?? f.lang,
+    color: teamColor(f.follow),
+  }));
+  const fanLines = onAir && view.feed === 'fans' ? FANS.map(f => renderCaption(onAir, onAir.verdict, PEOPLE, { ...view, persona: 'fan', follow: f.follow, lang: f.lang })) : null;
 
   const focusPlayer = view.player ? PEOPLE.players.get(view.player) : null;
   const focusStats = useMemo(() => (view.player ? playerStats(observed, view.player) : null), [observed, view.player]);
@@ -219,16 +335,17 @@ export default function App() {
 
       <main className="stage">
         <div className="broadcast">
-          <div className={`screen${varMoment ? ' is-var' : ''}`}>
-            <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected) || varMoment} drawEvidence={varMoment} people={PEOPLE} focus={focus} tag={view.feed === 'viewer' ? null : tag} teamColor={teamColor} />
+          <div className={`screen${varMoment ? ' is-var' : ''}${replay?.mode === 'rewind' ? ' is-rewind' : ''}${view.feed === 'fans' ? ' is-fans' : ''}`}>
+            <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected) || varMoment} drawEvidence={varMoment} people={PEOPLE} focus={focus} tag={tag} teamColor={teamColor} />
             <ScoreBug teams={B.teams} score={stats.score} clock={clockLabel(g, B.halfG)} />
             {focusPlayer && focusStats && (
               <PlayerCard player={focusPlayer} stats={focusStats} team={B.teams[focusPlayer.side]} onClose={() => setView(v => ({ ...v, player: '' }))} />
             )}
-            {varMoment && <VarCheck decision={onAir} clock={clockLabel(g, B.halfG)} />}
+            {varMoment && <VarCheck decision={onAir} clock={clockLabel(g, B.halfG)} replay={replay?.mode ?? null} />}
             {recapOnAir && phase !== 'review' && <RecapCard recap={recapOnAir} onClose={() => setClosedRecap(recapOnAir.id)} />}
-            {!recapOnAir && <LowerThird decision={onAir} text={onAir ? renderAired(onAir) : ''} lang={view.lang} phase={phase} insight={insight} feed={view.feed} />}
-            {view.feed === 'viewer' ? <span className="feed-bug is-viewer">Viewer feed</span> : <span className="feed-bug">Production · not on air</span>}
+            {!recapOnAir && view.feed !== 'fans' && <LowerThird decision={onAir} text={onAir ? renderAired(onAir) : ''} lang={view.lang} phase={phase} insight={insight} feed={view.feed} game={gameControls} result={callResult} />}
+            {!recapOnAir && fanLines && <FanSplit fans={fans} lines={fanLines} minute={onAir.display_minute} />}
+            {production ? <span className="feed-bug">Production · not on air</span> : <span className="feed-bug is-viewer">{view.feed === 'fans' ? 'Two viewer feeds' : 'Viewer feed'}</span>}
           </div>
 
           <div className="transport">
@@ -257,6 +374,17 @@ export default function App() {
               ))}
             </nav>
           </div>
+
+          <PlayAlong
+            game={game}
+            onGame={on => { setGame(on); if (on) setView(v => ({ ...v, feed: 'production' })); }}
+            tally={tally}
+            rate={rate}
+            onRate={changeRate}
+            sound={sound}
+            onSound={on => { if (on) unlockAudio(); setSound(on); saveSound(on); }}
+            agentsOn={source === 'agents' && Boolean(agentTrace)}
+          />
 
           <Timeline events={B.events} eventG={B.eventG} endG={B.endG} halfG={B.halfG} decisions={aired} g={g} onSeek={seek} teamColor={teamColor} />
 

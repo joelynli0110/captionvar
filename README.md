@@ -146,6 +146,10 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ## Viewer features
 
+- **The VAR replay.** When a check changes a caption, the picture freezes, runs back to the first piece of evidence and plays the move again, slowed, while the false words are struck. Turn on **Sound** for the cue tones; they are synthesised in the browser, with no recorded audio.
+- **Beat the VAR** (or open with `?game=1`). Each caption waits on screen before its check. Tap the words you think are false, lock in your call, and see it scored against the referee's verdict, claim by claim.
+- **Red team slider.** Set what share of captions are planted wrong, from none to all. The match is then replayed with the in-browser test narrator, and the same referee code checks it in your browser, so you can see the checks hold as the error rate rises. The Foundry run itself stays as recorded.
+- **Two fans.** One checked caption on a split screen: a Northbridge fan in English and a Riverside fan in Chinese, each written from the same verified facts.
 - **Player tags at fixed thresholds**, straight from the event feed: a sprint of 33 km/h or more, a completed pass of 40 m or more or with difficulty 60/100 or more, every shot with its xG and speed, and distance milestones. `npm run overlays` writes them as a timed, machine-readable overlay feed (JSON lines) for a graphics renderer.
 - **The move in progress and both teams' shape** on the pitch: every touch of the current possession, and each player at his last touch (positions are not tracked, so these fade with age).
 - **Language one tap away** beside the transport, and pass quality (long and difficult passes, fastest shot) in the analyst panel.
@@ -161,7 +165,7 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ```bash
 npm install
-npm test          # 39 tests: simulator, referee, context lines and recaps, rendering
+npm test          # 41 tests: simulator, referee, context lines and recaps, rendering, Beat the VAR
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
 

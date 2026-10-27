@@ -100,7 +100,7 @@ export function LanguageChips({ value, onChange }) {
 export function FeedSwitch({ value, onChange }) {
   return (
     <div className="feed-switch" role="radiogroup" aria-label="Picture">
-      {[['production', 'Production'], ['viewer', 'Viewer feed']].map(([v, label]) => (
+      {[['production', 'Production'], ['viewer', 'Viewer feed'], ['fans', 'Two fans']].map(([v, label]) => (
         <button key={v} type="button" role="radio" aria-checked={value === v} className={value === v ? 'on' : ''} onClick={() => onChange(v)}>{label}</button>
       ))}
     </div>
@@ -174,5 +174,46 @@ export function PlayerCard({ player, stats, team, onClose }) {
         {stats.total_distance_km != null && <div><dt>Distance</dt><dd>{stats.total_distance_km} km</dd></div>}
       </dl>
     </aside>
+  );
+}
+
+/**
+ * Play along: Beat the VAR (call the false words before the check), the red
+ * team's plant rate for the in-browser test narrator, and cue sounds.
+ */
+export function PlayAlong({ game, onGame, tally, rate, onRate, sound, onSound, agentsOn }) {
+  const pct = Math.round(rate * 100);
+  return (
+    <section className="play-along" aria-label="Play along">
+      <div className="pa-block">
+        <button type="button" className={`pa-toggle${game ? ' on' : ''}`} aria-pressed={game} onClick={() => onGame(!game)}>Beat the VAR</button>
+        <span className="pa-note">
+          {game
+            ? tally.calls ? <><b>{tally.right}/{tally.calls}</b> calls spot on · <b>{tally.caught}/{tally.total}</b> false claims spotted{tally.falseAlarms ? ` · ${tally.falseAlarms} called false wrongly` : ''}</> : 'Each caption waits for your call before the check.'
+            : 'Call the false words before the referee does.'}
+        </span>
+      </div>
+      <label className="pa-block pa-red">
+        <span className="pa-label">Red team</span>
+        <input type="range" min="0" max="100" step="5" value={pct} onChange={e => onRate(Number(e.target.value) / 100)} aria-describedby="pa-red-note" />
+        <span className="pa-value">{pct}%</span>
+        <span className="pa-note" id="pa-red-note">{agentsOn ? 'Showing the Foundry run as recorded. Move this to replay the match with the test narrator in your browser, with that share of captions planted wrong.' : 'of the test narrator\'s captions are planted wrong, then checked by the same referee in your browser.'}</span>
+      </label>
+      <button type="button" className={`pa-toggle pa-sound${sound ? ' on' : ''}`} aria-pressed={sound} onClick={() => onSound(!sound)}>{sound ? 'Sound on' : 'Sound off'}</button>
+    </section>
+  );
+}
+
+/** Two fans, one checked caption: each in their own language, from the same verified facts. */
+export function FanSplit({ fans, lines, minute }) {
+  return (
+    <div className="fan-split">
+      {fans.map((f, i) => (
+        <div key={f.key} className="fan-panel" style={{ '--kit': f.color }} lang={f.lang}>
+          <div className="fan-tag"><b>{f.label}</b><span>{f.langName}{minute ? ` · ${minute}` : ''}</span></div>
+          <p className="lt-text">{lines[i]}</p>
+        </div>
+      ))}
+    </div>
   );
 }

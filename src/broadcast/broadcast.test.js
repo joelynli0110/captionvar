@@ -8,6 +8,7 @@ import { spotMoments, indexPeople } from './narrator.js';
 import { INSIGHT_TYPES, recapSpot, contextFacts, RECAPS } from './context.js';
 import { simulateInsight, simulateRecap } from './analyst.js';
 import { verifyStatement } from './statements.js';
+import { callableClaims, falseClaims, scoreCall } from './game.js';
 
 const match = generateMatch({ seed: 'captionvar-demo-6' });
 const trace = buildTrace(match, { seed: 'narrator-10' });
@@ -432,4 +433,27 @@ test('found in recorded runs: superlatives after a possessive, and season averag
   assert.ok(flagged('61% possession, unlike their season average of 45%.'));
   assert.ok(!flagged("Northbridge FC's 13 shots and 1.51 xG show dominance."));
   assert.ok(!flagged("Reyes's best chance of the half goes wide."));
+});
+
+test('Beat the VAR scores a call against the referee, claim by claim', () => {
+  const trace = buildTrace(generateMatch({ seed: 'captionvar-demo-6' }), { seed: 'narrator-10' });
+  const wrong = trace.decisions.find(d => falseClaims(d).size > 0);
+  const truth = falseClaims(wrong);
+  assert.deepEqual(scoreCall(wrong, new Set(truth)), { caught: truth.size, missed: 0, falseAlarms: 0, total: truth.size, right: true });
+  assert.equal(scoreCall(wrong, new Set()).right, false);
+  const clean = trace.decisions.find(d => d.verdict.status === 'VERIFY');
+  assert.equal(scoreCall(clean, new Set()).right, true);
+  const anyClaim = callableClaims(clean)[0].id;
+  assert.deepEqual(scoreCall(clean, new Set([anyClaim])), { caught: 0, missed: 0, falseAlarms: 1, total: 0, right: false });
+});
+
+test('the red team rate sets how many test captions are planted, and every plant is caught', () => {
+  const match = generateMatch({ seed: 'captionvar-demo-6' });
+  const none = buildTrace(match, { seed: 'narrator-10', errorRate: 0 }).summary;
+  const all = buildTrace(match, { seed: 'narrator-10', errorRate: 1 }).summary;
+  assert.equal(none.planted_errors, 0);
+  assert.equal(none.verified, none.captions);
+  assert.ok(all.planted_errors > none.captions / 2);
+  assert.equal(all.caught, all.planted_errors);
+  assert.equal(all.false_alarms, 0);
 });
