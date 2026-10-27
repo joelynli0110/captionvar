@@ -423,3 +423,13 @@ test('player tags fire exactly at their thresholds, straight from the events', a
   assert.equal(missed.length, 0);
   assert.ok(feed.every(t => t.title && t.value && t.threshold));
 });
+
+test('found in recorded runs: superlatives after a possessive, and season averages, are comparisons beyond the match', async () => {
+  const { checkSweepingClaims } = await import('./verify.js');
+  const flagged = t => checkSweepingClaims(t, { status: 'VERIFY', claims: [] }).claims.length > 0;
+  assert.ok(flagged("Reyes' shot saved brilliantly, Northbridge FC’s best chance of the entire league season."));
+  assert.ok(flagged('Northbridge have 4 shots, well above their usual season average.'));
+  assert.ok(flagged('61% possession, unlike their season average of 45%.'));
+  assert.ok(!flagged("Northbridge FC's 13 shots and 1.51 xG show dominance."));
+  assert.ok(!flagged("Reyes's best chance of the half goes wide."));
+});

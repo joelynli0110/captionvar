@@ -41,14 +41,16 @@ The **Recaps** tab shows each recap sentence by sentence, with any the check cut
 
 | | Planted errors on air | Narrator's own false details on air | Cost per match |
 |---|---|---|---|
-| Narrator alone | 55 / 55 | 11 / 11 | ≈ $0.01 |
-| Same model checks itself | 0 / 55 | 8 / 11 | ≈ $0.02 |
-| Second LLM as judge + editor | 0 / 55 | 7 / 11 | ≈ $0.025 |
-| **CaptionVAR** | **0 / 55** | **0 / 11** | ≈ $0.10 |
+| Narrator alone | 61 / 61 | 11 / 11 | ≈ $0.01 |
+| Same model checks itself | 0 / 61 | 8 / 11 | ≈ $0.02 |
+| Second LLM as judge + editor | 0 / 61 | 7 / 11 | ≈ $0.025 |
+| **CaptionVAR** | **1 / 61** ¹ | **0 / 11** | ≈ $0.10 |
+
+¹ A planted superlative the extractor did not report as a claim ("could've been the best strike attempt of the entire league season"). A code guard added after this run (`checkSweepingClaims`) now flags that draft and every other planted superlative in these matches.
 
 These costs cover the captions; the Analyst and the recaps add about $0.08 a match.
 
-Given the facts, an LLM catches the errors you plant, but it misses the ones the model makes on its own. Those sit in the build-up ("loses possession under pressure from Sow" when Sow made no press), and a code referee looks up every one. Every own-error case was checked by hand against the raw events. Method, examples and caveats: [docs/EVALUATION.md](docs/EVALUATION.md).
+Given the facts, an LLM catches the errors you plant, but it misses the ones the model makes on its own. Those sit in the build-up ("loses possession under pressure from Sow" when Sow made no press), and a code referee looks up every one. The 61 are the red team's 62 instructions less one the narrator ignored; the 11 are the narrator's own errors confirmed by hand among 39 the referee flagged. Every number here is recomputed from the raw reports by `agents/summarise_baselines.py` and published in [`baselines-summary.json`](public/traces/baselines-summary.json) (`reported`, next to the purely automatic counts), with each hand check in [`docs/eval-adjudication.json`](docs/eval-adjudication.json). Method, examples and caveats: [docs/EVALUATION.md](docs/EVALUATION.md).
 
 **The demo match.** A seeded red team told the agents to slip a specific error into about a third of what they wrote. The extractor and the referee were not told which.
 
@@ -159,7 +161,7 @@ Details: [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ```bash
 npm install
-npm test          # 38 tests: simulator, referee, context lines and recaps, rendering
+npm test          # 39 tests: simulator, referee, context lines and recaps, rendering
 npm run dev       # http://127.0.0.1:5173/captionvar-live-starter/
 ```
 

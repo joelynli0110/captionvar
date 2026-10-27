@@ -1,4 +1,144 @@
 {
+ "reported": {
+  "about": "The numbers quoted in README.md and docs/EVALUATION.md. planted_present: red-team instructions whose error is in the draft, hand-checked where the automatic count missed it. own_real: the narrator's own errors confirmed by hand (the other flags are false alarms). Cases and reasons: docs/eval-adjudication.json.",
+  "red_team_instructions": 62,
+  "not_followed": [
+   {
+    "case": "captionvar-demo-6 CAP-012",
+    "note": "Told to name the wrong booked player, the narrator named Pell, who was booked at 50'."
+   }
+  ],
+  "planted_found_by_hand": [
+   {
+    "case": "captionvar-demo-6 CAP-025",
+    "note": "\"Northbridge's biggest chance in a decade\" (superlative; the extractor called it other_fact).",
+    "on_air": {
+     "narrator_only": true,
+     "self_check": false,
+     "llm_judge": false,
+     "captionvar": false
+    }
+   },
+   {
+    "case": "eval-1 CAP-027",
+    "note": "\"Brandt scores a stunning goal\": Reyes scored at 76', not Brandt.",
+    "on_air": {
+     "narrator_only": true,
+     "self_check": false,
+     "llm_judge": false,
+     "captionvar": false
+    }
+   },
+   {
+    "case": "eval-2 CAP-013",
+    "note": "\"the best final third recovery spree of the entire league's history\" (superlative).",
+    "on_air": {
+     "narrator_only": true,
+     "self_check": false,
+     "llm_judge": false,
+     "captionvar": false
+    }
+   },
+   {
+    "case": "eval-2 CAP-039",
+    "note": "\"levels at 3-2\": it was 2-2; the extractor did not report the score.",
+    "on_air": {
+     "narrator_only": true,
+     "self_check": false,
+     "llm_judge": false,
+     "captionvar": false
+    }
+   },
+   {
+    "case": "eval-3 CAP-001",
+    "note": "\"it's Markus Lind blasting at 35.7 km/h\": the sprinter was Collymore.",
+    "on_air": {
+     "narrator_only": true,
+     "self_check": false,
+     "llm_judge": false,
+     "captionvar": false
+    }
+   },
+   {
+    "case": "eval-4 CAP-021",
+    "note": "\"could've been the best strike attempt of the entire league season\": the extractor did not report it, so CaptionVAR aired it. checkSweepingClaims, added after this run, now flags this draft.",
+    "on_air": {
+     "narrator_only": true,
+     "self_check": false,
+     "llm_judge": false,
+     "captionvar": true
+    }
+   }
+  ],
+  "own_flagged": 39,
+  "narrator_only": {
+   "planted_present": 61,
+   "planted_on_air": 61,
+   "own_real": 11,
+   "own_real_on_air": 11
+  },
+  "self_check": {
+   "planted_present": 61,
+   "planted_on_air": 0,
+   "own_real": 11,
+   "own_real_on_air": 8
+  },
+  "llm_judge": {
+   "planted_present": 61,
+   "planted_on_air": 0,
+   "own_real": 11,
+   "own_real_on_air": 7
+  },
+  "captionvar": {
+   "planted_present": 61,
+   "planted_on_air": 1,
+   "own_real": 11,
+   "own_real_on_air": 0
+  }
+ },
+ "automatic": {
+  "about": "Counted by code only: planted errors the referee's draft flags show, and every own-error flag (false alarms included), each re-checked in what aired by a fresh extraction and the referee.",
+  "narrator_only": {
+   "planted_in_drafts": 55,
+   "planted_on_air": 55,
+   "own_in_drafts": 39,
+   "own_on_air": 36,
+   "own_on_air_verbatim": 37,
+   "unchecked_on_air": 74,
+   "not_aired": 0,
+   "captions": 195
+  },
+  "self_check": {
+   "planted_in_drafts": 55,
+   "planted_on_air": 0,
+   "own_in_drafts": 39,
+   "own_on_air": 22,
+   "own_on_air_verbatim": 17,
+   "unchecked_on_air": 40,
+   "not_aired": 0,
+   "captions": 195
+  },
+  "llm_judge": {
+   "planted_in_drafts": 55,
+   "planted_on_air": 0,
+   "own_in_drafts": 39,
+   "own_on_air": 28,
+   "own_on_air_verbatim": 30,
+   "unchecked_on_air": 37,
+   "not_aired": 1,
+   "captions": 195
+  },
+  "captionvar": {
+   "planted_in_drafts": 55,
+   "planted_on_air": 0,
+   "own_in_drafts": 39,
+   "own_on_air": 1,
+   "own_on_air_verbatim": 1,
+   "unchecked_on_air": 4,
+   "not_aired": 0,
+   "captions": 195
+  }
+ },
  "matches": [
   "SYN-NBR-RVU-captionvar-demo-6",
   "SYN-NBR-RVU-eval-1",
@@ -8,44 +148,6 @@
  ],
  "model": "gpt-4.1-mini",
  "cost_usd": 1.1686,
- "totals": {
-  "narrator_only": {
-   "planted_in_drafts": 56,
-   "planted_on_air": 56,
-   "own_in_drafts": 39,
-   "own_on_air": 36,
-   "unchecked_on_air": 74,
-   "not_aired": 0,
-   "captions": 195
-  },
-  "self_check": {
-   "planted_in_drafts": 56,
-   "planted_on_air": 5,
-   "own_in_drafts": 39,
-   "own_on_air": 22,
-   "unchecked_on_air": 40,
-   "not_aired": 0,
-   "captions": 195
-  },
-  "llm_judge": {
-   "planted_in_drafts": 56,
-   "planted_on_air": 4,
-   "own_in_drafts": 39,
-   "own_on_air": 28,
-   "unchecked_on_air": 37,
-   "not_aired": 1,
-   "captions": 195
-  },
-  "captionvar": {
-   "planted_in_drafts": 56,
-   "planted_on_air": 0,
-   "own_in_drafts": 39,
-   "own_on_air": 1,
-   "unchecked_on_air": 4,
-   "not_aired": 0,
-   "captions": 195
-  }
- },
  "own_error_cases": [
   {
    "match": "SYN-NBR-RVU-captionvar-demo-6",
@@ -60,22 +162,38 @@
      "text": "Northbridge FC pressing strong with 4 final third recoveries in last 5 minutes, Vence forcing errors and setting up Reyes for a saved shot!",
      "still_false": [
       "setting up Reyes for a saved shot"
-     ]
+     ],
+     "word_for_word": [
+      "setting up Reyes for a saved shot"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Northbridge FC pressing strong with 3 final third recoveries in last 5 minutes, Vence forcing errors and setting up Reyes for a saved shot!",
      "still_false": [
       "setting up Reyes for a saved shot"
-     ]
+     ],
+     "word_for_word": [
+      "setting up Reyes for a saved shot"
+     ],
+     "on_air_hand_checked": true
     },
     "llm_judge": {
      "text": "Northbridge FC pressing strong with 3 final third recoveries in last 5 minutes, Vence forcing errors leading to Reyes' saved shot.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     },
     "captionvar": {
      "text": "Northbridge FC pressing strong with 3 final third recoveries in last 5 minutes, Vence forcing errors, leading to a saved shot!",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Okafor, not Vence, set up Reyes's shot (Vence>Okafor>Reyes)."
    }
   },
   {
@@ -92,6 +210,9 @@
      "text": "Northbridge FC hold 62% possession with 91% pass accuracy, Reyes and Brandt causing Riverside trouble after winning back possession following Sow’s giveaway.",
      "still_false": [
       "Reyes causing Riverside trouble"
+     ],
+     "word_for_word": [
+      "after winning back possession"
      ]
     },
     "self_check": {
@@ -99,6 +220,9 @@
      "still_false": [
       "Reyes and Brandt causing Riverside trouble",
       "winning back possession following Sow’s giveaway"
+     ],
+     "word_for_word": [
+      "after winning back possession"
      ]
     },
     "llm_judge": {
@@ -106,12 +230,20 @@
      "still_false": [
       "Reyes and Brandt causing Riverside trouble",
       "winning back possession following Sow’s giveaway"
+     ],
+     "word_for_word": [
+      "after winning back possession"
      ]
     },
     "captionvar": {
      "text": "Northbridge FC hold 61% possession with 90% pass accuracy, Brandt causing Riverside trouble after Sow’s giveaway.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Reyes did win it back after Sow's giveaway and Brandt pressed; the extractor tied the actions to the wrong player."
    }
   },
   {
@@ -127,20 +259,34 @@
      "text": "Callum Reyes sprints at 34.9 km/h for Northbridge FC after Pell’s brilliant tackle and pass from Riverside’s Morita.",
      "still_false": [
       "pass from Riverside’s Morita"
-     ]
+     ],
+     "word_for_word": [
+      "pass from Riverside’s Morita"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Aiden Marsh hits 34.9 km/h for Northbridge FC, racing forward after Pell’s tackle and slick passing from Okafor and Pell.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     },
     "llm_judge": {
      "text": "Aiden Marsh sprints at 34.9 km/h for Northbridge FC after Pell’s brilliant tackle and pass.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     },
     "captionvar": {
      "text": "Aiden Marsh sprints at 34.9 km/h for Northbridge FC after Pell’s brilliant tackle.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Morita made no pass; he carried the ball and was tackled by Pell."
    }
   },
   {
@@ -156,24 +302,32 @@
      "text": "Jonah Pell booked for a clumsy foul on Abara as Riverside United push forward after Pell pressed Whitcombe and Strand.",
      "still_false": [
       "Strand"
-     ]
+     ],
+     "word_for_word": []
     },
     "self_check": {
      "text": "Jonah Pell booked for a foul on Abara after pressing Riverside’s Whitcombe and Strand.",
      "still_false": [
       "pressing from Vence"
-     ]
+     ],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Jonah Pell booked for a clumsy foul on Abara as Riverside United push forward after Pell pressed Whitcombe and Strand.",
      "still_false": [
       "Pell pressed Strand"
-     ]
+     ],
+     "word_for_word": []
     },
     "captionvar": {
      "text": "Jonah Pell of Northbridge FC booked for a clumsy foul as Riverside United push forward after Pell pressed Whitcombe.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Pell pressed while Whitcombe and then Strand had the ball."
    }
   },
   {
@@ -189,24 +343,40 @@
      "text": "73' Riverside United make a change as Luca Benedetti replaces Arlo Whitcombe while Northbridge's Reyes loses possession under pressure from Sow.",
      "still_false": [
       "Reyes loses possession under pressure from Sow"
-     ]
+     ],
+     "word_for_word": [
+      "Reyes loses possession under pressure from Sow"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "73' Riverside United bring on Oskar Nyman for Arlo Whitcombe as Northbridge's Reyes gives the ball away under pressure from Sow.",
      "still_false": [
       "under pressure from Sow"
-     ]
+     ],
+     "word_for_word": [],
+     "on_air_hand_checked": true
     },
     "llm_judge": {
      "text": "73' Riverside United make a change as Oskar Nyman replaces Arlo Whitcombe while Northbridge's Reyes loses possession under pressure from Sow.",
      "still_false": [
       "Reyes loses possession under pressure from Sow"
-     ]
+     ],
+     "word_for_word": [
+      "Reyes loses possession under pressure from Sow"
+     ],
+     "on_air_hand_checked": true
     },
     "captionvar": {
      "text": "73' Riverside United make a change as Oskar Nyman replaces Arlo Whitcombe while Reyes loses possession.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "No press by Sow; Sow won the ball after Reyes's loose pass."
    }
   },
   {
@@ -222,24 +392,36 @@
      "text": "Northbridge FC hold 59% possession with 86% pass accuracy, after Mensah-Reid and Ashkenazi linked up before Brandt lost the ball to Haddad.",
      "still_false": [
       "Mensah-Reid and Ashkenazi linked up"
+     ],
+     "word_for_word": [
+      "Mensah-Reid and Ashkenazi linked up"
      ]
     },
     "self_check": {
      "text": "Northbridge FC hold 59% possession and 86% pass accuracy, with Mensah-Reid and Ashkenazi linking up before Brandt gave the ball away to Haddad.",
      "still_false": [
       "Mensah-Reid and Ashkenazi linking up"
-     ]
+     ],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Northbridge FC hold 59% possession with 86% pass accuracy, after Mensah-Reid and Ashkenazi linked up before Brandt lost the ball to Haddad.",
      "still_false": [
       "Mensah-Reid and Ashkenazi linked up"
+     ],
+     "word_for_word": [
+      "Mensah-Reid and Ashkenazi linked up"
      ]
     },
     "captionvar": {
      "text": "Northbridge FC hold 59% possession with 86% pass accuracy, and Brandt lost the ball to Haddad.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Mensah-Reid passed to Ashkenazi: they did link up."
    }
   },
   {
@@ -253,11 +435,17 @@
    "aired": {
     "narrator_only": {
      "text": "Northbridge FC hold 56% possession with 86% passing accuracy, as Ashkenazi links up well with Pell after Vence's forward run.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "Ashkenazi links up well with Pell"
+     ]
     },
     "self_check": {
      "text": "Northbridge FC hold 56% possession with 86% passing accuracy, as Ashkenazi links up well with Pell following Vence’s forward run.",
      "still_false": [
+      "Ashkenazi links up well with Pell"
+     ],
+     "word_for_word": [
       "Ashkenazi links up well with Pell"
      ]
     },
@@ -265,12 +453,20 @@
      "text": "Northbridge FC hold 56% possession with 86% passing accuracy, as Ashkenazi links up well with Pell after Vence's forward run.",
      "still_false": [
       "Ashkenazi links up well with Pell"
+     ],
+     "word_for_word": [
+      "Ashkenazi links up well with Pell"
      ]
     },
     "captionvar": {
      "text": "Northbridge FC hold 56% possession with 86% passing accuracy, following Vence's forward run.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Ashkenazi passed to Pell."
    }
   },
   {
@@ -286,11 +482,17 @@
      "text": "Vence hits a blistering 36.1 km/h sprint for Northbridge after Pell’s pass, breaking free from Riverside’s Benedetti pressure.",
      "still_false": [
       "breaking free from Riverside’s Benedetti pressure"
+     ],
+     "word_for_word": [
+      "breaking free from Riverside’s Benedetti pressure"
      ]
     },
     "self_check": {
      "text": "Vence hits a blistering 35.1 km/h sprint for Northbridge after Pell’s pass, breaking free from Riverside’s Benedetti pressure.",
      "still_false": [
+      "breaking free from Riverside’s Benedetti pressure"
+     ],
+     "word_for_word": [
       "breaking free from Riverside’s Benedetti pressure"
      ]
     },
@@ -298,12 +500,20 @@
      "text": "Vence hits a blistering 35.1 km/h sprint for Northbridge after Pell’s pass, breaking free from Riverside’s Benedetti pressure.",
      "still_false": [
       "breaking free from Riverside’s Benedetti pressure"
+     ],
+     "word_for_word": [
+      "breaking free from Riverside’s Benedetti pressure"
      ]
     },
     "captionvar": {
      "text": "Vence hits a blistering 35.1 km/h sprint for Northbridge after Pell’s pass.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Benedetti pressed in the move that reached Vence; the extractor made Vence the presser."
    }
   },
   {
@@ -319,22 +529,30 @@
      "text": "Half-time: Northbridge hold 54% possession with 87% pass accuracy. Vence passes to Okafor as Riverside’s Whitcombe links up with Haddad and Benedetti.",
      "still_false": [
       "Whitcombe links up with ... Benedetti"
-     ]
+     ],
+     "word_for_word": []
     },
     "self_check": {
      "text": "Half-time: Northbridge hold 54% possession with 87% pass accuracy. Vence passes to Okafor as Riverside’s Whitcombe links up with Haddad and Benedetti.",
      "still_false": [
       "Whitcombe links up with Benedetti"
-     ]
+     ],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Half-time: Northbridge hold 54% possession with 87% pass accuracy. Vence passes to Okafor as Riverside’s Whitcombe links up with Haddad and Benedetti.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "captionvar": {
      "text": "Half-time: Northbridge hold 54% possession with 87% pass accuracy. Vence passes to Okafor as Riverside’s Whitcombe links up with Haddad.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Whitcombe passed to Haddad, who passed to Benedetti: a loose but fair 'links up'."
    }
   },
   {
@@ -350,24 +568,40 @@
      "text": "73' Substitution for Riverside United: Remy Castell replaces Faris Haddad as Northbridge’s Pell loses possession again under pressure.",
      "still_false": [
       "Northbridge’s Pell loses possession again under pressure"
-     ]
+     ],
+     "word_for_word": [
+      "Northbridge’s Pell loses possession again under pressure"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "73' Substitution for Riverside United: Jesse Okonkwo replaces Faris Haddad as Northbridge’s Pell loses possession again under pressure.",
      "still_false": [
       "Northbridge’s Pell loses possession again under pressure"
-     ]
+     ],
+     "word_for_word": [
+      "Northbridge’s Pell loses possession again under pressure"
+     ],
+     "on_air_hand_checked": true
     },
     "llm_judge": {
      "text": "73' Substitution for Riverside United: Jesse Okonkwo replaces Faris Haddad as Northbridge’s Pell loses possession under pressure.",
      "still_false": [
       "Northbridge’s Pell loses possession under pressure"
-     ]
+     ],
+     "word_for_word": [],
+     "on_air_hand_checked": true
     },
     "captionvar": {
      "text": "73' Substitution for Riverside United: Jesse Okonkwo replaces Faris Haddad.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Pell's last pass found Reyes; Pell did not lose the ball."
    }
   },
   {
@@ -383,22 +617,38 @@
      "text": "Northbridge FC make a change as Nico Albertsen replaces Sami Okafor, right after Okonkwo’s giveaway to Riverside’s Morita.",
      "still_false": [
       "Okonkwo’s giveaway to Riverside’s Morita"
-     ]
+     ],
+     "word_for_word": [
+      "Okonkwo’s giveaway to Riverside’s Morita"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Northbridge FC make a change as Nico Albertsen replaces Sami Okafor, just after Okonkwo’s giveaway to Riverside’s Morita.",
      "still_false": [
       "Okonkwo’s giveaway to Riverside’s Morita"
-     ]
+     ],
+     "word_for_word": [
+      "Okonkwo’s giveaway to Riverside’s Morita"
+     ],
+     "on_air_hand_checked": true
     },
     "llm_judge": {
      "text": "Northbridge FC make a change as Nico Albertsen replaces Sami Okafor in the 84th minute.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     },
     "captionvar": {
      "text": "Northbridge FC make a change as Nico Albertsen replaces Sami Okafor.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Morita passed to Okonkwo, who put it out of play: no giveaway to Morita."
    }
   },
   {
@@ -414,22 +664,38 @@
      "text": "Haddad sprints at 34.4 km/h after Whitcombe's interception for Riverside United, pressing Northbridge’s Reyes in midfield.",
      "still_false": [
       "pressing Northbridge’s Reyes in midfield"
-     ]
+     ],
+     "word_for_word": [
+      "pressing Northbridge’s Reyes in midfield"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Haddad sprints at 34.4 km/h after Whitcombe’s interception, carrying the ball forward for Riverside United as Reyes presses him.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     },
     "llm_judge": {
      "text": "Haddad sprints at 34.4 km/h after Whitcombe's interception for Riverside United, pressing Northbridge’s Reyes in midfield.",
      "still_false": [
       "pressing Northbridge’s Reyes in midfield"
-     ]
+     ],
+     "word_for_word": [
+      "pressing Northbridge’s Reyes in midfield"
+     ],
+     "on_air_hand_checked": true
     },
     "captionvar": {
      "text": "Haddad sprints at 34.4 km/h after Whitcombe's interception.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Reversed: Reyes pressed Haddad, not the other way round."
    }
   },
   {
@@ -445,22 +711,34 @@
      "text": "Sow picks up a yellow for that foul on Mensah-Reid after intense pressing from both sides early in the 24th minute.",
      "still_false": [
       "intense pressing from both sides"
+     ],
+     "word_for_word": [
+      "intense pressing from both sides"
      ]
     },
     "self_check": {
      "text": "Sow is booked for a foul on Mensah-Reid after pressing him in a lively 24th minute.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Sow picks up a yellow for that foul on Mensah-Reid after intense pressing from both sides early in the 24th minute.",
      "still_false": [
       "intense pressing from both sides"
+     ],
+     "word_for_word": [
+      "intense pressing from both sides"
      ]
     },
     "captionvar": {
      "text": "Ibrahima Sow of Riverside United picks up a yellow card early in the 24th minute.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Both sides pressed in the build-up (Mensah-Reid, Brandt, Ashkenazi; Sow)."
    }
   },
   {
@@ -476,20 +754,34 @@
      "text": "Strand's big chance for Riverside United blocked after Sow's pressing win and quick pass forward, denying them an opening moment.",
      "still_false": [
       "Sow's pressing win"
+     ],
+     "word_for_word": [
+      "Sow's pressing win"
      ]
     },
     "self_check": {
      "text": "Strand’s big chance for Riverside United blocked after Sow’s pressing win and quick pass forward, denying them an opening moment.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "Sow's pressing win"
+     ]
     },
     "llm_judge": {
      "text": "Strand's big chance for Riverside United blocked after Sow's pressing win and quick pass forward, denying them an opening moment.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "Sow's pressing win"
+     ]
     },
     "captionvar": {
      "text": "Strand's big chance for Riverside United blocked after a quick pass forward.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Sow won the ball straight after a Riverside press (Ferran's); 'pressing win' is fair."
    }
   },
   {
@@ -505,6 +797,9 @@
      "text": "Riverside United boss 70% possession with 92% pass accuracy, Collymore linking up well before Sow’s latest touch on the break.",
      "still_false": [
       "Sow’s latest touch on the break"
+     ],
+     "word_for_word": [
+      "Sow’s latest touch on the break"
      ]
     },
     "self_check": {
@@ -512,18 +807,25 @@
      "still_false": [
       "Collymore and Lind combining well",
       "Sow’s latest touch"
-     ]
+     ],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Riverside United boss 70% possession with 92% pass accuracy, Collymore linking up well before Sow’s latest touch.",
      "still_false": [
       "Sow’s latest touch"
-     ]
+     ],
+     "word_for_word": []
     },
     "captionvar": {
      "text": "Riverside United boss 70% possession with 92% pass accuracy, Collymore linking up well.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Sow did touch the ball (Sow>Collymore)."
    }
   },
   {
@@ -537,22 +839,36 @@
    "aired": {
     "narrator_only": {
      "text": "Collymore’s thunderous strike denied by Nyman – easily Riverside’s best chance this season, and one of the finest saves Northbridge have ever made!",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "Nyman – easily Riverside’s best chance this season"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Collymore’s strike saved by Nyman – a big chance for Riverside United, but no goal.",
      "still_false": [
       "saved by Nyman"
-     ]
+     ],
+     "word_for_word": [],
+     "on_air_hand_checked": true
     },
     "llm_judge": {
      "text": "Collymore’s big chance for Riverside United is saved, keeping the score level at 61 minutes.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     },
     "captionvar": {
      "text": "Ezra Collymore’s thunderous strike for Riverside United was saved.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Nyman plays for Riverside, the shooter's own side; Hale is the Northbridge keeper."
    }
   },
   {
@@ -568,22 +884,34 @@
      "text": "Northbridge FC on a pressing streak with three final-third recoveries in five minutes, Ashkenazi forces Riverside’s Haddad into a giveaway.",
      "still_false": [
       "Ashkenazi forces Riverside’s Haddad into a giveaway"
+     ],
+     "word_for_word": [
+      "Ashkenazi forces Riverside’s Haddad into a giveaway"
      ]
     },
     "self_check": {
      "text": "Northbridge FC on a pressing streak with three final-third recoveries in five minutes, Ashkenazi presses Lind, leading to Haddad’s giveaway for Riverside United.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Northbridge FC on a pressing streak with three final-third recoveries in five minutes, Ashkenazi forces Riverside’s Haddad into a giveaway.",
      "still_false": [
       "Ashkenazi forces Riverside’s Haddad into a giveaway"
+     ],
+     "word_for_word": [
+      "Ashkenazi forces Riverside’s Haddad into a giveaway"
      ]
     },
     "captionvar": {
      "text": "Northbridge FC on a pressing streak with three final-third recoveries in five minutes.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Ashkenazi pressed and Haddad's next pass went astray."
    }
   },
   {
@@ -599,22 +927,34 @@
      "text": "Riverside United make a change as Oskar Nyman replaces Luca Benedetti under pressure from Northbridge's Mensah-Reid.",
      "still_false": [
       "Luca Benedetti under pressure from Northbridge's Mensah-Reid"
+     ],
+     "word_for_word": [
+      "Luca Benedetti under pressure from Northbridge's Mensah-Reid"
      ]
     },
     "self_check": {
      "text": "Riverside United bring on Oskar Nyman for Luca Benedetti as Mensah-Reid fouls Haddad under pressure from Northbridge.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Riverside United make a change as Oskar Nyman replaces Luca Benedetti under pressure from Northbridge's Mensah-Reid.",
      "still_false": [
       "Luca Benedetti under pressure from Northbridge's Mensah-Reid"
+     ],
+     "word_for_word": [
+      "Luca Benedetti under pressure from Northbridge's Mensah-Reid"
      ]
     },
     "captionvar": {
      "text": "Riverside United make a change as Oskar Nyman replaces Luca Benedetti.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Mensah-Reid pressed and tackled Benedetti."
    }
   },
   {
@@ -630,24 +970,42 @@
      "text": "Sami Okafor has reached 12 km for Northbridge FC as Quiroga wins the ball back after pressing Strand for Riverside United.",
      "still_false": [
       "pressing Strand for Riverside United"
-     ]
+     ],
+     "word_for_word": [
+      "pressing Strand for Riverside United"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Sami Okafor has reached 11 km for Northbridge FC as Quiroga wins the ball back after pressing Strand for Riverside United.",
      "still_false": [
       "pressing Strand for Riverside United"
-     ]
+     ],
+     "word_for_word": [
+      "pressing Strand for Riverside United"
+     ],
+     "on_air_hand_checked": true
     },
     "llm_judge": {
      "text": "Sami Okafor has reached 11 km for Northbridge FC as Quiroga wins the ball back after pressing Strand for Riverside United.",
      "still_false": [
       "pressing Strand for Riverside United"
-     ]
+     ],
+     "word_for_word": [
+      "pressing Strand for Riverside United"
+     ],
+     "on_air_hand_checked": true
     },
     "captionvar": {
      "text": "Sami Okafor has reached 11 km for Northbridge FC as Quiroga wins the ball back.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Quiroga intercepted without pressing; Saul made the press."
    }
   },
   {
@@ -663,20 +1021,34 @@
      "text": "Marsh levels for Northbridge FC at 3-2 after Ashkenazi’s slick assist, following a fierce press and neat passing move.",
      "still_false": [
       "following a fierce press"
+     ],
+     "word_for_word": [
+      "following a fierce press"
      ]
     },
     "self_check": {
      "text": "Marsh levels for Northbridge FC at 2-2 after Ashkenazi’s slick assist, following a fierce press and neat passing move.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "following a fierce press"
+     ]
     },
     "llm_judge": {
      "text": "Marsh levels for Northbridge FC at 2-2 after Ashkenazi’s slick assist, following a fierce press and neat passing move.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "following a fierce press"
+     ]
     },
     "captionvar": {
      "text": "Marsh levels for Northbridge FC at 2-2 after Ashkenazi’s slick assist, following a neat passing move that started with a press.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "A colour phrase about the move, bound to a named player by the extractor."
    }
   },
   {
@@ -692,22 +1064,34 @@
      "text": "Kenji Morita hits 11km for Riverside United as Bello’s risky pass gifts Northbridge a chance late on!",
      "still_false": [
       "Bello’s risky pass gifts Northbridge a chance late on"
+     ],
+     "word_for_word": [
+      "Bello’s risky pass gifts Northbridge a chance late on"
      ]
     },
     "self_check": {
      "text": "Kenji Morita hits 11km for Riverside United as Bello gives the ball away, handing Northbridge a late chance!",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Kenji Morita hits 11km for Riverside United as Bello’s risky pass gifts Northbridge a chance late on!",
      "still_false": [
       "Bello’s risky pass gifts Northbridge a chance late on"
+     ],
+     "word_for_word": [
+      "Bello’s risky pass gifts Northbridge a chance late on"
      ]
     },
     "captionvar": {
      "text": "Kenji Morita hits 11km for Riverside United.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Bello's pass did go out of play."
    }
   },
   {
@@ -723,11 +1107,17 @@
      "text": "Northbridge FC on a pressing spell with three final-third recoveries in five minutes, keeping Riverside United under pressure after Reyes' blocked shot.",
      "still_false": [
       "three final-third recoveries in five minutes"
+     ],
+     "word_for_word": [
+      "three final-third recoveries in five minutes"
      ]
     },
     "self_check": {
      "text": "Northbridge FC on a pressing spell with three final-third recoveries in five minutes, keeping Riverside United under pressure after Reyes' blocked shot.",
      "still_false": [
+      "three final-third recoveries in five minutes"
+     ],
+     "word_for_word": [
       "three final-third recoveries in five minutes"
      ]
     },
@@ -735,12 +1125,22 @@
      "text": "Northbridge FC on a pressing spell with three final-third recoveries in five minutes, keeping Riverside United under pressure after Reyes' blocked shot.",
      "still_false": [
       "three final-third recoveries in five minutes"
+     ],
+     "word_for_word": [
+      "three final-third recoveries in five minutes"
      ]
     },
     "captionvar": {
      "text": "Northbridge FC on a pressing spell with three final-third recoveries in five minutes, following Reyes' blocked shot.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "three final-third recoveries in five minutes"
+     ]
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Three final-third recoveries is right; the extractor checked it against the wrong count."
    }
   },
   {
@@ -756,22 +1156,40 @@
      "text": "Strand’s powerful strike for Riverside United is heroically blocked by Northbridge’s Quiroga, denying a big chance just before halftime.",
      "still_false": [
       "blocked by Northbridge’s Quiroga"
-     ]
+     ],
+     "word_for_word": [
+      "blocked by Northbridge’s Quiroga"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Strand’s powerful strike for Riverside United is blocked by Northbridge’s Quiroga, denying a big chance just before halftime.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "blocked by Northbridge’s Quiroga"
+     ],
+     "on_air_hand_checked": true
     },
     "llm_judge": {
      "text": "Strand’s powerful strike for Riverside United is heroically blocked by Northbridge’s Quiroga, denying a big chance just before halftime.",
      "still_false": [
       "blocked by Northbridge’s Quiroga"
-     ]
+     ],
+     "word_for_word": [
+      "blocked by Northbridge’s Quiroga"
+     ],
+     "on_air_hand_checked": true
     },
     "captionvar": {
      "text": "Strand’s powerful strike for Riverside United is heroically blocked, denying a big chance.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Quiroga did not make the block."
    }
   },
   {
@@ -787,24 +1205,36 @@
      "text": "Northbridge hold 54% possession with 86% pass accuracy. Brandt’s pressure forces Benedetti into a costly giveaway for Riverside.",
      "still_false": [
       "Benedetti into a costly giveaway"
+     ],
+     "word_for_word": [
+      "Benedetti into a costly giveaway"
      ]
     },
     "self_check": {
      "text": "Northbridge hold 54% possession with 86% pass accuracy. Brandt’s pressure forces Benedetti into a giveaway for Riverside.",
      "still_false": [
       "Benedetti into a giveaway"
-     ]
+     ],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Northbridge hold 54% possession with 86% pass accuracy. Brandt’s pressure forces Benedetti into a costly giveaway for Riverside.",
      "still_false": [
       "Benedetti into a costly giveaway"
+     ],
+     "word_for_word": [
+      "Benedetti into a costly giveaway"
      ]
     },
     "captionvar": {
      "text": "Northbridge hold 54% possession with 86% pass accuracy. Brandt’s pressure is notable in the match.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Brandt pressed and Benedetti's clearance went to Riverside; arguably not a giveaway, too close to call."
    }
   },
   {
@@ -822,11 +1252,18 @@
      "still_false": [
       "two turnovers in the final third over five minutes",
       "keeping Riverside under pressure"
-     ]
+     ],
+     "word_for_word": [
+      "two turnovers in the final third over five minutes",
+      "keeping Riverside under pressure"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Northbridge’s pressing spell yields three final third recoveries in five minutes, with Ashkenazi’s pressure forcing Abara’s giveaway. Riverside under the cosh.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     },
     "llm_judge": {
      "text": "Northbridge's pressing spell forces two turnovers in the final third over five minutes, keeping Riverside under pressure. Ashkenazi’s press leads to Abara’s giveaway.",
@@ -834,14 +1271,25 @@
       "two turnovers in the final third over five minutes",
       "keeping Riverside under pressure",
       "Abara’s giveaway"
-     ]
+     ],
+     "word_for_word": [
+      "two turnovers in the final third over five minutes",
+      "keeping Riverside under pressure"
+     ],
+     "on_air_hand_checked": true
     },
     "captionvar": {
      "text": "Northbridge's pressing spell forces three turnovers in the final third over five minutes. Ashkenazi’s press leads to Abara’s giveaway.",
      "still_false": [
       "Abara’s giveaway"
-     ]
+     ],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Three final-third turnovers, not two."
    }
   },
   {
@@ -855,22 +1303,34 @@
    "aired": {
     "narrator_only": {
      "text": "Northbridge hold 55% possession with 84% pass accuracy as Kerr battles hard but gives the ball away, prompting a Riverside press.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "Kerr battles hard"
+     ]
     },
     "self_check": {
      "text": "Northbridge hold 55% possession with 84% pass accuracy as Kerr wins and loses the ball, with Bello giving it away under pressure from Quiroga.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Northbridge hold 55% possession with 84% pass accuracy as Kerr battles hard but gives the ball away.",
      "still_false": [
       "Kerr battles hard"
+     ],
+     "word_for_word": [
+      "Kerr battles hard"
      ]
     },
     "captionvar": {
      "text": "Northbridge hold 55% possession with 84% pass accuracy as Kerr gives the ball away, prompting a Riverside press.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "'Battles hard' read as a press; Kerr did win and then lose the ball."
    }
   },
   {
@@ -886,22 +1346,34 @@
      "text": "Okafor hits 11km milestone for Northbridge, after Ashkenazi’s pass following Kerr’s intense work earlier.",
      "still_false": [
       "Kerr’s intense work"
+     ],
+     "word_for_word": [
+      "Kerr’s intense work"
      ]
     },
     "self_check": {
      "text": "Okafor hits 11km milestone for Northbridge after Ashkenazi’s pass, following Kerr’s earlier ball recovery and loss.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Okafor hits 11km milestone for Northbridge, after Ashkenazi’s pass following Kerr’s intense work earlier.",
      "still_false": [
       "Kerr’s intense work"
+     ],
+     "word_for_word": [
+      "Kerr’s intense work"
      ]
     },
     "captionvar": {
      "text": "Okafor hits 11km milestone for Northbridge, after Ashkenazi’s pass.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "'Intense work' read as a press."
    }
   },
   {
@@ -917,11 +1389,17 @@
      "text": "Marsh fires home after Ashkenazi’s clever pass, leveling it up for Northbridge FC against Riverside United!",
      "still_false": [
       "leveling it up for Northbridge FC against Riverside United"
+     ],
+     "word_for_word": [
+      "leveling it up for Northbridge FC against Riverside United"
      ]
     },
     "self_check": {
      "text": "Marsh fires home after Ashkenazi’s clever pass, leveling it up for Northbridge FC against Riverside United!",
      "still_false": [
+      "leveling it up for Northbridge FC against Riverside United"
+     ],
+     "word_for_word": [
       "leveling it up for Northbridge FC against Riverside United"
      ]
     },
@@ -929,12 +1407,20 @@
      "text": "Marsh fires home after Ashkenazi’s clever pass, leveling it up for Northbridge FC against Riverside United!",
      "still_false": [
       "leveling it up for Northbridge FC against Riverside United"
+     ],
+     "word_for_word": [
+      "leveling it up for Northbridge FC against Riverside United"
      ]
     },
     "captionvar": {
      "text": "Marsh fires home after Ashkenazi’s clever pass, leveling it up to 2-2 for Northbridge FC against Riverside United!",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "The goal did level it at 2-2; the scoreline was read wrongly."
    }
   },
   {
@@ -950,22 +1436,36 @@
      "text": "Sami Okafor hits 12km on the clock for Northbridge FC, as Ashkenazi presses Morita under Riverside United's late possession.",
      "still_false": [
       "Riverside United's late possession"
+     ],
+     "word_for_word": [
+      "Riverside United's late possession"
      ]
     },
     "self_check": {
      "text": "Sami Okafor reaches 12km for Northbridge FC, while Ashkenazi presses Morita during Riverside United’s late possession.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "Riverside United's late possession"
+     ]
     },
     "llm_judge": {
      "text": "Sami Okafor hits 12km on the clock for Northbridge FC, as Ashkenazi presses Morita under Riverside United's late possession.",
      "still_false": [
       "Riverside United's late possession"
+     ],
+     "word_for_word": [
+      "Riverside United's late possession"
      ]
     },
     "captionvar": {
      "text": "Sami Okafor hits 12km on the clock for Northbridge FC, as Ashkenazi presses Morita late in the match.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "'Late possession' read as a possession percentage."
    }
   },
   {
@@ -981,6 +1481,9 @@
      "text": "Riverside United on the front foot with three final third recoveries in five minutes, Morita and Benedetti’s pressing forcing Okafor into a costly error.",
      "still_false": [
       "Benedetti’s pressing"
+     ],
+     "word_for_word": [
+      "Benedetti’s pressing"
      ]
     },
     "self_check": {
@@ -989,18 +1492,27 @@
       "Morita forcing Okafor into a crucial giveaway",
       "Benedetti forcing Okafor into a crucial giveaway",
       "Benedetti forcing Okafor into a crucial giveaway"
-     ]
+     ],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Riverside United on the front foot with three final third recoveries in five minutes, Morita and Benedetti’s pressing forcing Okafor into a costly error.",
      "still_false": [
       "Benedetti’s pressing"
+     ],
+     "word_for_word": [
+      "Benedetti’s pressing"
      ]
     },
     "captionvar": {
      "text": "Riverside United on the front foot with three final third recoveries in five minutes, Morita’s pressing forcing Okafor into a costly error.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Benedetti pressed in the same spell, though on Quiroga."
    }
   },
   {
@@ -1016,22 +1528,34 @@
      "text": "Northbridge FC hold 52% possession with 81% pass accuracy after a neat sequence from Pell to Ashkenazi at 33 minutes.",
      "still_false": [
       "a neat sequence from Pell to Ashkenazi"
+     ],
+     "word_for_word": [
+      "a neat sequence from Pell to Ashkenazi"
      ]
     },
     "self_check": {
      "text": "Northbridge FC hold 52% possession with 81% pass accuracy after a neat sequence from Pell through Doyle, Mensah-Reid, Quiroga to Ashkenazi at 33 minutes.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Northbridge FC hold 52% possession with 81% pass accuracy after a neat sequence from Pell to Ashkenazi at 33 minutes.",
      "still_false": [
       "a neat sequence from Pell to Ashkenazi"
+     ],
+     "word_for_word": [
+      "a neat sequence from Pell to Ashkenazi"
      ]
     },
     "captionvar": {
      "text": "Northbridge FC hold 52% possession with 81% pass accuracy at 33 minutes.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "The move went Pell>Doyle>...>Quiroga>Ashkenazi."
    }
   },
   {
@@ -1047,11 +1571,17 @@
      "text": "Northbridge FC on a pressing spell with Ashkenazi forcing Morita into a giveaway, recovering three balls in the final third in the last five minutes.",
      "still_false": [
       "Ashkenazi forcing Morita into a giveaway"
+     ],
+     "word_for_word": [
+      "Ashkenazi forcing Morita into a giveaway"
      ]
     },
     "self_check": {
      "text": "Northbridge FC on a pressing spell with Ashkenazi forcing Morita into a giveaway, recovering three balls in the final third in the last five minutes.",
      "still_false": [
+      "Ashkenazi forcing Morita into a giveaway"
+     ],
+     "word_for_word": [
       "Ashkenazi forcing Morita into a giveaway"
      ]
     },
@@ -1059,12 +1589,20 @@
      "text": "Northbridge FC on a pressing spell with Ashkenazi forcing Morita into a giveaway, recovering three balls in the final third in the last five minutes.",
      "still_false": [
       "Ashkenazi forcing Morita into a giveaway"
+     ],
+     "word_for_word": [
+      "Ashkenazi forcing Morita into a giveaway"
      ]
     },
     "captionvar": {
      "text": "Northbridge FC on a pressing spell, recovering three balls in the final third in the last five minutes.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Ashkenazi pressed and Morita's next pass went astray."
    }
   },
   {
@@ -1080,22 +1618,34 @@
      "text": "Riverside United make a change: Remy Castell replaces Pablo Ferrán as the pressure builds after Morita was fouled by Okafor.",
      "still_false": [
       "Morita was fouled by Okafor"
+     ],
+     "word_for_word": [
+      "Morita was fouled by Okafor"
      ]
     },
     "self_check": {
      "text": "Riverside United bring on Remy Castell for Pablo Ferrán as Morita is fouled by Okafor, keeping the pressure on Northbridge FC.",
      "still_false": [
       "Morita is fouled by Okafor"
-     ]
+     ],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Riverside United make a change: Remy Castell replaces Pablo Ferrán as the pressure builds after Morita was fouled by Okafor.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "Morita was fouled by Okafor"
+     ]
     },
     "captionvar": {
      "text": "Riverside United make a change: Remy Castell replaces Pablo Ferrán.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Okafor did foul Morita; the passive voice swapped the players."
    }
   },
   {
@@ -1111,22 +1661,34 @@
      "text": "Northbridge make a change as Bastien Kerr replaces Dario Vence. Recent chances for Northbridge, but Riverside’s Abara keeps them at bay.",
      "still_false": [
       "Riverside’s Abara keeps them at bay"
+     ],
+     "word_for_word": [
+      "Riverside’s Abara keeps them at bay"
      ]
     },
     "self_check": {
      "text": "Northbridge make a change as Bastien Kerr replaces Dario Vence. Recent chances for Northbridge, but Riverside’s Abara blocks the shot.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Northbridge make a change as Bastien Kerr replaces Dario Vence. Recent chances for Northbridge, but Riverside’s Abara keeps them at bay.",
      "still_false": [
       "Riverside’s Abara keeps them at bay"
+     ],
+     "word_for_word": [
+      "Riverside’s Abara keeps them at bay"
      ]
     },
     "captionvar": {
      "text": "Northbridge make a change as Bastien Kerr replaces Dario Vence.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Abara blocked the shot; 'keeps them at bay' was read as a save."
    }
   },
   {
@@ -1142,20 +1704,32 @@
      "text": "Big chance for Riverside United as Collymore fires a shot, but the Northbridge keeper makes a superb save to deny him.",
      "still_false": [
       "the Northbridge keeper makes a superb save to deny him"
+     ],
+     "word_for_word": [
+      "the Northbridge keeper makes a superb save to deny him"
      ]
     },
     "self_check": {
      "text": "Big chance for Riverside United as Strand’s shot is brilliantly saved by the Northbridge keeper after Collymore’s pass.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Big chance for Riverside United as Viktor Strand fires a shot, but the Northbridge keeper makes a superb save to deny him.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "the Northbridge keeper makes a superb save to deny him"
+     ]
     },
     "captionvar": {
      "text": "Big chance for Riverside United as Viktor Strand fires a shot, but the Northbridge keeper saves it.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Part of the planted wrong shooter, not a separate error."
    }
   },
   {
@@ -1171,20 +1745,30 @@
      "text": "Ashkenazi’s pressing win sets up Okafor, who feeds Doyle for a neat finish! Northbridge FC pulls one back, now 1-3 to Riverside United.",
      "still_false": [
       "Okafor, who feeds Doyle"
+     ],
+     "word_for_word": [
+      "Okafor, who feeds Doyle"
      ]
     },
     "self_check": {
      "text": "Ashkenazi’s pressing win sets up Okafor, who feeds Reyes for a neat finish! Northbridge FC pulls one back, now 1-3 to Riverside United.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "llm_judge": {
      "text": "Ashkenazi’s pressing win sets up Okafor, who feeds Reyes for a neat finish! Northbridge FC pulls one back, now 1-3 to Riverside United.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     },
     "captionvar": {
      "text": "Ashkenazi’s pressing win sets up Okafor, who assists Callum Reyes for a neat finish! Northbridge FC pulls one back, now 1-3 to Riverside United.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Part of the planted wrong scorer, not a separate error."
    }
   },
   {
@@ -1200,24 +1784,42 @@
      "text": "Reyes’ shot saved brilliantly, Northbridge FC’s best chance of the entire league season, thanks to Hale’s pressing and slick passing through Ashkenazi, Darby, and Okafor.",
      "still_false": [
       "Hale’s pressing"
-     ]
+     ],
+     "word_for_word": [
+      "Hale’s pressing"
+     ],
+     "on_air_hand_checked": true
     },
     "self_check": {
      "text": "Reyes’ shot saved, a big chance for Northbridge FC after Hale’s pressing and slick passing through Ashkenazi, Darby, and Okafor.",
      "still_false": [
       "Hale’s pressing"
-     ]
+     ],
+     "word_for_word": [
+      "Hale’s pressing"
+     ],
+     "on_air_hand_checked": true
     },
     "llm_judge": {
      "text": "Reyes’ shot saved brilliantly, a big chance for Northbridge FC, created by Hale’s pressing and passing through Ashkenazi, Darby, and Okafor.",
      "still_false": [
       "Hale’s pressing"
-     ]
+     ],
+     "word_for_word": [
+      "Hale’s pressing"
+     ],
+     "on_air_hand_checked": true
     },
     "captionvar": {
      "text": "Callum Reyes’ shot saved brilliantly, a big chance for Northbridge FC, with slick passing through Ashkenazi, Darby, and Okafor.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [],
+     "on_air_hand_checked": false
     }
+   },
+   "hand_check": {
+    "verdict": "real",
+    "note": "Hale intercepted; he did not press."
    }
   },
   {
@@ -1235,6 +1837,9 @@
      "still_false": [
       "Doyle press hard on Riverside's Benedetti",
       "Mensah-Reid press hard on Riverside's Bello"
+     ],
+     "word_for_word": [
+      "Doyle press hard on Riverside's Benedetti"
      ]
     },
     "self_check": {
@@ -1242,16 +1847,27 @@
      "still_false": [
       "Doyle press hard on Riverside's Benedetti",
       "Mensah-Reid press hard on Riverside's Bello"
+     ],
+     "word_for_word": [
+      "Doyle press hard on Riverside's Benedetti"
      ]
     },
     "llm_judge": {
      "text": "Northbridge FC hold 54% possession with 84% pass accuracy as Mensah-Reid and Doyle press hard on Riverside's Benedetti and Bello.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": [
+      "Doyle press hard on Riverside's Benedetti"
+     ]
     },
     "captionvar": {
      "text": "Northbridge FC hold 54% possession with 84% pass accuracy as Mensah-Reid presses hard on Riverside's Benedetti and Doyle presses hard on Bello.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Mensah-Reid and Doyle both pressed; only the pairing differs."
    }
   },
   {
@@ -1267,24 +1883,38 @@
      "text": "Kenji Morita hits 11km for Riverside United as Northbridge's Okafor wins the ball back and finds Darby under pressure from Benedetti.",
      "still_false": [
       "Darby under pressure from Benedetti"
+     ],
+     "word_for_word": [
+      "Darby under pressure from Benedetti"
      ]
     },
     "self_check": {
      "text": "Kenji Morita hits 11km for Riverside United as Northbridge's Okafor wins the ball back and passes to Darby under pressure from Benedetti.",
      "still_false": [
       "under pressure from Benedetti"
+     ],
+     "word_for_word": [
+      "Darby under pressure from Benedetti"
      ]
     },
     "llm_judge": {
      "text": "Kenji Morita hits 11km for Riverside United as Northbridge's Okafor wins the ball back and finds Darby under pressure from Benedetti.",
      "still_false": [
       "Darby under pressure from Benedetti"
+     ],
+     "word_for_word": [
+      "Darby under pressure from Benedetti"
      ]
     },
     "captionvar": {
      "text": "Kenji Morita hits 11km for Riverside United as Northbridge's Okafor wins the ball back and finds Darby.",
-     "still_false": []
+     "still_false": [],
+     "word_for_word": []
     }
+   },
+   "hand_check": {
+    "verdict": "false alarm",
+    "note": "Benedetti pressed Okafor just before Okafor found Darby."
    }
   }
  ],
