@@ -449,7 +449,7 @@ export default function App() {
 
       <footer className="colophon">
         <p>Built for the Microsoft × Premier League Inside the Game hackathon. All clubs, players and events are synthetic.</p>
-        <p><a href="https://github.com/joelynli0110/captionvar-live-starter">Source on GitHub</a></p>
+        <p><a href="https://github.com/joelynli0110/captionvar">Source on GitHub</a></p>
       </footer>
     </div>
   );
