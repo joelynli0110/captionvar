@@ -213,6 +213,8 @@ python agents\run_match.py --out public\traces\foundry-demo.json --rpm 30
 
 Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. In Application Insights, **Transaction search** then opens any caption as one timeline of every agent call, with the referee's verdict and evidence on its span ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 18 workflow tests the same way. `--no-insights` and `--no-recaps` skip the Analyst and the recaps.
 
+**Foundry evaluators** on what aired ([what it measures](docs/EVALUATION.md#foundry-evaluators)): `pip install -r agents\requirements-eval.txt`, then `python agents\foundry_eval.py --trace public\traces\foundry-demo.json`.
+
 To replay a run you made, put it in `public/traces/` and open the demo with `?trace=<file>.json`. `?at=77`, `?at=HT` or `?at=FT` starts playback at that point.
 
 **The referee over MCP** needs only Node.js: `node scripts/referee-mcp.mjs` serves it on stdio. In VS Code, open the repository and start `captionvar-referee` from `.vscode/mcp.json`; Copilot agent mode can then check a caption with `check_caption`.

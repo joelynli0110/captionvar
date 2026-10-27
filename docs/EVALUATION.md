@@ -74,6 +74,32 @@ The same match, the same seeded red-team plan, gpt-4.1-nano behind every agent i
 
 So on this match the referee turned the model into a cost and quality dial: the cheaper model cost fluency and context, not correctness. One match is a small sample.
 
+## Foundry evaluators
+
+A second opinion on what aired, from Microsoft Foundry's built-in evaluators (the `azure-ai-evaluation` SDK, 1.16.9), next to the code referee. `agents/foundry_eval.py` reads a trace and scores:
+
+- **What aired**: every caption, line of context and recap sentence. Captions are split by what the referee did: verified, trimmed, withheld then corrected, built from data. Lines and recap sentences are verified or rewritten.
+- **The first drafts the referee stopped**, scored the same way. Each is labelled with what is known about it: a planted red-team error, an error the narrator made on its own (checked by hand, [`demo-adjudication.json`](demo-adjudication.json)), a true detail flagged by mistake, or unreviewed. A groundedness fail means the evaluator also caught the draft.
+
+| Evaluator | Reads | Question |
+|---|---|---|
+| Groundedness | the text and the facts | Is every statement backed by the facts? |
+| Coherence | the text and its brief | Does it read as one clear answer? |
+| Fluency | the text | Is it well written? |
+
+Scores are 1 to 5; 3 or more passes (the SDK's default). The facts are what the agent that wrote the text was given, rebuilt from the match seed by the factbox: the narrator's moment facts and recent play, the Analyst's running numbers, or the recap facts. Squad lists are left out, as for the LLM judge above. The evaluators are a model judge too, so their scores are an opinion, not ground truth. The groundedness rubric also rewards completeness: a short caption that is true but leaves facts out can score below 5.
+
+```powershell
+pip install -r agents\requirements-eval.txt
+$env:FOUNDRY_PROJECT_ENDPOINT = "<project endpoint from the Foundry portal>"
+$env:FOUNDRY_MODEL = "gpt-4.1-mini"
+python agents\foundry_eval.py --trace public\traces\foundry-demo.json
+```
+
+It writes `public/traces/eval/foundry-evaluators.foundry-demo.json` (scores per text and totals by kind, by what the referee did, and for the stopped drafts) and the inputs it sent, as JSONL. The evaluators call the deployment in `FOUNDRY_MODEL` at the Foundry resource's Azure OpenAI endpoint, `https://<resource>.openai.azure.com/`; set `AZURE_OPENAI_ENDPOINT` if yours differs. Sign-in is `az login` (DefaultAzureCredential), no keys. `--dry-run` builds every input without calling Azure; `--limit N` scores only the first N; `--log-to-foundry` also uploads the run to the project's Evaluation page, after the local results are saved (best effort).
+
+**Results: not run yet.** They will be added here after a run on the published trace.
+
 ## Limits
 
 - The 11 own errors come from 5 matches with one model. The direction is clear (8 and 7 against 0), but the sample is small.
