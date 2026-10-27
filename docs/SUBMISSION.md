@@ -16,4 +16,4 @@ Everyone checks the numbers. But 10 of the 11 errors our narrator made on its ow
 
 **The problem it solves.** A language model can describe a match well and still name the wrong player, and a broadcaster can't air that. Asking a second model to judge the first is not enough. Over five matches, an LLM judge caught every planted error but stopped only 4 of the 11 errors the narrator made on its own; CaptionVAR stopped all 11. It missed one planted superlative, which a code guard added since now flags. The matches have not yet been re-run with that guard.
 
-Live demo: https://joelynli0110.github.io/captionvar/ · Code: https://github.com/joelynli0110/captionvar
+Video: https://www.youtube.com/watch?v=1QV7cPcsiHo · Live demo: https://joelynli0110.github.io/captionvar/ · Code: https://github.com/joelynli0110/captionvar
