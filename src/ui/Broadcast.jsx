@@ -17,14 +17,15 @@ export function ScoreBug({ teams, score, clock }) {
 export const reduceMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** How long each phase of an on-air caption lasts, in real milliseconds. */
-export const PHASE_MS = { checking: 1100, review: 3600 };
+export const PHASE_MS = { checking: 900, review: 4400 };
 
 /**
- * A new caption first shows the VAR check in progress. When the check changed
- * the caption, a review card takes over the screen for a moment, like a VAR
- * decision on a stadium screen; then the caption that is allowed to air shows
- * in the lower third. The animation is presentational: the decision itself
- * was made from the data before the caption reached here.
+ * Every new caption gets a short VAR check: the draft sits in the lower third
+ * while a scan line passes over it. When the check changed the caption, the
+ * full VAR moment plays (VarCheck below): the picture freezes, the false words
+ * are struck as the line reaches them, the evidence is drawn on the pitch, the
+ * decision is stamped, and the caption that may air wipes in. The animation is
+ * presentational: the decision was made from the data before it reached here.
  */
 export function useOnAirPhase(decision) {
   const [phase, setPhase] = useState('aired');
@@ -53,43 +54,90 @@ export function Draft({ decision, className = 'candidate' }) {
   );
 }
 
-export function ReviewCard({ decision, text }) {
+/** Timings inside the VAR moment (ms from its start); CSS reads them as delays. */
+const SCAN_MS = 1500;
+const STAMP_MS = 1750;
+const SWAP_MS = 2700;
+
+/**
+ * The draft as the scan line passes over it: each rejected segment is struck
+ * when the line reaches it (its delay is its position in the text).
+ */
+function ScannedDraft({ decision }) {
+  const status = Object.fromEntries(decision.verdict.claims.map(c => [c.id, c.status]));
+  const total = decision.segments.reduce((n, s) => n + s.text.length, 0) || 1;
+  let at = 0;
+  return (
+    <p className="lt-text lt-draft">
+      {decision.segments.map((s, i) => {
+        const start = at;
+        at += s.text.length;
+        const st = s.claim ? status[s.claim] : null;
+        const hit = st === 'contradicted' || st === 'unverifiable';
+        return (
+          <span key={i} className={hit ? `seg seg-hit seg-hit-${st}` : 'seg'}
+            style={hit ? { animationDelay: `${Math.round((start / total) * SCAN_MS)}ms` } : undefined}>
+            {s.text}
+          </span>
+        );
+      })}
+    </p>
+  );
+}
+
+/** The VAR bug and the decision stamp, over a frozen, desaturated picture. */
+export function VarCheck({ decision, clock }) {
   const v = VERDICT[decision.verdict.status];
   const why = firstDraft(decision).flags[0];
   return (
-    <div className={`review-card tone-${v.tone}`} role="status" aria-live="assertive">
-      <div className="rc-head">
-        <span className="rc-var">VAR</span>
-        <span className="rc-decision">{v.decision}</span>
-        <span className="rc-minute">{decision.display_minute}</span>
+    <div className={`var-check tone-${v.tone}`} role="status" aria-live="assertive">
+      <div className="var-bug"><span>VAR</span><b>CHECK</b><i>{clock}</i></div>
+      <div className="var-stamp" style={{ animationDelay: `${STAMP_MS}ms` }}>
+        <span className="vs-complete">Check complete</span>
+        <strong>{v.decision}</strong>
+        {why && <span className="vs-why">{why.note}</span>}
       </div>
-      <Draft decision={decision} className="rc-draft" />
-      {why && <p className="rc-why">{why.note}</p>}
-      <p className="rc-air"><span>On air</span>{text}</p>
     </div>
   );
 }
 
-export function LowerThird({ decision, text, lang, phase, insight }) {
-  if (!decision || phase === 'review') return null;
+export function LowerThird({ decision, text, lang, phase, insight, feed = 'production' }) {
+  if (!decision) return null;
   const v = VERDICT[decision.verdict.status];
+  // The viewer feed shows only what airs: no check, no verdict.
+  if (feed === 'viewer') {
+    return (
+      <div className="lower-third tone-live" aria-live="polite" lang={lang}>
+        <div className="lt-tag">Live<span className="lt-minute">{decision.display_minute}</span></div>
+        <div className="lt-body">
+          <p className="lt-text">{text}</p>
+          {insight && <p className="lt-why" lang="en"><span>Why it matters</span>{insight}</p>}
+        </div>
+      </div>
+    );
+  }
   const checking = phase === 'checking';
-  const claims = decision.claims.length;
+  const review = phase === 'review';
   return (
-    <div className={`lower-third ${checking ? 'is-checking' : `tone-${v.tone}`}`} aria-live="polite" lang={lang}>
+    <div className={`lower-third ${checking || review ? 'is-checking' : `tone-${v.tone}`}${review ? ` is-review tone-${v.tone}` : ''}`} aria-live="polite" lang={lang}>
       <div className="lt-tag">
-        {checking ? 'VAR check' : v.air}
+        {checking ? 'VAR check' : review ? <span className="lt-flip" style={{ animationDelay: `${SWAP_MS}ms` }}><span>VAR check</span><span>{v.air}</span></span> : v.air}
         <span className="lt-minute">{decision.display_minute}</span>
       </div>
       <div className="lt-body">
-        <p className="lt-text">
-          {checking ? `Checking ${claims} claim${claims === 1 ? '' : 's'} against the match data` : text}
-        </p>
-        {!checking && insight && (
+        {checking && <p className="lt-text lt-draft">{firstDraft(decision).text}</p>}
+        {review && (
+          <div className="lt-swap">
+            <ScannedDraft decision={decision} />
+            <p className="lt-text lt-aired" style={{ animationDelay: `${SWAP_MS}ms` }}>{text}</p>
+          </div>
+        )}
+        {!checking && !review && <p className="lt-text">{text}</p>}
+        {!checking && !review && insight && (
           <p className="lt-why" lang="en"><span>Why it matters</span>{insight}</p>
         )}
       </div>
-      {checking && <span className="lt-scan" aria-hidden="true" />}
+      {(checking || review) && <span className="lt-scanline" style={{ animationDuration: `${checking ? PHASE_MS.checking - 100 : SCAN_MS}ms` }} aria-hidden="true" />}
     </div>
   );
 }

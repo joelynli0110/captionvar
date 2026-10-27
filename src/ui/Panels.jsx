@@ -94,6 +94,35 @@ export function LanguageChips({ value, onChange }) {
   );
 }
 
+/**
+ * Production shows the VAR at work; the viewer feed shows only what airs.
+ */
+export function FeedSwitch({ value, onChange }) {
+  return (
+    <div className="feed-switch" role="radiogroup" aria-label="Picture">
+      {[['production', 'Production'], ['viewer', 'Viewer feed']].map(([v, label]) => (
+        <button key={v} type="button" role="radio" aria-checked={value === v} className={value === v ? 'on' : ''} onClick={() => onChange(v)}>{label}</button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The five-match result as a full-time score: of the errors the narrator
+ * made on its own (confirmed by hand), how many each checker kept off air.
+ */
+export function Scoreboard({ result }) {
+  return (
+    <section className="scoreboard" aria-label={`Result over five matches: of ${result.own} errors the narrator made on its own, an LLM judge stopped ${result.judge}, CaptionVAR stopped ${result.captionvar}.`}>
+      <span className="sb-label">Full time · 5 matches<small>The narrator's own errors stopped, of {result.own}</small></span>
+      <span className="sb-team">LLM judge</span>
+      <span className="sb-score"><b>{result.judge}</b><i>–</i><b className="win">{result.captionvar}</b></span>
+      <span className="sb-team win">CaptionVAR</span>
+      <a className="sb-more" href="https://github.com/joelynli0110/captionvar-live-starter/blob/master/docs/EVALUATION.md">Self-check {result.selfCheck} · checked by hand · method</a>
+    </section>
+  );
+}
+
 const ROWS = [
   ['Possession', s => `${s.possession.home ?? 0}%`, s => `${s.possession.away ?? 0}%`],
   ['xG', s => s.home.xg.toFixed(2), s => s.away.xg.toFixed(2)],

@@ -159,12 +159,12 @@ function Kpis({ summary, own, lines, calls }) {
       {planted > 0 && (
         <div className="kpi-main">
           <dd>{summary.caught + lines.caught}<small>/{planted}</small></dd>
-          <dt>planted errors caught</dt>
+          <dt>planted caught</dt>
         </div>
       )}
-      {own > 0 && <div className="kpi-own"><dd>{own}</dd><dt>of its own errors stopped</dt></div>}
+      {own > 0 && <div className="kpi-own"><dd>{own}</dd><dt>own stopped</dt></div>}
       {!(own > 0) && <div><dd>{calls}</dd><dt>VAR calls</dt></div>}
-      <div><dd>{summary.captions}</dd><dt>captions checked</dt></div>
+      <div><dd>{summary.captions}</dd><dt>checked</dt></div>
     </dl>
   );
 }
@@ -195,7 +195,7 @@ export default function VarRoom({ decisions, recaps = [], liveId, selectedId, on
     <section className="var-room" aria-label="VAR room">
       <header className="vr-head">
         <div className="vr-title">
-          <h2>VAR room</h2>
+          <h2>VAR room <span className="rec">REC</span></h2>
           <button type="button" className="link" onClick={onExplain}>How it works</button>
         </div>
         <Kpis summary={summary} own={decisions.filter(d => d.own_error && d.verdict.status !== 'VERIFY').length} lines={lineScore(decisions, recaps)} calls={calls.length} />
