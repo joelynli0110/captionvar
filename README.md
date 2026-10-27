@@ -8,7 +8,7 @@ A multi-agent system on **Microsoft Foundry** where one agent writes live footba
 
 **[Open the live demo](https://joelynli0110.github.io/captionvar-live-starter/)**. It needs no sign-in and opens at 72:30 of a synthetic match, playing at 8× speed.
 
-![CaptionVAR replaying the Foundry run: a wrong substitute corrected before it airs, the line on why the equaliser matters, an error the narrator made on its own caught, and the checked full-time recap](docs/media/demo.gif)
+![CaptionVAR replaying the Foundry run: a long-pass tag over both teams' shape, a wrong substitute corrected before it airs, the line on why the equaliser matters, an error the narrator made on its own caught, and the checked full-time recap](docs/media/demo.gif)
 
 ## The problem
 
