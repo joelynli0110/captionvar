@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { VERDICT, firstDraft } from './data.js';
+import { callableClaims } from '../broadcast/game.js';
+
+export { scoreCall } from '../broadcast/game.js';
 
 export function ScoreBug({ teams, score, clock }) {
   return (
@@ -17,7 +20,7 @@ export function ScoreBug({ teams, score, clock }) {
 export const reduceMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** How long each phase of an on-air caption lasts, in real milliseconds. */
-export const PHASE_MS = { checking: 900, review: 4400 };
+export const PHASE_MS = { checking: 900, review: 5000 };
 
 /**
  * Every new caption gets a short VAR check: the draft sits in the lower third
@@ -27,9 +30,11 @@ export const PHASE_MS = { checking: 900, review: 4400 };
  * decision is stamped, and the caption that may air wipes in. The animation is
  * presentational: the decision was made from the data before it reached here.
  */
-export function useOnAirPhase(decision) {
+export function useOnAirPhase(decision, awaiting = false) {
   const [phase, setPhase] = useState('aired');
   useEffect(() => {
+    // Beat the VAR: the draft waits on screen until the viewer makes a call.
+    if (decision && awaiting) { setPhase('guess'); return undefined; }
     if (!decision || reduceMotion()) { setPhase('aired'); return undefined; }
     const changed = decision.verdict.status !== 'VERIFY';
     setPhase('checking');
@@ -38,8 +43,32 @@ export function useOnAirPhase(decision) {
     return () => timers.forEach(clearTimeout);
     // Keyed on the decision object, not its id: the agent trace and the test
     // narrator reuse caption ids, and switching source must restart the check.
-  }, [decision]);
+  }, [decision, awaiting]);
   return phase;
+}
+
+/**
+ * Beat the VAR: the draft before the check, with each claim a word the
+ * viewer can tap to call it false. Locking in starts the real check.
+ */
+export function GuessDraft({ decision, flagged, onToggle, onLock }) {
+  const callable = new Set(callableClaims(decision).map(c => c.id));
+  return (
+    <div className="guess">
+      <p className="lt-text lt-guess">
+        {decision.segments.map((s, i) => (callable.has(s.claim)
+          ? (
+            <button key={i} type="button" className={`seg-call${flagged.has(s.claim) ? ' is-flagged' : ''}`}
+              aria-pressed={flagged.has(s.claim)} onClick={() => onToggle(s.claim)}>{s.text}</button>
+          )
+          : <span key={i}>{s.text}</span>))}
+      </p>
+      <div className="guess-bar">
+        <span>Tap what you think is false</span>
+        <button type="button" className="guess-lock" onClick={onLock}>{flagged.size ? `Call ${flagged.size} false` : 'Looks right'}</button>
+      </div>
+    </div>
+  );
 }
 
 /** The narrator's draft with the words the check rejected marked. */
@@ -56,8 +85,10 @@ export function Draft({ decision, className = 'candidate' }) {
 
 /** Timings inside the VAR moment (ms from its start); CSS reads them as delays. */
 const SCAN_MS = 1500;
-const STAMP_MS = 1750;
-const SWAP_MS = 2700;
+export const REWIND_MS = 700; // the play runs back to the evidence
+export const REPLAY_MS = 2100; // then forward again, slowed down
+export const STAMP_MS = REWIND_MS + REPLAY_MS;
+const SWAP_MS = STAMP_MS + 900;
 
 /**
  * The draft as the scan line passes over it: each rejected segment is struck
@@ -86,12 +117,17 @@ function ScannedDraft({ decision }) {
 }
 
 /** The VAR bug and the decision stamp, over a frozen, desaturated picture. */
-export function VarCheck({ decision, clock }) {
+export function VarCheck({ decision, clock, replay = null }) {
   const v = VERDICT[decision.verdict.status];
   const why = firstDraft(decision).flags[0];
   return (
     <div className={`var-check tone-${v.tone}`} role="status" aria-live="assertive">
       <div className="var-bug"><span>VAR</span><b>CHECK</b><i>{clock}</i></div>
+      {replay && (
+        <div className={`replay-bug is-${replay}`} aria-hidden="true">
+          {replay === 'rewind' ? <><svg viewBox="0 0 20 12"><path d="M10 0v12L2 6zM19 0v12l-8-6z" /></svg>Rewind</> : <><svg viewBox="0 0 12 12"><path d="M2 0l9 6-9 6z" /></svg>Replay · slow</>}
+        </div>
+      )}
       <div className="var-stamp" style={{ animationDelay: `${STAMP_MS}ms` }}>
         <span className="vs-complete">Check complete</span>
         <strong>{v.decision}</strong>
@@ -101,7 +137,7 @@ export function VarCheck({ decision, clock }) {
   );
 }
 
-export function LowerThird({ decision, text, lang, phase, insight, feed = 'production' }) {
+export function LowerThird({ decision, text, lang, phase, insight, feed = 'production', game = null, result = null }) {
   if (!decision) return null;
   const v = VERDICT[decision.verdict.status];
   // The viewer feed shows only what airs: no check, no verdict.
@@ -116,10 +152,18 @@ export function LowerThird({ decision, text, lang, phase, insight, feed = 'produ
       </div>
     );
   }
+  if (phase === 'guess' && game) {
+    return (
+      <div className="lower-third is-checking is-guess" lang="en">
+        <div className="lt-tag">Your call<span className="lt-minute">{decision.display_minute}</span></div>
+        <div className="lt-body"><GuessDraft decision={decision} {...game} /></div>
+      </div>
+    );
+  }
   const checking = phase === 'checking';
   const review = phase === 'review';
   return (
-    <div className={`lower-third ${checking || review ? 'is-checking' : `tone-${v.tone}`}${review ? ` is-review tone-${v.tone}` : ''}`} aria-live="polite" lang={lang}>
+    <div className={`lower-third ${checking || review ? 'is-checking' : `tone-${v.tone}`}${review ? ` is-review tone-${v.tone}` : ''}`} aria-live="polite" lang={lang} style={{ '--swap-ms': `${SWAP_MS}ms` }}>
       <div className="lt-tag">
         {checking ? 'VAR check' : review ? <span className="lt-flip" style={{ animationDelay: `${SWAP_MS}ms` }}><span>VAR check</span><span>{v.air}</span></span> : v.air}
         <span className="lt-minute">{decision.display_minute}</span>
@@ -133,6 +177,7 @@ export function LowerThird({ decision, text, lang, phase, insight, feed = 'produ
           </div>
         )}
         {!checking && !review && <p className="lt-text">{text}</p>}
+        {!checking && !review && result && <CallResult result={result} />}
         {!checking && !review && insight && (
           <p className="lt-why" lang="en"><span>Why it matters</span>{insight}</p>
         )}
@@ -140,6 +185,16 @@ export function LowerThird({ decision, text, lang, phase, insight, feed = 'produ
       {(checking || review) && <span className="lt-scanline" style={{ animationDuration: `${checking ? PHASE_MS.checking - 100 : SCAN_MS}ms` }} aria-hidden="true" />}
     </div>
   );
+}
+
+/** How the viewer's call compared with the referee's, shown once the caption airs. */
+function CallResult({ result }) {
+  const { caught, missed, falseAlarms, total, right } = result;
+  const detail = [
+    total ? `${caught}/${total} false claim${total === 1 ? '' : 's'} spotted` : 'nothing false in it',
+    falseAlarms ? `${falseAlarms} true claim${falseAlarms === 1 ? '' : 's'} called false` : null,
+  ].filter(Boolean).join(' · ');
+  return <p className={`call-result ${right ? 'is-right' : 'is-wrong'}`}><b>{right ? 'Spot on' : missed ? 'The VAR saw more' : 'Over-ruled'}</b>{detail}</p>;
 }
 
 /** A line of context or recap sentence as first written, with what the check rejected marked. */
