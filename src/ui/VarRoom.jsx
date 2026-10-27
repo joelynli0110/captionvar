@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { VERDICT, firstDraft } from './data.js';
 import { Draft, LineDraft } from './Broadcast.jsx';
 import { overlayRecord } from '../broadcast/trace.js';
@@ -156,18 +156,10 @@ export default function VarRoom({ decisions, recaps = [], liveId, selectedId, on
   const [filter, setFilter] = useState('calls');
   const calls = decisions.filter(isCall);
   const shown = filter === 'calls' ? calls : decisions;
-  // The first-visit hint sits beside its record, outside the scrolling list.
-  const room = useRef(null);
-  const [hintTop, setHintTop] = useState(null);
-  useLayoutEffect(() => {
-    const row = hintId ? room.current?.querySelector('.vr-item[data-hint]') : null;
-    setHintTop(row ? row.getBoundingClientRect().top - room.current.getBoundingClientRect().top + 10 : null);
-  }, [hintId, decisions.length, filter]);
   const tabs = [['calls', `VAR calls · ${calls.length}`], ['all', `All captions · ${decisions.length}`]];
   if (recaps.length) tabs.push(['recaps', `Recaps · ${recaps.length}`]);
   return (
-    <section className="var-room" aria-label="VAR room" ref={room}>
-      {hintTop != null && <span className="hint hint-row" aria-hidden="true" style={{ top: hintTop }}>Click to see why it was stopped →</span>}
+    <section className="var-room" aria-label="VAR room">
       <header className="vr-head">
         <div className="vr-title">
           <h2>VAR room <span className="rec">REC</span></h2>
@@ -189,13 +181,13 @@ export default function VarRoom({ decisions, recaps = [], liveId, selectedId, on
           const open = d.id === selectedId;
           const aired = renderAired(d);
           return (
-            <li key={d.id} data-hint={d.id === hintId && !open ? '' : undefined} className={`vr-item tone-${v.tone}${open ? ' is-open' : ''}${d.id === liveId ? ' is-live' : ''}`}>
+            <li key={d.id} className={`vr-item tone-${v.tone}${open ? ' is-open' : ''}${d.id === liveId ? ' is-live' : ''}`}>
               <button type="button" className="vr-row" onClick={() => onSelect(open ? null : d.id)} aria-expanded={open}>
                 <span className="vr-minute">{d.display_minute}</span>
                 <span className="vr-verdict">{v.label}</span>
                 <Gist decision={d} aired={aired} />
               </button>
-              {d.id === hintId && !open && <span className="hint hint-inline" role="note">↑ Tap to see why it was stopped</span>}
+              {d.id === hintId && !open && <span className="hint hint-inline" role="note">↑ Click to see why it was stopped</span>}
               {open && <Detail decision={d} people={people} view={view} aired={aired} onInspect={onInspect} />}
             </li>
           );
