@@ -8,7 +8,7 @@ A multi-agent system on **Microsoft Foundry** where one agent writes live footba
 
 **[Open the live demo](https://joelynli0110.github.io/captionvar-live-starter/)**. It needs no sign-in and opens just before the 24th minute of a synthetic match, playing at 8× speed: the narrator calls the first goal 0-2, and the VAR check stops it on screen and airs the corrected 0-1. **Production** shows the check as it happens; **Viewer feed** shows only what airs. Add `?at=77` to jump to a minute, or `?intro=1` for the team sheet of agents.
 
-![CaptionVAR replaying the Foundry run: a long-pass tag over both teams' shape, a wrong substitute corrected before it airs, the line on why the equaliser matters, an error the narrator made on its own caught, and the checked full-time recap](docs/media/demo.gif)
+![CaptionVAR replaying the Foundry run: the narrator's 0-2 is stopped on screen, the play is replayed to the evidence and the corrected 0-1 airs; the record of the check opens; the next VAR call; the line on why the equaliser matters; the checked full-time recap](docs/media/demo.gif)
 
 ## The problem
 
