@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { loadBroadcast, loadAgentTrace, indexAt, clockLabel, DEMO } from './ui/data.js';
+import { loadBroadcast, loadAgentTrace, loadBenchmark, indexAt, clockLabel, DEMO } from './ui/data.js';
 import { matchStats, playerStats } from './sim/stats.js';
 import { renderCaption } from './broadcast/render.js';
 import { summarise } from './broadcast/trace.js';
 import Pitch from './ui/Pitch.jsx';
-import { ScoreBug, LowerThird, ReviewCard, RecapCard, useOnAirPhase } from './ui/Broadcast.jsx';
+import { ScoreBug, LowerThird, VarCheck, RecapCard, useOnAirPhase } from './ui/Broadcast.jsx';
 import VarRoom from './ui/VarRoom.jsx';
 import Timeline from './ui/Timeline.jsx';
-import { ViewerSettings, StatsPanel, PlayerCard, LanguageChips } from './ui/Panels.jsx';
+import { ViewerSettings, StatsPanel, PlayerCard, LanguageChips, FeedSwitch, Scoreboard } from './ui/Panels.jsx';
 import HowItWorks from './ui/HowItWorks.jsx';
 import { tagFor } from './broadcast/overlays.js';
 
@@ -24,10 +24,10 @@ const SHAPE_WINDOW_S = 240; // match seconds a player's last touch still marks w
 const teamColor = side => B.teams[side].colors.primary;
 
 /** First visit shows the explainer before play starts; ?intro=0 skips it. */
+/** The page opens on the match itself; ?intro=1 opens the team sheet first. */
 function introWanted() {
   try {
-    if (new URLSearchParams(window.location.search).get('intro') === '0') return false;
-    return window.localStorage.getItem('captionvar-intro-seen') !== '1';
+    return new URLSearchParams(window.location.search).get('intro') === '1';
   } catch {
     return false;
   }
@@ -114,12 +114,14 @@ export default function App() {
   const [explaining, setExplaining] = useState(introWanted);
   const held = useRef(false);
   const { g, setG, playing, setPlaying, speed, setSpeed } = usePlayback(!explaining, held);
-  const [view, setView] = useState({ persona: 'fan', follow: 'neutral', player: '', lang: 'en' });
+  const [view, setView] = useState({ persona: 'fan', follow: 'neutral', player: '', lang: 'en', feed: 'production' });
   const [selectedId, setSelectedId] = useState(null);
   // Captions from the Foundry agent pipeline when a trace is published with
   // the site; otherwise (or on request) from the built-in test narrator.
   const [agentTrace, setAgentTrace] = useState(null);
   const [source, setSource] = useState('test');
+  const [benchmark, setBenchmark] = useState(null);
+  useEffect(() => { loadBenchmark().then(setBenchmark); }, []);
   useEffect(() => {
     loadAgentTrace(B.match, B.endG).then(trace => {
       if (trace) { setAgentTrace(trace); setSource('agents'); }
@@ -149,8 +151,9 @@ export default function App() {
     && (lastRecap.recap === 'HT' ? g < B.halfG.start2 : g >= B.endG - 1) ? lastRecap : null;
   const selected = selectedId ? decisions.find(d => d.id === selectedId) : null;
   const reviewed = selected || onAir;
-  const phase = useOnAirPhase(onAir);
+  const phase = useOnAirPhase(view.feed === 'viewer' ? null : onAir);
   held.current = phase === 'review';
+  const varMoment = phase === 'review' && Boolean(onAir);
 
   const renderAired = useCallback(d => renderCaption(d, d.verdict, PEOPLE, view), [view]);
 
@@ -169,7 +172,7 @@ export default function App() {
   // Draw only the evidence that belongs to this moment (same half, within
   // 150 s); older supporting events, such as earlier goals behind a score
   // claim, stay in the VAR room list.
-  const evidence = reviewed
+  const evidence = reviewed && view.feed !== 'viewer'
     ? reviewed.verdict.evidence.map(id => B.byId.get(id))
       .filter(e => e && e.x != null && e.period === reviewed.period && Math.abs(e.t - reviewed.t) <= 150)
       .sort((a, b) => a.seq - b.seq)
@@ -207,20 +210,25 @@ export default function App() {
       <header className="masthead">
         <div className="wordmark" aria-label="CaptionVAR">Caption<span>VAR</span></div>
         <p className="tagline">AI match commentary, checked against the data before it airs.</p>
-        <ViewerSettings view={view} setView={setView} teams={B.teams} players={PLAYERS} source={sourceControl} />
+        <div className="mast-controls">
+          <FeedSwitch value={view.feed} onChange={feed => setView(v => ({ ...v, feed }))} />
+          <ViewerSettings view={view} setView={setView} teams={B.teams} players={PLAYERS} source={sourceControl} />
+        </div>
       </header>
+      {benchmark && <Scoreboard result={benchmark} />}
 
       <main className="stage">
         <div className="broadcast">
-          <div className="screen">
-            <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected)} focus={focus} tag={tag} teamColor={teamColor} />
+          <div className={`screen${varMoment ? ' is-var' : ''}`}>
+            <Pitch ball={ball} actor={actor} trail={trail} shape={shape} evidence={evidence} evidenceLabels={Boolean(selected) || varMoment} drawEvidence={varMoment} people={PEOPLE} focus={focus} tag={view.feed === 'viewer' ? null : tag} teamColor={teamColor} />
             <ScoreBug teams={B.teams} score={stats.score} clock={clockLabel(g, B.halfG)} />
             {focusPlayer && focusStats && (
               <PlayerCard player={focusPlayer} stats={focusStats} team={B.teams[focusPlayer.side]} onClose={() => setView(v => ({ ...v, player: '' }))} />
             )}
-            {phase === 'review' && onAir && <ReviewCard decision={onAir} text={renderAired(onAir)} />}
+            {varMoment && <VarCheck decision={onAir} clock={clockLabel(g, B.halfG)} />}
             {recapOnAir && phase !== 'review' && <RecapCard recap={recapOnAir} onClose={() => setClosedRecap(recapOnAir.id)} />}
-            {!recapOnAir && <LowerThird decision={onAir} text={onAir ? renderAired(onAir) : ''} lang={view.lang} phase={phase} insight={insight} />}
+            {!recapOnAir && <LowerThird decision={onAir} text={onAir ? renderAired(onAir) : ''} lang={view.lang} phase={phase} insight={insight} feed={view.feed} />}
+            {view.feed === 'viewer' ? <span className="feed-bug is-viewer">Viewer feed</span> : <span className="feed-bug">Production · not on air</span>}
           </div>
 
           <div className="transport">

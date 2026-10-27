@@ -6,7 +6,7 @@
 
 A multi-agent system on **Microsoft Foundry** where one agent writes live football captions, another explains why key moments matter, a third writes the half-time and full-time recaps, and a referee written in code checks every claim they make against the match events before anything reaches the viewer. Built for the Microsoft × Premier League *Inside the Game* hackathon.
 
-**[Open the live demo](https://joelynli0110.github.io/captionvar-live-starter/)**. It needs no sign-in and opens at 72:30 of a synthetic match, playing at 8× speed.
+**[Open the live demo](https://joelynli0110.github.io/captionvar-live-starter/)**. It needs no sign-in and opens just before the 24th minute of a synthetic match, playing at 8× speed: the narrator calls the first goal 0-2, and the VAR check stops it on screen and airs the corrected 0-1. **Production** shows the check as it happens; **Viewer feed** shows only what airs. Add `?at=77` to jump to a minute, or `?intro=1` for the team sheet of agents.
 
 ![CaptionVAR replaying the Foundry run: a wrong substitute corrected before it airs, the line on why the equaliser matters, an error the narrator made on its own caught, and the checked full-time recap](docs/media/demo.gif)
 

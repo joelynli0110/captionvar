@@ -11,7 +11,8 @@ import adjudication from '../../docs/demo-adjudication.json';
 export const DEMO = {
   matchSeed: 'captionvar-demo-6',
   narratorSeed: 'narrator-10',
-  startAt: { period: 2, t: 72 * 60 + 30 },
+  // Cold open: a few seconds before the 24' goal, whose first draft says 0-2.
+  startAt: { period: 1, t: 23 * 60 + 25 },
   speed: 8,
 };
 
@@ -42,6 +43,30 @@ export function firstDraft(decision) {
  * Load a trace produced by the agent pipeline (agents/run_match.py) if one is
  * published with the site. Returns null when absent or for a different match.
  */
+/**
+ * The headline result of the five-match comparison, read from the published
+ * summary so the page and the file can never disagree: how many of the
+ * narrator's own errors (confirmed by hand) each set-up kept off air.
+ */
+export async function loadBenchmark(url = `${import.meta.env.BASE_URL}traces/baselines-summary.json`) {
+  try {
+    const res = await fetch(url, { cache: 'no-cache' });
+    if (!res.ok) return null;
+    const r = (await res.json()).reported;
+    if (!r) return null;
+    const stopped = s => r[s].own_real - r[s].own_real_on_air;
+    return {
+      own: r.captionvar.own_real,
+      judge: stopped('llm_judge'),
+      selfCheck: stopped('self_check'),
+      captionvar: stopped('captionvar'),
+      matches: null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** ?trace=<file> replays another trace from public/traces (for example an offline run). */
 function traceUrl() {
   let name = 'foundry-demo.json';

@@ -99,7 +99,7 @@ function Tag({ tag, teamColor }) {
  * progress, the ball and the acting player, threshold tags, and, when a
  * caption is under review, its evidence drawn as VAR lines.
  */
-export default function Pitch({ ball, actor, trail, shape = [], evidence, evidenceLabels, focus, tag, teamColor }) {
+export default function Pitch({ ball, actor, trail, shape = [], evidence, evidenceLabels, drawEvidence = false, people, focus, tag, teamColor }) {
   return (
     <svg className="pitch" viewBox="0 0 105 68" role="img" aria-label="Live pitch view of the synthetic match">
       <Markings />
@@ -111,15 +111,21 @@ export default function Pitch({ ball, actor, trail, shape = [], evidence, eviden
       ))}
 
       {evidence.length > 0 && (
-        <g className="var-lines">
+        <g className={`var-lines${drawEvidence ? ' is-drawing' : ''}`}>
           <polyline
             points={evidence.map(e => `${X(e.x)},${Y(e.y)}`).join(' ')}
-            fill="none" stroke="var(--var)" strokeWidth="0.35" strokeDasharray="1.2 0.8"
+            pathLength={drawEvidence ? 1 : undefined} fill="none" stroke="var(--var)" strokeWidth={drawEvidence ? 0.45 : 0.35}
+            strokeDasharray={drawEvidence ? '1 1' : '1.2 0.8'} className="var-path"
           />
-          {groupByPlace(evidence).map(group => (
-            <g key={`v${group[0].id}`}>
+          {groupByPlace(evidence).map((group, i) => (
+            <g key={`v${group[0].id}`} className="var-node" style={drawEvidence ? { animationDelay: `${300 + i * 260}ms` } : undefined}>
               <circle cx={X(group[0].x)} cy={Y(group[0].y)} r="1.6" fill="none" stroke="var(--var)" strokeWidth="0.35" />
-              {evidenceLabels && <text x={X(group[0].x) + 2.2} y={Y(group[0].y) - 1.8} className="var-label">{group.map(e => e.id).join(', ')}</text>}
+              {evidenceLabels && (
+                <text x={X(group[0].x) + 2.2} y={Y(group[0].y) - 1.8} className="var-label">
+                  {group.map(e => e.id).join(', ')}
+                  {people && group[0].player_id ? ` · ${people.name(group[0].player_id)}` : ''}
+                </text>
+              )}
             </g>
           ))}
         </g>
