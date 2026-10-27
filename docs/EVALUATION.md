@@ -9,7 +9,17 @@ Five full matches on Microsoft Foundry with gpt-4.1-mini: 195 captions in all. E
 | LLM judge | A second LLM judges the draft against the facts. An LLM editor fixes it, at most twice, and if the judge still objects nothing airs. This is multi-agent, but with no code referee. |
 | CaptionVAR | A blind claim extractor, the code referee and an editor |
 
-## Results
+### Evaluation version
+
+| | |
+|---|---|
+| Version | **v1**, run 24 Oct 2026 23:28 – 25 Oct 00:26 UTC (`generated_at` in each raw report) |
+| Data | 5 synthetic matches (`captionvar-demo-6`, `eval-1` to `eval-4`), 195 captions, one seeded red-team plan per match |
+| Model | gpt-4.1-mini on Microsoft Foundry, for every agent in every set-up |
+| Referee | the code as it was at that run, before the superlative guard (`checkSweepingClaims`, added in 9fab8cb and widened in 8f4d91d) |
+| Numbers | one source: `python agents/summarise_baselines.py` writes [`baselines-summary.json`](../public/traces/baselines-summary.json) (`reported`). `npm test` fails if a table here or in the README disagrees with it. |
+
+## Results (v1, as run)
 
 | | Planted errors on air | Narrator's own false details on air | Cost per match |
 |---|---|---|---|
@@ -46,20 +56,23 @@ Reproduce: [AGENTS.md → Baselines](AGENTS.md#baselines-what-the-multi-agent-de
 
 ## What this found in CaptionVAR itself
 
-- **One planted error got through.** A superlative ("could've been the best strike attempt of the entire league season") aired because the extractor did not report it as a claim. A code guard now flags comparisons beyond the match whether or not the extractor reports them (`checkSweepingClaims` in `src/broadcast/verify.js`). With it, CaptionVAR's count would be 0 / 61; the table keeps 1 / 61, because that is what the run aired. We check the guard over every text recorded in this repository: 738 drafts, rewrites, lines of context and recap sentences from the five evaluation matches and the published Foundry runs (gpt-4.1-mini and gpt-4.1-nano). It flags all 24 planted superlatives actually written and no other text (`node scripts/check_superlative_guard.mjs`). In 5 more lines the red team asked for one and the Analyst did not write it.
-- **It is strict at the cost of some true detail.** In 28 of the 195 captions, a true build-up detail was flagged because the extractor tied it to the wrong player, and the editor trimmed it. Nothing false aired; some true colour was lost. Better role rules in the extractor prompt (passive voice, "under pressure from", "forces X into") are the obvious next step.
+- **One planted error got through in v1.** A superlative ("could've been the best strike attempt of the entire league season") aired because the extractor did not report it as a claim. v1 counts it: CaptionVAR **1 / 61**.
+- **The fix, and what has been checked so far.** After the run we added a code guard that flags comparisons beyond the match whether or not the extractor reports them (`checkSweepingClaims` in `src/broadcast/verify.js`).
+  - *Checked:* the guard applied to every text recorded in this repository, 738 drafts, rewrites, lines of context and recap sentences from the five evaluation matches and the published Foundry runs (gpt-4.1-mini and gpt-4.1-nano). It flags all 24 planted superlatives actually written, including the one that aired, and no other text (`node scripts/check_superlative_guard.mjs`). In 5 more lines the red team asked for one and the Analyst did not write it.
+  - *Not yet checked:* the five matches have not been re-run with the guard. A re-run would draw new drafts from the model, with new chances to miss. So we do not claim 0 / 61; that needs a v2 run, reported next to v1.
+- **It is strict at the cost of some true detail.** In 28 of the 195 captions, a true build-up detail was flagged because the extractor tied it to the wrong player, and the editor trimmed it. Trimming removed true colour; it added nothing false. Better role rules in the extractor prompt (passive voice, "under pressure from", "forces X into") are the obvious next step.
 - **The measurement has noise too.** Re-checking CaptionVAR's own aired captions flagged 6 of 195. All 6 are measurement mistakes: three colour phrases read as claims, two true details checked wrongly (a giveaway, a lead), and a count checked against the wrong metric. They are listed in the summary file.
 
 ## A cheaper model
 
 The same match, the same seeded red-team plan, gpt-4.1-nano behind every agent instead of gpt-4.1-mini ([`public/traces/models/`](../public/traces/models/), compared with `agents/compare_models.py`).
 
-- **Safety held.** All 15 planted caption errors were stopped. We checked by hand every one of the 21 captions nano wrote that aired (6 first drafts, 15 editor rewrites) against the raw events, including the build-up details ("Vence winning the ball back after pressing", "Sow winning a tackle"). All are true. The other 19 aired from the data.
+- **Safety held in this match.** All 15 planted caption errors were stopped. We checked by hand every one of the 21 captions nano wrote that aired (6 first drafts, 15 editor rewrites) against the raw events, including the build-up details ("Vence winning the ball back after pressing", "Sow winning a tackle"). All are true. The other 19 aired from the data.
 - **Quality dropped.** Only 6 of 40 first drafts passed (22 with mini). Nano's narrator and editor make more mistakes, and its extractor misreads more true details. Two rewrites were often not enough, so 19 captions aired as plain captions built from the data. Only 2 of 19 lines of context passed; 11 of 12 recap sentences did.
 - **Cost and time.** About $0.07 for the match against $0.18, but more calls (280 against 188) and a slower median time to air (6.9 s against 3.7 s), because more drafts go through the editor.
 - **One failure handled.** At 61' nano's extractor returned JSON that did not parse. The workflow now retries such replies and, if they never parse, treats them as no claims, so the draft cannot air unchecked.
 
-So the referee turns the model into a cost and quality dial: a cheaper model costs fluency and context, not correctness.
+So on this match the referee turned the model into a cost and quality dial: the cheaper model cost fluency and context, not correctness. One match is a small sample.
 
 ## Limits
 
