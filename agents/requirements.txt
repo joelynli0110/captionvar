@@ -8,3 +8,6 @@ azure-monitor-opentelemetry>=1.8.10,<2
 mcp>=1.20,<3
 pydantic>=2.8
 pytest>=8
+# Live mode server (agents/live_server.py); both also come with mcp
+starlette>=0.40
+uvicorn>=0.30
