@@ -19,7 +19,8 @@ still works). The daily counters live in memory; keep max replicas at 1.
 Environment (defaults in brackets):
     LIVE_ENABLED [1]  LIVE_OFFLINE [0]  LIVE_FROM_MINUTE [24]  LIVE_MOMENTS [4]
     LIVE_MAX_CALLS [60]  LIVE_DAILY_RUNS [20]  LIVE_DAILY_CALLS [800]
-    LIVE_CACHE_MINUTES [10]  LIVE_RPM [30]  LIVE_RED_TEAM [0.5]  LIVE_OFFLINE_DELAY [3]
+    LIVE_CACHE_MINUTES [10]  LIVE_RPM [30]  LIVE_RED_TEAM [0.5]  LIVE_RED_TEAM_SEED [live-8]
+    LIVE_OFFLINE_DELAY [3]
     LIVE_TRACE [0]  APPLICATIONINSIGHTS_CONNECTION_STRING (optional)
     FOUNDRY_PROJECT_ENDPOINT, FOUNDRY_MODEL (unless offline)
 """
@@ -75,6 +76,8 @@ class Settings:
         self.cache_s = env_num("LIVE_CACHE_MINUTES", 10) * 60
         self.rpm = env_num("LIVE_RPM", 30)
         self.red_team = env_num("LIVE_RED_TEAM", 0.5)
+        # Seeded: with the defaults the red team plants a wrong score in the 24' goal, as in the recorded run.
+        self.red_team_seed = os.environ.get("LIVE_RED_TEAM_SEED", "live-8")
         # Offline only: seconds between decisions, so the page behaves as it would with a model.
         self.offline_delay = env_num("LIVE_OFFLINE_DELAY", 3) if self.offline else 0.0
         self.trace = env_flag("LIVE_TRACE", False) or bool(os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"))
@@ -172,7 +175,8 @@ class LiveHub:
         from agent_framework.foundry import FoundryChatClient
         from azure.identity.aio import DefaultAzureCredential
         # Managed identity on Azure Container Apps; az login or env credentials elsewhere. No keys.
-        client = FoundryChatClient(project_endpoint=self.s.endpoint, model=self.s.model, credential=DefaultAzureCredential())
+        self._credential = DefaultAzureCredential()
+        client = FoundryChatClient(project_endpoint=self.s.endpoint, model=self.s.model, credential=self._credential)
         self._client = client
         return client
 
@@ -194,11 +198,11 @@ class LiveHub:
             LOG.warning("tracing not set up: %s", exc)
 
     async def _run(self) -> None:
-        self._client = None
+        self._client = self._credential = None
         try:
             gen = live_moments(
                 client_factory=self._client_factory, model=self.s.model, offline=self.s.offline,
-                from_minute=self.s.from_minute, limit=self.s.moments, red_team=self.s.red_team,
+                from_minute=self.s.from_minute, limit=self.s.moments, red_team=self.s.red_team, red_team_seed=self.s.red_team_seed,
                 rpm=self.s.rpm, max_calls=self.s.max_calls, on_call=self._count_call,
             )
             async for event in gen:
@@ -209,10 +213,15 @@ class LiveHub:
                 self._publish(event)
                 LOG.info("live %s%s", event["type"], f" {event['decision']['id']}" if event["type"] == "decision" else "")
         except Exception as exc:  # noqa: BLE001 - a run that cannot start still ends cleanly for its viewers
-            LOG.exception("live run failed")
-            self._publish({"type": "end", "reason": f"stopped: {str(exc).splitlines()[0][:160] if str(exc) else type(exc).__name__}",
+            LOG.exception("live run failed: %s", exc)
+            self._publish({"type": "end", "reason": "stopped: the run failed",
                            "decisions": sum(e["type"] == "decision" for e in self.events)})
         finally:
+            if self._credential:
+                try:
+                    await self._credential.close()
+                except Exception:  # noqa: BLE001
+                    pass
             if not self.events or self.events[-1]["type"] != "end":
                 self._publish({"type": "end", "reason": "stopped", "decisions": sum(e["type"] == "decision" for e in self.events)})
 

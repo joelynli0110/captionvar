@@ -51,7 +51,7 @@ async def live_moments(
     from_minute: int = 24,
     limit: int = 4,
     red_team: float = 0.5,
-    red_team_seed: str = "live-1",
+    red_team_seed: str = "live-8",
     rpm: float | None = 30,
     max_calls: int = 60,
     insights: bool = True,
@@ -109,7 +109,9 @@ async def live_moments(
         except CallCapReached as exc:
             reason = str(exc)
         except Exception as exc:  # noqa: BLE001 - report to the viewer and stop
-            reason = f"stopped: {str(exc).splitlines()[0][:160] if str(exc) else type(exc).__name__}"
+            # The details go to the server log; viewers get a short reason.
+            logging.getLogger("captionvar.live").error("live run stopped: %s", exc)
+            reason = "stopped: a model call failed" if limiter.calls else "stopped: the run failed"
         finally:
             pipeline.LIMITER = RateLimiter(None)
         yield {
