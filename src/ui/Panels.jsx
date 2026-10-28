@@ -76,7 +76,7 @@ export function ViewerSettings({ view, setView, teams, players, source, speed, s
               label="Captions by"
               value={source.kind}
               onChange={source.onChange}
-              options={[{ value: 'agents', label: source.agentTrace.source === 'foundry-agents' ? 'Foundry agents' : 'Agent workflow' }, { value: 'test', label: 'Test narrator' }]}
+              options={[...(source.live ? [{ value: 'live', label: 'Live run' }] : []), { value: 'agents', label: source.agentTrace.source === 'foundry-agents' ? 'Foundry agents' : 'Agent workflow' }, { value: 'test', label: 'Test narrator' }]}
             />
           )}
         </div>
