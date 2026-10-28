@@ -74,6 +74,56 @@ The same match, the same seeded red-team plan, gpt-4.1-nano behind every agent i
 
 So on this match the referee turned the model into a cost and quality dial: the cheaper model cost fluency and context, not correctness. One match is a small sample.
 
+## Foundry evaluators
+
+A second opinion on what aired, from Microsoft Foundry's built-in evaluators (the `azure-ai-evaluation` SDK, 1.16.9), next to the code referee. `agents/foundry_eval.py` reads a trace and scores:
+
+- **What aired**: every caption, line of context and recap sentence. Captions are split by what the referee did: verified, trimmed, withheld then corrected, built from data. Lines and recap sentences are verified or rewritten.
+- **The first drafts the referee stopped**, scored the same way. Each is labelled with what is known about it: a planted red-team error, an error the narrator made on its own (checked by hand, [`demo-adjudication.json`](demo-adjudication.json)), a true detail flagged by mistake, or unreviewed. A groundedness fail means the evaluator also caught the draft.
+
+| Evaluator | Reads | Question |
+|---|---|---|
+| Groundedness | the text and the facts | Is every statement backed by the facts? |
+| Coherence | the text and its brief | Does it read as one clear answer? |
+| Fluency | the text | Is it well written? |
+
+Scores are 1 to 5; 3 or more passes (the SDK's default). The facts are what the agent that wrote the text was given, rebuilt from the match seed by the factbox: the narrator's moment facts and recent play, the Analyst's running numbers, or the recap facts. Squad lists are left out, as for the LLM judge above. The evaluators are a model judge too, so their scores are an opinion, not ground truth. The groundedness rubric also rewards completeness: a short caption that is true but leaves facts out can score below 5.
+
+```powershell
+pip install -r agents\requirements-eval.txt
+$env:FOUNDRY_PROJECT_ENDPOINT = "<project endpoint from the Foundry portal>"
+$env:FOUNDRY_MODEL = "gpt-4.1-mini"
+python agents\foundry_eval.py --trace public\traces\foundry-demo.json
+```
+
+It writes `public/traces/eval/foundry-evaluators.foundry-demo.json` (scores per text and totals by kind, by what the referee did, and for the stopped drafts) and the inputs it sent, as JSONL. The evaluators call the deployment in `FOUNDRY_MODEL` at the Foundry resource's Azure OpenAI endpoint, `https://<resource>.openai.azure.com/`; set `AZURE_OPENAI_ENDPOINT` if yours differs. Sign-in is `az login` (DefaultAzureCredential), no keys. `--dry-run` builds every input without calling Azure; `--limit N` scores only the first N; `--log-to-foundry` also uploads the run to the project's Evaluation page, after the local results are saved (best effort).
+
+**Results on the demo match.** Run on 28 October 2026 (UTC) on the published trace, with gpt-4.1-mini as the judge: 97 texts, 291 evaluator calls, no errors, about 7 minutes. Every score and reason is in [`foundry-evaluators.foundry-demo.json`](../public/traces/eval/foundry-evaluators.foundry-demo.json); the run is also logged to the Foundry project's Evaluation page.
+
+The first drafts the referee stopped:
+
+| First drafts | Code referee stopped | Foundry groundedness failed |
+|---|---|---|
+| Planted red-team errors | 21 of 21 | 17 of 21 |
+| The narrator's own error (CAP-030) | 1 of 1 | 0 of 1 |
+| True details the referee flagged by mistake | 5 of 5 | 0 of 5 |
+
+- **Planted errors it passed (4).** Three planted superlatives ("the finest opportunity seen in the entire league this season") scored 4 of 5: the evaluator's reason names the unsupported claim, but the score still passes. The fourth is a possession figure inflated by one point (62% for 61%), also scored 4.
+- **The narrator's own error, scored 5 of 5.** "Okafor's recent giveaway under pressure from Marsh": Marsh is Okafor's teammate. The evaluator read the names in the facts and passed it. This is the kind of error the comparison above is about, but in this match it is one case.
+- **The referee's false alarms.** The evaluator passed all 5 true details the referee flagged, which agrees with the hand check: they cost true colour, nothing false.
+
+What aired:
+
+| Aired | Groundedness pass | Coherence pass | Fluency pass |
+|---|---|---|---|
+| Captions | 39 of 40 | 40 of 40 | 40 of 40 |
+| Lines on why it matters | 18 of 18 | 18 of 18 | 18 of 18 |
+| Recap sentences | 11 of 12 | 12 of 12 | 12 of 12 |
+
+The two groundedness fails among what aired are true, checked against the events: "Callum Reyes equalized for Northbridge FC in the 77th minute" (G-1819 made it 1-1; the recap facts list the goals in order, but not the score after each), and "Yellow card for Lior Ashkenazi ... as Bello pushed forward" (the facts it was given list Bello carrying the ball forward twice, events C-2211 and C-2212). Fluency passes everywhere but averages 3.2 of 5: the rubric rewards varied, complex sentences, and captions are short on purpose.
+
+In short, on this match Foundry's evaluators agree with the referee on what aired and catch most planted errors, but a 4 of 5 still passes a flagged superlative, and the one error about who did what to whom passed with full marks. The code referee decides what airs; the evaluators are a useful independent report on quality.
+
 ## Limits
 
 - The 11 own errors come from 5 matches with one model. The direction is clear (8 and 7 against 0), but the sample is small.

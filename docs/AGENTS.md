@@ -63,6 +63,24 @@ The same tools work from any MCP client. `.vscode/mcp.json` registers the server
 
 `scripts/factbox.mjs` serves the same operations as one JSON request per line, without the MCP dependency; set `CAPTIONVAR_FACTBOX=jsonl` to use it. A test runs the workflow both ways and checks the decisions are identical. Either way, Python and the browser share one implementation of spotting, checking and rendering (`scripts/factbox-ops.mjs`).
 
+### The referee over A2A
+
+`scripts/referee-a2a.mjs` serves the VAR check as an A2A (Agent2Agent protocol v0.3.0) agent, so an agent on another stack can check a caption without an MCP client. It uses the official JavaScript SDK, `@a2a-js/sdk` 0.3.13, in the same Node process as the referee code: it calls the same factbox operation as the MCP tool, so there is no second implementation and no extra hop.
+
+```bash
+node scripts/referee-a2a.mjs              # http://127.0.0.1:41241; --port, --seed, --public-url
+node scripts/referee-a2a-client.mjs       # reads the Agent Card, sends one check, prints the verdict
+```
+
+- **Agent Card** at `/.well-known/agent-card.json`, with one skill, `check_caption`, and an example. Requests go to `/a2a/jsonrpc` (`message/send`).
+- **Request:** a message with one DataPart holding exactly the input of the MCP tool `check_caption`: `index` (moment index, from `list_moments`), `text` (the caption as written), `extracted` (the Claim Extractor's typed claims: `kind`, `span` and the asserted values), and optionally `scope` (`caption`, `insight` or `recap`) and `recap` (`HT` or `FT`). Both servers validate it with the same schema (`scripts/referee-tools.mjs`).
+- **Reply:** a message with a TextPart summary and a DataPart holding exactly what the MCP tool returns: `claims`, `segments` and `verdict` (`VERIFY`, `QUALIFY` or `WITHHOLD`, each claim supported, contradicted or unverifiable, with evidence event IDs). Input that does not match the schema gets a TextPart starting `Rejected.` and a DataPart `{ error }`.
+- **The referee checks claims, not prose.** The caller sends the claims, as the workflow does after its Claim Extractor. For a caption, the referee still scans the text for unbacked player names and comparisons beyond the match.
+
+For the demo match's 24' goal, the narrator's "Riverside United lead Northbridge 0-2" comes back `WITHHOLD: 4 of 5 claims supported. contradicted "Riverside United lead Northbridge 0-2": Goal events give 0–1. [G-0559]`. `scripts/referee-a2a.test.mjs` starts both servers and checks that A2A and MCP return the same verdict for this caption and for its corrected 0-1.
+
+The workflow itself still calls the referee over MCP; A2A is for other agents. There is no authentication, so keep it on localhost or behind your own gateway.
+
 ## Run it on Microsoft Foundry
 
 Prerequisites: Python 3.10+, Node.js 22+, the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli), and a Foundry project with a `gpt-4.1-mini` deployment.

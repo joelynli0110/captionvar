@@ -7,13 +7,15 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test src/sim/*.test.js src/broadcast/*.test.js",
+    "test": "node --test src/sim/*.test.js src/broadcast/*.test.js scripts/*.test.mjs",
     "match": "node scripts/generate_match.mjs",
     "calibrate": "node scripts/calibrate_sim.mjs",
     "overlays": "node scripts/overlay_feed.mjs"
   },
   "dependencies": {
+    "@a2a-js/sdk": "0.3.13",
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "express": "^5.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "zod": "^4.6.7"

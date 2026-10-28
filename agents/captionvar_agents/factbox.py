@@ -27,7 +27,7 @@ from opentelemetry import trace
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TRACER = trace.get_tracer("captionvar")
 
-# Factbox operation -> MCP tool (kept in sync with TOOLS in scripts/referee-mcp.mjs).
+# Factbox operation -> MCP tool (kept in sync with TOOLS in scripts/referee-tools.mjs).
 OP_TO_TOOL = {
     "info": "match_info",
     "moments": "list_moments",

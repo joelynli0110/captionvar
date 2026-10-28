@@ -17,13 +17,13 @@ A multi-agent system on **Microsoft Foundry** where one agent writes live footba
 
 | Criterion | Where to look |
 |---|---|
-| **Technological implementation** | **Synthetic data:** a seeded match generator ([`src/sim/generateMatch.js`](src/sim/generateMatch.js), schema in [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md)), released event by event ([`src/sim/stream.js`](src/sim/stream.js)), with passes rated by distance, difficulty and ball speed, pressures, sprints, and a calibration script (`npm run calibrate`). **Hero technologies:** Microsoft Foundry deployments behind every agent; a Microsoft Agent Framework workflow ([`pipeline.py`](agents/captionvar_agents/pipeline.py)); the referee as an MCP server ([`referee-mcp.mjs`](scripts/referee-mcp.mjs)), also usable from GitHub Copilot through [`.vscode/mcp.json`](.vscode/mcp.json); OpenTelemetry traces into Application Insights. **Quality:** 46 JavaScript and 18 Python tests run in [CI](.github/workflows/tests.yml) on every push; the page deploys from master. |
+| **Technological implementation** | **Synthetic data:** a seeded match generator ([`src/sim/generateMatch.js`](src/sim/generateMatch.js), schema in [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md)), released event by event ([`src/sim/stream.js`](src/sim/stream.js)), with passes rated by distance, difficulty and ball speed, pressures, sprints, and a calibration script (`npm run calibrate`). **Hero technologies:** Microsoft Foundry deployments behind every agent; a Microsoft Agent Framework workflow ([`pipeline.py`](agents/captionvar_agents/pipeline.py)); the referee as an MCP server ([`referee-mcp.mjs`](scripts/referee-mcp.mjs)), also usable from GitHub Copilot through [`.vscode/mcp.json`](.vscode/mcp.json), and its `check_caption` as an A2A agent ([`referee-a2a.mjs`](scripts/referee-a2a.mjs)); OpenTelemetry traces into Application Insights. **Quality:** 51 JavaScript and 27 Python tests run in [CI](.github/workflows/tests.yml) on every push; the page deploys from master. |
 | **Agentic design & innovation** | Six LLM agents and one code referee, each with one job ([How it works](#how-it-works)). The extractor lists claims without seeing the facts; the referee decides from the event log, not from another model's opinion. Conditional edges: a pass goes to the publisher, a failure goes to the editor, and when the retries are used up a caption is built from the true facts. Measured against a self-check and an LLM judge on the same drafts ([Results](#results)). |
 | **Real-world impact** | A broadcaster can't air a wrong scorer or the wrong player. CaptionVAR stopped all 11 of the narrator's own errors, against 4 for an LLM judge. About $0.18 for a whole match with lines of context and recaps, a median 3.7 s from moment to air. Every decision cites the event IDs behind it, and `npm run overlays` writes a timed, machine-readable overlay feed for a graphics renderer. |
 | **User experience & presentation** | [Demo video](https://www.youtube.com/watch?v=1QV7cPcsiHo) (1:46). [Live demo](https://joelynli0110.github.io/captionvar/): the first interception plays within about 10 seconds of opening, then one hint at a time shows where to click. Production, viewer feed and a two-fan split screen. |
 | **Adherence to the challenge** | All five stages: **ingest** the live event stream, **interpret** it into match statistics ([`stats.js`](src/sim/stats.js)), **explain** why a moment matters (the Analyst, checked like the captions), **render** it as a lower third and an overlay feed, **personalize** it (fan or analyst, a club, a player, four languages written from the checked facts). Half-time and full-time recaps, checked sentence by sentence. |
-| **Best Multi-Agent System** | Distinct roles; typed handoffs (draft → claims → verdict → rewrite or publish), each draft carrying its history; one shared source of match state, the referee over MCP. Recovers from failures: two rewrites then a caption from the facts; replies that do not parse are retried, then fail closed. The outcome a single agent did not reach: the same model checking itself let 8 of its 11 own errors air. |
-| **Best Use of Microsoft Foundry** | Every agent runs on a Foundry deployment; swapping the model is one setting ([gpt-4.1-mini vs gpt-4.1-nano](docs/EVALUATION.md#a-cheaper-model), same match, same red-team plan). Each caption is one trace in the Application Insights resource connected to the Foundry project, with every agent call and every MCP call to the referee ([setup](docs/AGENTS.md#trace-it-in-foundry)). Cost per match from Foundry token usage. |
+| **Best Multi-Agent System** | Distinct roles; typed handoffs (draft → claims → verdict → rewrite or publish), each draft carrying its history; one shared source of match state, the referee over MCP, with its check also served to any other agent over A2A ([The referee over A2A](docs/AGENTS.md#the-referee-over-a2a)). Recovers from failures: two rewrites then a caption from the facts; replies that do not parse are retried, then fail closed. The outcome a single agent did not reach: the same model checking itself let 8 of its 11 own errors air. |
+| **Best Use of Microsoft Foundry** | Every agent runs on a Foundry deployment; swapping the model is one setting ([gpt-4.1-mini vs gpt-4.1-nano](docs/EVALUATION.md#a-cheaper-model), same match, same red-team plan). Each caption is one trace in the Application Insights resource connected to the Foundry project, with every agent call and every MCP call to the referee ([setup](docs/AGENTS.md#trace-it-in-foundry)). Cost per match from Foundry token usage. Foundry's built-in evaluators (groundedness, coherence, fluency) give an independent report on the demo match: they pass 68 of the 70 texts that aired (the 2 fails are true, checked against the events), catch 17 of 21 planted errors, and pass the narrator's own who-did-what error with full marks ([results](docs/EVALUATION.md#foundry-evaluators)). |
 
 ## The problem
 
@@ -195,7 +195,7 @@ On the pitch and below it:
 
 ```bash
 npm install
-npm test          # 46 tests: simulator, referee, context lines and recaps, rendering, Beat the VAR
+npm test          # 51 tests: simulator, referee, context lines and recaps, rendering, Beat the VAR, the referee over A2A
 npm run dev       # http://127.0.0.1:5173/captionvar/
 ```
 
@@ -211,11 +211,16 @@ $env:FOUNDRY_MODEL = "gpt-4.1-mini"
 python agents\run_match.py --out public\traces\foundry-demo.json --rpm 30
 ```
 
-Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. In Application Insights, **Transaction search** then opens any caption as one timeline of every agent call, with the referee's verdict and evidence on its span ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 18 workflow tests the same way. `--no-insights` and `--no-recaps` skip the Analyst and the recaps.
+Add `--trace` to send one OpenTelemetry trace per caption to the Application Insights resource connected to your Foundry project. In Application Insights, **Transaction search** then opens any caption as one timeline of every agent call, with the referee's verdict and evidence on its span ([setup](docs/AGENTS.md#trace-it-in-foundry)). `--offline` runs the same workflow with a scripted model, with no Azure account and no cost. `pytest agents/tests` runs the 27 Python tests (workflow, evaluator inputs) the same way; 3 more run when `agents/requirements-eval.txt` is installed. `--no-insights` and `--no-recaps` skip the Analyst and the recaps.
+
+**Foundry evaluators** on what aired ([what it measures](docs/EVALUATION.md#foundry-evaluators)): `pip install -r agents\requirements-eval.txt`, then `python agents\foundry_eval.py --trace public\traces\foundry-demo.json`.
 
 To replay a run you made, put it in `public/traces/` and open the demo with `?trace=<file>.json`. `?at=77`, `?at=HT` or `?at=FT` starts playback at that point.
 
+
 **The referee over MCP** needs only Node.js: `node scripts/referee-mcp.mjs` serves it on stdio. In VS Code, open the repository and start `captionvar-referee` from `.vscode/mcp.json`; Copilot agent mode can then check a caption with `check_caption`.
+
+**The referee over A2A** also needs only Node.js: `node scripts/referee-a2a.mjs` serves `check_caption` as an A2A agent on http://127.0.0.1:41241, with its Agent Card at `/.well-known/agent-card.json`. `node scripts/referee-a2a-client.mjs` sends it the 24' goal the narrator called 0-2 and prints the verdict ([details](docs/AGENTS.md#the-referee-over-a2a)).
 
 ## Repository layout
 
@@ -224,7 +229,7 @@ src/sim/         seeded match simulator, stats, live feed, validator
 src/broadcast/   referee (verify.js, statements.js), claim binding, context and recap facts, agent packets, rendering
 src/ui/          pitch, broadcast overlay, VAR room, timeline (React)
 agents/          Microsoft Agent Framework workflow, prompts, run_match.py
-scripts/         match generator, calibration, referee-mcp.mjs (the referee as an MCP server), factbox
+scripts/         match generator, calibration, referee-mcp.mjs and referee-a2a.mjs (the referee over MCP and A2A), factbox
 public/traces/   the published Foundry run
 docs/            agent design, data schema, evaluation, submission text, media
 ```
