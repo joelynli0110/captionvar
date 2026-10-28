@@ -1,0 +1,4526 @@
+{
+ "version": "1.0",
+ "what_is_measured": "Microsoft Foundry's built-in evaluators (azure-ai-evaluation) scored each text against the facts the agent that wrote it was given. 'aired': every caption, line of context and recap sentence that aired. 'first_drafts': the first drafts the code referee did not pass, scored the same way; a groundedness 'fail' means the evaluator also found the draft not backed by the facts. Scores are 1-5; 3 or more passes. The evaluators are a model judge: their scores are an independent opinion, not ground truth. The groundedness rubric also rewards completeness, so a short text that is true but leaves facts out can score below 5; compare pass rates between groups rather than reading one mean on its own.",
+ "trace": {
+  "file": "foundry-demo.json",
+  "match_id": "SYN-NBR-RVU-captionvar-demo-6",
+  "model": "gpt-4.1-mini",
+  "generated_at": "2026-10-25T23:56:13Z"
+ },
+ "evaluators": {
+  "groundedness": {
+   "class": "azure.ai.evaluation.GroundednessEvaluator",
+   "inputs": [
+    "response",
+    "context"
+   ],
+   "scale": "1-5",
+   "threshold": 3
+  },
+  "coherence": {
+   "class": "azure.ai.evaluation.CoherenceEvaluator",
+   "inputs": [
+    "query",
+    "response"
+   ],
+   "scale": "1-5",
+   "threshold": 3
+  },
+  "fluency": {
+   "class": "azure.ai.evaluation.FluencyEvaluator",
+   "inputs": [
+    "response"
+   ],
+   "scale": "1-5",
+   "threshold": 3
+  }
+ },
+ "judge": {
+  "package": "azure-ai-evaluation==1.16.9",
+  "deployment": "gpt-4.1-mini",
+  "endpoint_host": "captionvar-live-resource.openai.azure.com"
+ },
+ "context": "The facts the agent that wrote the text was given, rebuilt from the match seed by the factbox: the narrator's moment facts and recent play for captions, the Analyst's running numbers for lines, the recap facts for recap sentences. Squad lists left out.",
+ "generated_at": "2026-10-28T00:03:05Z",
+ "wall_seconds": 395.2,
+ "limit": null,
+ "evaluator_errors": 0,
+ "sdk_metrics": {
+  "groundedness.groundedness": 4.237113402061856,
+  "groundedness.gpt_groundedness": 4.237113402061856,
+  "coherence.coherence": 3.845360824742268,
+  "coherence.gpt_coherence": 3.845360824742268,
+  "fluency.fluency": 3.2371134020618557,
+  "fluency.gpt_fluency": 3.2371134020618557,
+  "groundedness.binary_aggregate": 0.8,
+  "coherence.binary_aggregate": 1.0,
+  "fluency.binary_aggregate": 1.0
+ },
+ "foundry_portal_url": "(logged to the project's Evaluation page; the link is private to the project and left out)",
+ "aired": {
+  "all": {
+   "n": 70,
+   "groundedness": {
+    "scored": 70,
+    "errors": 0,
+    "mean": 4.73,
+    "pass": 68,
+    "fail": 2,
+    "scores": {
+     "2.0": 2,
+     "3.0": 4,
+     "4.0": 5,
+     "5.0": 59
+    }
+   },
+   "coherence": {
+    "scored": 70,
+    "errors": 0,
+    "mean": 3.79,
+    "pass": 70,
+    "fail": 0,
+    "scores": {
+     "3.0": 19,
+     "4.0": 47,
+     "5.0": 4
+    }
+   },
+   "fluency": {
+    "scored": 70,
+    "errors": 0,
+    "mean": 3.23,
+    "pass": 70,
+    "fail": 0,
+    "scores": {
+     "3.0": 54,
+     "4.0": 16
+    }
+   }
+  },
+  "by_kind": {
+   "caption": {
+    "n": 40,
+    "groundedness": {
+     "scored": 40,
+     "errors": 0,
+     "mean": 4.92,
+     "pass": 39,
+     "fail": 1,
+     "scores": {
+      "2.0": 1,
+      "5.0": 39
+     }
+    },
+    "coherence": {
+     "scored": 40,
+     "errors": 0,
+     "mean": 4.03,
+     "pass": 40,
+     "fail": 0,
+     "scores": {
+      "3.0": 3,
+      "4.0": 33,
+      "5.0": 4
+     }
+    },
+    "fluency": {
+     "scored": 40,
+     "errors": 0,
+     "mean": 3.25,
+     "pass": 40,
+     "fail": 0,
+     "scores": {
+      "3.0": 30,
+      "4.0": 10
+     }
+    }
+   },
+   "why_it_matters": {
+    "n": 18,
+    "groundedness": {
+     "scored": 18,
+     "errors": 0,
+     "mean": 4.89,
+     "pass": 18,
+     "fail": 0,
+     "scores": {
+      "3.0": 1,
+      "5.0": 17
+     }
+    },
+    "coherence": {
+     "scored": 18,
+     "errors": 0,
+     "mean": 3.78,
+     "pass": 18,
+     "fail": 0,
+     "scores": {
+      "3.0": 4,
+      "4.0": 14
+     }
+    },
+    "fluency": {
+     "scored": 18,
+     "errors": 0,
+     "mean": 3.33,
+     "pass": 18,
+     "fail": 0,
+     "scores": {
+      "3.0": 12,
+      "4.0": 6
+     }
+    }
+   },
+   "recap_sentence": {
+    "n": 12,
+    "groundedness": {
+     "scored": 12,
+     "errors": 0,
+     "mean": 3.83,
+     "pass": 11,
+     "fail": 1,
+     "scores": {
+      "2.0": 1,
+      "3.0": 3,
+      "4.0": 5,
+      "5.0": 3
+     }
+    },
+    "coherence": {
+     "scored": 12,
+     "errors": 0,
+     "mean": 3.0,
+     "pass": 12,
+     "fail": 0,
+     "scores": {
+      "3.0": 12
+     }
+    },
+    "fluency": {
+     "scored": 12,
+     "errors": 0,
+     "mean": 3.0,
+     "pass": 12,
+     "fail": 0,
+     "scores": {
+      "3.0": 12
+     }
+    }
+   }
+  },
+  "by_kind_and_bucket": {
+   "caption": {
+    "verified": {
+     "n": 22,
+     "groundedness": {
+      "scored": 22,
+      "errors": 0,
+      "mean": 5.0,
+      "pass": 22,
+      "fail": 0,
+      "scores": {
+       "5.0": 22
+      }
+     },
+     "coherence": {
+      "scored": 22,
+      "errors": 0,
+      "mean": 3.95,
+      "pass": 22,
+      "fail": 0,
+      "scores": {
+       "3.0": 2,
+       "4.0": 19,
+       "5.0": 1
+      }
+     },
+     "fluency": {
+      "scored": 22,
+      "errors": 0,
+      "mean": 3.41,
+      "pass": 22,
+      "fail": 0,
+      "scores": {
+       "3.0": 13,
+       "4.0": 9
+      }
+     }
+    },
+    "trimmed": {
+     "n": 5,
+     "groundedness": {
+      "scored": 5,
+      "errors": 0,
+      "mean": 5.0,
+      "pass": 5,
+      "fail": 0,
+      "scores": {
+       "5.0": 5
+      }
+     },
+     "coherence": {
+      "scored": 5,
+      "errors": 0,
+      "mean": 4.2,
+      "pass": 5,
+      "fail": 0,
+      "scores": {
+       "4.0": 4,
+       "5.0": 1
+      }
+     },
+     "fluency": {
+      "scored": 5,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 5,
+      "fail": 0,
+      "scores": {
+       "3.0": 5
+      }
+     }
+    },
+    "withheld_then_corrected": {
+     "n": 13,
+     "groundedness": {
+      "scored": 13,
+      "errors": 0,
+      "mean": 4.77,
+      "pass": 12,
+      "fail": 1,
+      "scores": {
+       "2.0": 1,
+       "5.0": 12
+      }
+     },
+     "coherence": {
+      "scored": 13,
+      "errors": 0,
+      "mean": 4.08,
+      "pass": 13,
+      "fail": 0,
+      "scores": {
+       "3.0": 1,
+       "4.0": 10,
+       "5.0": 2
+      }
+     },
+     "fluency": {
+      "scored": 13,
+      "errors": 0,
+      "mean": 3.08,
+      "pass": 13,
+      "fail": 0,
+      "scores": {
+       "3.0": 12,
+       "4.0": 1
+      }
+     }
+    }
+   },
+   "why_it_matters": {
+    "verified": {
+     "n": 11,
+     "groundedness": {
+      "scored": 11,
+      "errors": 0,
+      "mean": 4.82,
+      "pass": 11,
+      "fail": 0,
+      "scores": {
+       "3.0": 1,
+       "5.0": 10
+      }
+     },
+     "coherence": {
+      "scored": 11,
+      "errors": 0,
+      "mean": 3.73,
+      "pass": 11,
+      "fail": 0,
+      "scores": {
+       "3.0": 3,
+       "4.0": 8
+      }
+     },
+     "fluency": {
+      "scored": 11,
+      "errors": 0,
+      "mean": 3.45,
+      "pass": 11,
+      "fail": 0,
+      "scores": {
+       "3.0": 6,
+       "4.0": 5
+      }
+     }
+    },
+    "rewritten": {
+     "n": 7,
+     "groundedness": {
+      "scored": 7,
+      "errors": 0,
+      "mean": 5.0,
+      "pass": 7,
+      "fail": 0,
+      "scores": {
+       "5.0": 7
+      }
+     },
+     "coherence": {
+      "scored": 7,
+      "errors": 0,
+      "mean": 3.86,
+      "pass": 7,
+      "fail": 0,
+      "scores": {
+       "3.0": 1,
+       "4.0": 6
+      }
+     },
+     "fluency": {
+      "scored": 7,
+      "errors": 0,
+      "mean": 3.14,
+      "pass": 7,
+      "fail": 0,
+      "scores": {
+       "3.0": 6,
+       "4.0": 1
+      }
+     }
+    }
+   },
+   "recap_sentence": {
+    "verified": {
+     "n": 11,
+     "groundedness": {
+      "scored": 11,
+      "errors": 0,
+      "mean": 3.91,
+      "pass": 10,
+      "fail": 1,
+      "scores": {
+       "2.0": 1,
+       "3.0": 2,
+       "4.0": 5,
+       "5.0": 3
+      }
+     },
+     "coherence": {
+      "scored": 11,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 11,
+      "fail": 0,
+      "scores": {
+       "3.0": 11
+      }
+     },
+     "fluency": {
+      "scored": 11,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 11,
+      "fail": 0,
+      "scores": {
+       "3.0": 11
+      }
+     }
+    },
+    "rewritten": {
+     "n": 1,
+     "groundedness": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 1,
+      "fail": 0,
+      "scores": {
+       "3.0": 1
+      }
+     },
+     "coherence": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 1,
+      "fail": 0,
+      "scores": {
+       "3.0": 1
+      }
+     },
+     "fluency": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 1,
+      "fail": 0,
+      "scores": {
+       "3.0": 1
+      }
+     }
+    }
+   }
+  }
+ },
+ "first_drafts": {
+  "about": "First drafts the code referee did not pass, with what is known about them. planted_error: the red team told the writer to include it. own_error: a false detail the narrator wrote unasked, confirmed by hand. true_detail_flagged: checked by hand, nothing false (the referee's flag was a false alarm). unreviewed: no hand check. groundedness 'fail' = the Foundry evaluator also found the draft not backed by the facts.",
+  "by_truth": {
+   "planted_error": {
+    "n": 21,
+    "groundedness": {
+     "scored": 21,
+     "errors": 0,
+     "mean": 2.38,
+     "pass": 4,
+     "fail": 17,
+     "scores": {
+      "2.0": 17,
+      "4.0": 4
+     }
+    },
+    "coherence": {
+     "scored": 21,
+     "errors": 0,
+     "mean": 4.0,
+     "pass": 21,
+     "fail": 0,
+     "scores": {
+      "3.0": 1,
+      "4.0": 19,
+      "5.0": 1
+     }
+    },
+    "fluency": {
+     "scored": 21,
+     "errors": 0,
+     "mean": 3.33,
+     "pass": 21,
+     "fail": 0,
+     "scores": {
+      "3.0": 14,
+      "4.0": 7
+     }
+    }
+   },
+   "own_error": {
+    "n": 1,
+    "groundedness": {
+     "scored": 1,
+     "errors": 0,
+     "mean": 5.0,
+     "pass": 1,
+     "fail": 0,
+     "scores": {
+      "5.0": 1
+     }
+    },
+    "coherence": {
+     "scored": 1,
+     "errors": 0,
+     "mean": 4.0,
+     "pass": 1,
+     "fail": 0,
+     "scores": {
+      "4.0": 1
+     }
+    },
+    "fluency": {
+     "scored": 1,
+     "errors": 0,
+     "mean": 3.0,
+     "pass": 1,
+     "fail": 0,
+     "scores": {
+      "3.0": 1
+     }
+    }
+   },
+   "true_detail_flagged": {
+    "n": 5,
+    "groundedness": {
+     "scored": 5,
+     "errors": 0,
+     "mean": 5.0,
+     "pass": 5,
+     "fail": 0,
+     "scores": {
+      "5.0": 5
+     }
+    },
+    "coherence": {
+     "scored": 5,
+     "errors": 0,
+     "mean": 4.0,
+     "pass": 5,
+     "fail": 0,
+     "scores": {
+      "4.0": 5
+     }
+    },
+    "fluency": {
+     "scored": 5,
+     "errors": 0,
+     "mean": 3.0,
+     "pass": 5,
+     "fail": 0,
+     "scores": {
+      "3.0": 5
+     }
+    }
+   }
+  },
+  "by_kind_and_truth": {
+   "caption": {
+    "planted_error": {
+     "n": 15,
+     "groundedness": {
+      "scored": 15,
+      "errors": 0,
+      "mean": 2.4,
+      "pass": 3,
+      "fail": 12,
+      "scores": {
+       "2.0": 12,
+       "4.0": 3
+      }
+     },
+     "coherence": {
+      "scored": 15,
+      "errors": 0,
+      "mean": 4.07,
+      "pass": 15,
+      "fail": 0,
+      "scores": {
+       "4.0": 14,
+       "5.0": 1
+      }
+     },
+     "fluency": {
+      "scored": 15,
+      "errors": 0,
+      "mean": 3.47,
+      "pass": 15,
+      "fail": 0,
+      "scores": {
+       "3.0": 8,
+       "4.0": 7
+      }
+     }
+    },
+    "own_error": {
+     "n": 1,
+     "groundedness": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 5.0,
+      "pass": 1,
+      "fail": 0,
+      "scores": {
+       "5.0": 1
+      }
+     },
+     "coherence": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 4.0,
+      "pass": 1,
+      "fail": 0,
+      "scores": {
+       "4.0": 1
+      }
+     },
+     "fluency": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 1,
+      "fail": 0,
+      "scores": {
+       "3.0": 1
+      }
+     }
+    },
+    "true_detail_flagged": {
+     "n": 2,
+     "groundedness": {
+      "scored": 2,
+      "errors": 0,
+      "mean": 5.0,
+      "pass": 2,
+      "fail": 0,
+      "scores": {
+       "5.0": 2
+      }
+     },
+     "coherence": {
+      "scored": 2,
+      "errors": 0,
+      "mean": 4.0,
+      "pass": 2,
+      "fail": 0,
+      "scores": {
+       "4.0": 2
+      }
+     },
+     "fluency": {
+      "scored": 2,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 2,
+      "fail": 0,
+      "scores": {
+       "3.0": 2
+      }
+     }
+    }
+   },
+   "why_it_matters": {
+    "planted_error": {
+     "n": 5,
+     "groundedness": {
+      "scored": 5,
+      "errors": 0,
+      "mean": 2.4,
+      "pass": 1,
+      "fail": 4,
+      "scores": {
+       "2.0": 4,
+       "4.0": 1
+      }
+     },
+     "coherence": {
+      "scored": 5,
+      "errors": 0,
+      "mean": 4.0,
+      "pass": 5,
+      "fail": 0,
+      "scores": {
+       "4.0": 5
+      }
+     },
+     "fluency": {
+      "scored": 5,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 5,
+      "fail": 0,
+      "scores": {
+       "3.0": 5
+      }
+     }
+    },
+    "true_detail_flagged": {
+     "n": 3,
+     "groundedness": {
+      "scored": 3,
+      "errors": 0,
+      "mean": 5.0,
+      "pass": 3,
+      "fail": 0,
+      "scores": {
+       "5.0": 3
+      }
+     },
+     "coherence": {
+      "scored": 3,
+      "errors": 0,
+      "mean": 4.0,
+      "pass": 3,
+      "fail": 0,
+      "scores": {
+       "4.0": 3
+      }
+     },
+     "fluency": {
+      "scored": 3,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 3,
+      "fail": 0,
+      "scores": {
+       "3.0": 3
+      }
+     }
+    }
+   },
+   "recap_sentence": {
+    "planted_error": {
+     "n": 1,
+     "groundedness": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 2.0,
+      "pass": 0,
+      "fail": 1,
+      "scores": {
+       "2.0": 1
+      }
+     },
+     "coherence": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 1,
+      "fail": 0,
+      "scores": {
+       "3.0": 1
+      }
+     },
+     "fluency": {
+      "scored": 1,
+      "errors": 0,
+      "mean": 3.0,
+      "pass": 1,
+      "fail": 0,
+      "scores": {
+       "3.0": 1
+      }
+     }
+    }
+   }
+  },
+  "pairs": [
+   {
+    "decision_id": "CAP-001",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "Faris Haddad sprints at 36 km/h: Recorded top speed is 35.0 km/h.",
+    "hand_check": "",
+    "first_draft": "Faris Haddad sprints at 36 km/h for Riverside United after a slick move from Lind to Morita, pushing forward past Vence's challenge.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response is mostly related to the context but includes an incorrect speed (36 km/h instead of 35 km/h) and adds an unsupported detail about Vence's challenge, making it partially inaccurate."
+    },
+    "aired": "Faris Haddad sprints at 35 km/h for Riverside United after a slick move from Lind to Morita, pushing forward past Vence's challenge.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the context's details about Faris Haddad's sprint, the top speed, the passing sequence, and the opposition challenge, making it fully grounded and complete."
+    }
+   },
+   {
+    "decision_id": "CAP-003",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "4 final third recoveries in 5 minutes: The window contains 3, not 4.",
+    "hand_check": "",
+    "first_draft": "Northbridge FC on a relentless pressing spell with 4 final third recoveries in 5 minutes, Vence's pressing causing Riverside United real problems.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response is mostly relevant and accurate but incorrectly states 4 final third recoveries instead of 3, making it partially incorrect and incomplete based on the context."
+    },
+    "aired": "Northbridge FC on a relentless pressing spell with 3 final third recoveries in 5 minutes, Vence's pressing causing Riverside United real problems.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely conveys the pressing spell by Northbridge FC, including the number of recoveries and Vence's impact, fully grounded in the context without missing details or adding unrelated information."
+    }
+   },
+   {
+    "decision_id": "CAP-003",
+    "kind": "why_it_matters",
+    "truth": "planted_error",
+    "planted": "unverifiable_superlative",
+    "referee_flags": "show their dominance, the best pressing start for any team this season: A comparison beyond this match cannot be checked against the match data.",
+    "hand_check": "",
+    "first_draft": "Northbridge FC's 3 final-third recoveries in 5 minutes and 0.29 xG show their dominance, the best pressing start for any team this season.",
+    "first_draft_groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response accurately references the pressing spell and key stats from the context but adds an unsupported claim about it being the best pressing start this season, which is not in the context."
+    },
+    "aired": "Northbridge FC's 3 final-third recoveries in 5 minutes and 0.29 xG highlight their strong start in the match.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and specifically reflects the key statistics from the context about Northbridge FC's pressing and xG, directly addressing the context without errors or omissions that would reduce clarity."
+    }
+   },
+   {
+    "decision_id": "CAP-004",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "Northbridge FC now enjoying 62% possession: Home share is 61%. | feeding Brandt under pressure from Benedetti: No matching press in the last 2 minutes of play. | Benedetti: Names Luca Benedetti, but no checked statement about him holds.",
+    "hand_check": "",
+    "first_draft": "Northbridge FC now enjoying 62% possession and 90% pass accuracy, Reyes steals the ball from Sow before feeding Brandt under pressure from Benedetti.",
+    "first_draft_groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is mostly accurate and detailed, correctly describing the recent play and pass accuracy, but it slightly misstates the possession percentage by 1%, which is not supported by the context."
+    },
+    "aired": "Northbridge FC now enjoying 61% possession and 90% pass accuracy, Reyes steals the ball from Sow before feeding Brandt.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the possession statistics and the recent play involving Reyes and Brandt as described in the context, making it a complete and grounded answer."
+    }
+   },
+   {
+    "decision_id": "CAP-004",
+    "kind": "why_it_matters",
+    "truth": "planted_error",
+    "planted": "unverifiable_superlative",
+    "referee_flags": "well above their usual season average: A comparison beyond this match cannot be checked against the match data.",
+    "hand_check": "",
+    "first_draft": "Northbridge FC’s 4 shots and 0.36 xG in 16 minutes show early control and offensive threat, well above their usual season average.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response accurately reports the shots and xG from the context but adds an unsupported claim about being above the usual season average, which is not present in the context, making it partially correct but incomplete and partially inaccurate."
+    },
+    "aired": null,
+    "aired_groundedness": null
+   },
+   {
+    "decision_id": "CAP-006",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "wrong_score",
+    "referee_flags": "Riverside United lead Northbridge 0-2: Goal events give 0–1.",
+    "hand_check": "",
+    "first_draft": "Strand nets his first after Benedetti’s clever assist, Riverside United lead Northbridge 0-2 following a relentless high press!",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response correctly identifies the scorer, assist, and the pressing style but incorrectly states the score as 0-2 instead of 0-1, making it partially correct but incomplete and inaccurate in a key detail."
+    },
+    "aired": "Strand nets his first after Benedetti’s clever assist, Riverside United lead Northbridge FC 0-1 following a relentless high press!",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded and complete, accurately reflecting all key details from the context including scorer, assist, score, and the pressing tactic."
+    }
+   },
+   {
+    "decision_id": "CAP-006",
+    "kind": "why_it_matters",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "Riverside's xG to 0.58: No rule can check this statement against the match data. | 54.8% possession for Northbridge: Home share is 59.4%.",
+    "hand_check": "",
+    "first_draft": "Strand's goal lifts Riverside's xG to 0.58 despite 54.8% possession for Northbridge, showing effective pressing turning defense into attack.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response attempts to relate to the context but introduces an incorrect xG value (0.58) for Riverside United not supported by the context and makes an interpretive claim about pressing that is not explicitly stated, making it partially inaccurate."
+    },
+    "aired": "Strand's goal lifts Riverside United to a 1-0 lead over Northbridge FC, with the move starting from effective pressing that turned defense into attack, despite Northbridge holding 59.4% possession so far.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including the scorer, scoreline, pressing leading to the goal, and possession stats, without adding or omitting important information."
+    }
+   },
+   {
+    "decision_id": "CAP-007",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "wrong_player",
+    "referee_flags": "Callum Reyes sprints at 34.9 km/h: Recorded top speed is 34.9 km/h. | Pell’s clever pass: No completed pass by that player in the last 2 minutes; the latest was by Aiden Marsh (P-0620). | Reyes: Names Callum Reyes, but no checked statement about him holds.",
+    "hand_check": "",
+    "first_draft": "Callum Reyes sprints at 34.9 km/h for Northbridge FC after Pell’s clever pass and ball win against Riverside United.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains incorrect information about the player’s name, which is not supported by the context, making it inaccurate despite other correct details."
+    },
+    "aired": "Aiden Marsh sprints at 34.9 km/h for Northbridge FC.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key fact from the context about Aiden Marsh's top speed sprint for Northbridge FC, making it fully grounded and complete."
+    }
+   },
+   {
+    "decision_id": "CAP-009",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "unverifiable_superlative",
+    "referee_flags": "easily the finest opportunity seen in the entire league this season: A judgement or comparison beyond this match cannot be checked against the match data.",
+    "hand_check": "",
+    "first_draft": "Callum Reyes fires a big chance off target for Northbridge FC — easily the finest opportunity seen in the entire league this season!",
+    "first_draft_groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response correctly identifies the key facts from the context but adds an unsubstantiated claim about the opportunity being the finest in the league this season, which is not supported by the context. Therefore, it is partially correct but incomplete and includes extraneous information."
+    },
+    "aired": "Callum Reyes fires a big chance off target for Northbridge FC.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key information from the context about Callum Reyes' off-target big chance for Northbridge FC, making it fully grounded and complete."
+    }
+   },
+   {
+    "decision_id": "CAP-009",
+    "kind": "why_it_matters",
+    "truth": "true_detail_flagged",
+    "planted": "",
+    "referee_flags": "Reyes’ off-target shot prolongs their wait for a breakthrough: No rule can check this statement against the match data.",
+    "hand_check": "'Prolongs their wait for a breakthrough' is interpretation, read as a fact.",
+    "first_draft": "Northbridge FC’s 0.64 xG and 63% possession show their dominance, but Reyes’ off-target shot prolongs their wait for a breakthrough.",
+    "first_draft_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including team xG, possession, and the outcome of Reyes’ shot, making it fully grounded and complete."
+    },
+    "aired": "Northbridge FC’s 0.64 xG and 63% possession show their dominance, but Callum Reyes’ off-target shot keeps the score at 0-1.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including the xG, possession, the off-target shot by Callum Reyes, and the current score, making it fully grounded and complete."
+    }
+   },
+   {
+    "decision_id": "CAP-010",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "wrong_player",
+    "referee_flags": "Yellow card for Arlo Whitcombe: The event names a different player. | he fouls Ashkenazi: No foul by that player in the last 2 minutes; the latest was by Kenji Morita (F-1008). | pressing him near the halfway line for Riverside United: No press by that player in the last 2 minutes; the latest was by Kenji Morita (PR-1007). | Ashkenazi: Names Lior Ashkenazi, but no checked statement about him holds. | Whitcombe: Names Arlo Whitcombe, but no checked statement about him holds.",
+    "hand_check": "",
+    "first_draft": "Yellow card for Arlo Whitcombe as he fouls Ashkenazi after pressing him near the halfway line for Riverside United.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response incorrectly identifies the player who received the yellow card and committed the foul, which is not supported by the context. It attempts to respond but contains inaccurate details."
+    },
+    "aired": "Yellow card for Kenji Morita of Riverside United.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key information from the context about the yellow card given to Kenji Morita of Riverside United without adding or omitting details."
+    }
+   },
+   {
+    "decision_id": "CAP-012",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "wrong_player",
+    "referee_flags": "Yellow card shown to Ruairi Doyle (Northbridge FC): The event names a different player. | a foul on Abara (Riverside United): No foul by that player in the last 2 minutes; the latest was by Jonah Pell (F-1215). | Doyle: Names Ruairi Doyle, but no checked statement about him holds. | Abara: Names Theo Abara, but no checked statement about him holds.",
+    "hand_check": "",
+    "first_draft": "Yellow card shown to Ruairi Doyle (Northbridge FC) after a foul on Abara (Riverside United). Pell had been pressing hard moments before.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains incorrect information by naming Ruairi Doyle as the player who received the yellow card instead of Jonah Pell, which contradicts the context. Therefore, it attempts to respond but includes incorrect details."
+    },
+    "aired": "Yellow card shown to Jonah Pell (Northbridge FC). Pell had been pressing hard moments before.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the context by mentioning the yellow card to Jonah Pell and his pressing actions just before the card, fully grounded in the provided information."
+    }
+   },
+   {
+    "decision_id": "CAP-013",
+    "kind": "caption",
+    "truth": "true_detail_flagged",
+    "planted": "",
+    "referee_flags": "sustained pressure from Northbridge: No press by that player in the last 2 minutes; the latest was by Ibrahima Sow (PR-1338).",
+    "hand_check": "Northbridge did press in the build-up (Vence on Lind, PR-1328).",
+    "first_draft": "Ibrahima Sow of Riverside United is shown a yellow card for a foul on Reyes after sustained pressure from Northbridge.",
+    "first_draft_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately conveys the information from the context, including the player, team, foul, card, and the sequence leading to the card, making it a complete and grounded answer."
+    },
+    "aired": "Ibrahima Sow of Riverside United is shown a yellow card for a foul on Reyes.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the information in the context without adding or omitting any relevant details."
+    }
+   },
+   {
+    "decision_id": "CAP-014",
+    "kind": "caption",
+    "truth": "true_detail_flagged",
+    "planted": "",
+    "referee_flags": "keeping Riverside United on their toes: No rule can check this statement against the match data.",
+    "hand_check": "'Keeping Riverside on their toes' is colour, read as a claim.",
+    "first_draft": "Vence’s shot saved brilliantly after Marsh’s clever pass, keeping Riverside United on their toes.",
+    "first_draft_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key facts from the context about the shot being saved after Marsh’s pass to Vence, with only a minor, reasonable embellishment. It is fully grounded and complete."
+    },
+    "aired": "Vence’s shot saved brilliantly after Marsh’s clever pass for Northbridge FC.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context about the chance involving Marsh’s pass to Vence and the shot being saved, without adding unrelated or incorrect information."
+    }
+   },
+   {
+    "decision_id": "CAP-014",
+    "kind": "why_it_matters",
+    "truth": "true_detail_flagged",
+    "planted": "",
+    "referee_flags": "keeps them trailing: Goal events give 0–1.",
+    "hand_check": "'Keeps them trailing' is true (0-1); the extractor gave the score the wrong way round.",
+    "first_draft": "Northbridge FC’s 9 shots and 0.82 xG show their dominance, but Vence’s saved chance keeps them trailing at 56 minutes.",
+    "first_draft_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including shots, xG, the saved chance by Vence, and the current score, making it fully grounded and complete."
+    },
+    "aired": "Northbridge FC’s 9 shots and 0.82 xG show their dominance, but Vence’s saved chance keeps the score at 0-1 at 56 minutes.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the key details from the context, including shots, xG, the saved chance by Vence, the score, and the time, without adding extraneous information."
+    }
+   },
+   {
+    "decision_id": "CAP-016",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "wrong_player",
+    "referee_flags": "Ashkenazi finds Brandt: No completed pass by that player in the last 2 minutes; the latest was by Ruairi Doyle (P-1473). | Brandt, who shoots for Northbridge: The event names a different player. | Brandt: Names Elias Brandt, but no checked statement about him holds. | Ashkenazi: Names Lior Ashkenazi, but no checked statement about him holds.",
+    "hand_check": "",
+    "first_draft": "Ashkenazi finds Brandt, who shoots for Northbridge but fires off target in a big chance at 61'.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response attempts to describe the big chance at 61' but incorrectly names Brandt as the shooter instead of Callum Reyes, which is not supported by the context. This makes the response inaccurate despite being related to the event."
+    },
+    "aired": "Callum Reyes shoots for Northbridge FC but fires off target in a big chance at 61'.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the key details from the context, including the player, team, outcome, and timing, making it a complete and grounded answer."
+    }
+   },
+   {
+    "decision_id": "CAP-017",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "4 final-third recoveries in the last 5 minutes: The window contains 3, not 4.",
+    "hand_check": "",
+    "first_draft": "Northbridge FC on a pressing spell with 4 final-third recoveries in the last 5 minutes, though none directly after pressing. Pell gives the ball away before Abara’s brief counter.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response incorrectly states 4 final-third recoveries instead of 3, which is a factual error based on the context. While other details are accurate, this mistake makes the response unreliable."
+    },
+    "aired": "Northbridge FC on a pressing spell with 3 final-third recoveries in the last 5 minutes, none directly after pressing. Pell gives the ball away before Abara’s brief counter.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the key facts and recent play details from the context, providing a complete and relevant summary without extraneous or incorrect information."
+    }
+   },
+   {
+    "decision_id": "CAP-017",
+    "kind": "why_it_matters",
+    "truth": "true_detail_flagged",
+    "planted": "",
+    "referee_flags": "sustained pressure: No matching press in the last 2 minutes of play. | no direct gains from pressing: No matching press in the last 2 minutes of play.",
+    "hand_check": "'No direct gains from pressing' is true (none of the 3 recoveries came after a press); the extractor read it as a press that happened.",
+    "first_draft": "Northbridge FC’s 3 final-third recoveries in 5 minutes show sustained pressure despite no direct gains from pressing.",
+    "first_draft_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context about Northbridge FC's pressing spell and final-third recoveries, making it fully grounded and complete."
+    },
+    "aired": "Northbridge FC made 3 final-third recoveries in 5 minutes, none of which came immediately after pressing.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key information from the context about Northbridge FC's pressing spell and final-third recoveries, without introducing any unrelated or incorrect information."
+    }
+   },
+   {
+    "decision_id": "CAP-021",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "wrong_player",
+    "referee_flags": "Riverside United make a change as Tariq Bello replaces Arlo Whitcombe: Players coming on and off are the other way round. | Lind and Abara link up under pressure from Northbridge: No press by that player in the last 2 minutes; the latest was by Sami Okafor (PR-1753). | Whitcombe: Names Arlo Whitcombe, but no checked statement about him holds. | Bello: Names Tariq Bello, but no checked statement about him holds.",
+    "hand_check": "",
+    "first_draft": "73' Riverside United make a change as Tariq Bello replaces Arlo Whitcombe, fresh legs coming onto the pitch as Lind and Abara link up under pressure from Northbridge.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response incorrectly names Tariq Bello as the substitute instead of Oskar Nyman, which is not supported by the context, making it partially inaccurate despite some relevant details."
+    },
+    "aired": "73' Riverside United make a change as Oskar Nyman replaces Arlo Whitcombe. Lind and Abara link up during the play.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the substitution and the recent passing play between Lind and Abara as described in the context without adding unrelated or incorrect information."
+    }
+   },
+   {
+    "decision_id": "CAP-025",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "unverifiable_superlative",
+    "referee_flags": "a shot that would have been the finest goal of the entire league season so far: A judgement or comparison beyond this match cannot be checked against the match data.",
+    "hand_check": "",
+    "first_draft": "Vence’s big chance saved brilliantly by Riverside’s keeper—a shot that would have been the finest goal of the entire league season so far!",
+    "first_draft_groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response accurately reflects the key event of Vence’s shot being saved but includes an unsupported subjective claim about the quality of the goal, which is not grounded in the context. Therefore, it is partially correct but incomplete and contains an extraneous opinion."
+    },
+    "aired": "Vence’s big chance saved brilliantly by Riverside’s keeper—no goal scored.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context about Vence’s big chance being saved and no goal scored, making it fully grounded and complete."
+    }
+   },
+   {
+    "decision_id": "CAP-027",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "4 final third recoveries in last 5 mins: The window contains 3, not 4.",
+    "hand_check": "",
+    "first_draft": "Northbridge FC on a pressing spell with 4 final third recoveries in last 5 mins, one straight after pressing, as Vence and Reyes link up nicely in attack.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response incorrectly states 4 final third recoveries instead of 3, which is not supported by the context, making it partially inaccurate despite some correct details."
+    },
+    "aired": "Northbridge FC on a pressing spell with 3 final third recoveries in last 5 mins, one straight after pressing, as Vence and Reyes link up nicely in attack.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately reflects the pressing spell by Northbridge FC with 3 final third recoveries, including one straight after pressing, and correctly references the link-up between Vence and Reyes, which is supported by the recent play. It is complete and grounded in the context without adding unrelated information."
+    }
+   },
+   {
+    "decision_id": "CAP-030",
+    "kind": "caption",
+    "truth": "own_error",
+    "planted": "",
+    "referee_flags": "Okafor’s recent giveaway under pressure from Marsh: No matching loss of possession in the last 2 minutes of play. | Okafor’s recent giveaway under pressure from Marsh: No matching press in the last 2 minutes of play. | Okafor: Names Sami Okafor, but no checked statement about him holds. | Marsh: Names Aiden Marsh, but no checked statement about him holds.",
+    "hand_check": "Okafor did give the ball away (P-1940), but not under pressure from Marsh, his own teammate; nobody pressed him.",
+    "first_draft": "Northbridge FC hold 67% possession with 91% pass accuracy despite Okafor’s recent giveaway under pressure from Marsh.",
+    "first_draft_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the possession and pass accuracy stats and the recent play involving Okafor and Marsh, without adding or omitting relevant details."
+    },
+    "aired": "Northbridge FC hold 67% possession with 91% pass accuracy.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the possession and pass accuracy statistics for Northbridge FC as given in the context, making it fully grounded and complete."
+    }
+   },
+   {
+    "decision_id": "CAP-030",
+    "kind": "why_it_matters",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "1.9 xG: Home xg so far: 1.63, not 1.90.",
+    "hand_check": "",
+    "first_draft": "Northbridge FC hold 67% possession with 1.9 xG, showing clear dominance and control as they push for a late winner.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response correctly reports possession but incorrectly states xG as 1.9 instead of 1.63 and adds an unsupported interpretation, making it partially inaccurate and not fully grounded in the context."
+    },
+    "aired": "Northbridge FC hold 67% possession with 1.63 xG, showing clear dominance and control as they push for a late winner.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately reflects the possession percentage and xG from the context and reasonably interprets these stats as dominance, making it a fully grounded and complete response based on the provided context."
+    }
+   },
+   {
+    "decision_id": "CAP-036",
+    "kind": "why_it_matters",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "Okonkwo’s 0.75 xG chance: Recorded xG is 0.45.",
+    "hand_check": "",
+    "first_draft": "Okonkwo’s 0.75 xG chance ends off target after 60.8 minutes without a shot on target for Riverside, showing their struggle to break Northbridge’s dominance.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains an incorrect xG value (0.75 instead of 0.45) while correctly mentioning other details, so it attempts to respond but includes incorrect information."
+    },
+    "aired": "Okonkwo’s 0.45 xG chance ends off target after 60.8 minutes without a shot on target for Riverside, showing their struggle to break Northbridge’s dominance.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including the xG value, shot outcome, time without a shot on target, and possession dominance, making it fully grounded and complete."
+    }
+   },
+   {
+    "decision_id": "CAP-039",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "wrong_player",
+    "referee_flags": "Yellow card for Dario Vence: The event names a different player. | late tackle on Bello: No foul by that player in the last 2 minutes; the latest was by Lior Ashkenazi (F-2214). | Vence: Names Dario Vence, but no checked statement about him holds.",
+    "hand_check": "",
+    "first_draft": "Yellow card for Dario Vence after a late tackle on Bello, who was pushing forward for Riverside United in stoppage time.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response attempts to address the context but incorrectly names the player who received the yellow card, making it inaccurate despite some relevance."
+    },
+    "aired": "Yellow card for Lior Ashkenazi of Northbridge FC as Bello pushed forward for Riverside United in stoppage time.",
+    "aired_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response correctly identifies the yellow card and the players involved but inaccurately describes the play by saying Bello pushed forward, which is not supported by the context that emphasizes Ashkenazi's foul on Bello. This makes the response partially correct but containing incorrect information."
+    }
+   },
+   {
+    "decision_id": "CAP-040",
+    "kind": "caption",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "Sami Okafor of Northbridge FC reaches an impressive 14 km on the pitch: Recorded milestone is 12 km. | Okafor: Names Sami Okafor, but no checked statement about him holds.",
+    "hand_check": "",
+    "first_draft": "Sami Okafor of Northbridge FC reaches an impressive 14 km on the pitch as Ashkenazi is booked for a late foul on Bello.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains an incorrect distance milestone (14 km instead of 12 km) but correctly mentions Ashkenazi's booking for a foul on Bello. This mix of correct and incorrect information means the response attempts to relate to the context but includes inaccuracies."
+    },
+    "aired": "Sami Okafor of Northbridge FC reaches 12 km on the pitch as Ashkenazi is booked for a late foul on Bello.",
+    "aired_groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely conveys the milestone of Sami Okafor reaching 12 km and the booking of Ashkenazi for a foul on Bello, both of which are explicitly stated in the context."
+    }
+   },
+   {
+    "decision_id": "RECAP-HT.3",
+    "kind": "recap_sentence",
+    "truth": "planted_error",
+    "planted": "inflated_number",
+    "referee_flags": "Riverside United have 7 shots: Away shots so far: 5, not 7.",
+    "hand_check": "",
+    "first_draft": "Northbridge FC have 6 shots and 2 on target, Riverside United have 7 shots and 2 on target.",
+    "first_draft_groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains an incorrect number of shots for Riverside United, which is not supported by the context, making it partially inaccurate."
+    },
+    "aired": "Northbridge FC have 6 shots and 2 on target, Riverside United have 5 shots and 2 on target.",
+    "aired_groundedness": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is accurate but only provides a small subset of the information from the context, making it a vague and incomplete summary rather than a fully grounded and complete response."
+    }
+   }
+  ]
+ },
+ "items": [
+  {
+   "decision_id": "CAP-001",
+   "minute": "7'",
+   "moment_type": "sprint",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Faris Haddad sprints at 35 km/h for Riverside United after a slick move from Lind to Morita, pushing forward past Vence's challenge.",
+   "item_id": "CAP-001:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the context's details about Faris Haddad's sprint, the top speed, the passing sequence, and the opposition challenge, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the sprint moment in the match, with well-connected ideas and smooth flow, effectively addressing the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with adequate vocabulary and sentence structure. It effectively conveys the intended message without errors but lacks complexity and variety in sentence construction and vocabulary to reach a higher level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-001",
+   "minute": "7'",
+   "moment_type": "sprint",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Faris Haddad sprints at 36 km/h: Recorded top speed is 35.0 km/h.",
+   "hand_check": "",
+   "response": "Faris Haddad sprints at 36 km/h for Riverside United after a slick move from Lind to Morita, pushing forward past Vence's challenge.",
+   "item_id": "CAP-001:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response is mostly related to the context but includes an incorrect speed (36 km/h instead of 35 km/h) and adds an unsupported detail about Vence's challenge, making it partially inaccurate."
+    },
+    "coherence": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the sprint moment in the match, with well-connected ideas and smooth flow, effectively addressing the query."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary and sentence structure. It is well-articulated but not highly complex or varied, fitting well within the proficient fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-002",
+   "minute": "7'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Reyes fires a big chance for Northbridge FC, but the keeper makes a sharp save to deny him early on!",
+   "item_id": "CAP-002:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the context, mentioning the key details of the big chance by Reyes for Northbridge FC and the save by the keeper, without adding or omitting any important information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query by providing a clear, logically organized caption that describes the moment in the match. It uses appropriate transitions and presents the information in a smooth, easy-to-understand manner."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary, but it is simple and lacks complex sentence structures, placing it at a competent fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-002",
+   "minute": "7'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC leads with 58% possession and 0.29 xG from 2 shots, showing early attacking dominance despite Reyes' saved chance.",
+   "item_id": "CAP-002:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including possession, xG, shots, and the saved chance by Reyes, providing a thorough and relevant summary without adding extraneous information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and directly addresses why the moment matters by explaining the team's dominance and the importance of the saved chance, making it easy to follow and logically organized."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, grammatically correct, and uses appropriate vocabulary to clearly convey the intended message. It is coherent and easy to understand, with minor complexity in sentence structure, fitting the proficient fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-003",
+   "minute": "8'",
+   "moment_type": "press",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC on a relentless pressing spell with 3 final third recoveries in 5 minutes, Vence's pressing causing Riverside United real problems.",
+   "item_id": "CAP-003:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely conveys the pressing spell by Northbridge FC, including the number of recoveries and Vence's impact, fully grounded in the context without missing details or adding unrelated information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the pressing moment in the match, with well-connected ideas and appropriate detail, making it easy to follow and relevant to the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and coherent with appropriate vocabulary and no grammatical errors. It effectively conveys the intended message in a concise manner, demonstrating competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-003",
+   "minute": "8'",
+   "moment_type": "press",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "4 final third recoveries in 5 minutes: The window contains 3, not 4.",
+   "hand_check": "",
+   "response": "Northbridge FC on a relentless pressing spell with 4 final third recoveries in 5 minutes, Vence's pressing causing Riverside United real problems.",
+   "item_id": "CAP-003:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response is mostly relevant and accurate but incorrectly states 4 final third recoveries instead of 3, making it partially incorrect and incomplete based on the context."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the pressing moment in the match with relevant details, making it easy to follow and understand as a live broadcast caption."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-articulated with appropriate vocabulary and clear sentence structure. It is coherent and flows smoothly, with minor complexity in sentence construction. There are no grammatical errors, and the message is clear and logical, fitting the definition of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-003",
+   "minute": "8'",
+   "moment_type": "press",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "rewritten",
+   "truth": "",
+   "author": "line_editor",
+   "planted": "unverifiable_superlative",
+   "first_status": "QUALIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC's 3 final-third recoveries in 5 minutes and 0.29 xG highlight their strong start in the match.",
+   "item_id": "CAP-003:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and specifically reflects the key statistics from the context about Northbridge FC's pressing and xG, directly addressing the context without errors or omissions that would reduce clarity."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically connects the pressing moment to the team's strong start using clear and relevant information, directly addressing the query in a well-structured sentence."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary, but it is a simple sentence without complex structure or varied sentence types, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-003",
+   "minute": "8'",
+   "moment_type": "press",
+   "set": "first_draft",
+   "kind": "why_it_matters",
+   "bucket": "qualify",
+   "truth": "planted_error",
+   "author": "analyst",
+   "planted": "unverifiable_superlative",
+   "first_status": "QUALIFY",
+   "referee_flags": "show their dominance, the best pressing start for any team this season: A comparison beyond this match cannot be checked against the match data.",
+   "hand_check": "",
+   "response": "Northbridge FC's 3 final-third recoveries in 5 minutes and 0.29 xG show their dominance, the best pressing start for any team this season.",
+   "item_id": "CAP-003:why_it_matters:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response accurately references the pressing spell and key stats from the context but adds an unsupported claim about it being the best pressing start this season, which is not in the context."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response clearly and logically explains why the 8' press moment matters by linking specific performance metrics to the team's dominance, making it a coherent and well-organized answer."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and uses appropriate vocabulary for the context. It conveys the message effectively with coherence and smooth flow but lacks complex sentence structures and extensive vocabulary variety. This aligns well with the definition of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-004",
+   "minute": "16'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC now enjoying 61% possession and 90% pass accuracy, Reyes steals the ball from Sow before feeding Brandt.",
+   "item_id": "CAP-004:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the possession statistics and the recent play involving Reyes and Brandt as described in the context, making it a complete and grounded answer."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents relevant match statistics and a play description in a clear and connected manner, making it easy to follow and appropriate for a live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, with adequate vocabulary and simple sentence structure, making it easily understandable but not complex or highly varied."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-004",
+   "minute": "16'",
+   "moment_type": "stat",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Northbridge FC now enjoying 62% possession: Home share is 61%. | feeding Brandt under pressure from Benedetti: No matching press in the last 2 minutes of play. | Benedetti: Names Luca Benedetti, but no checked statement about him holds.",
+   "hand_check": "",
+   "response": "Northbridge FC now enjoying 62% possession and 90% pass accuracy, Reyes steals the ball from Sow before feeding Brandt under pressure from Benedetti.",
+   "item_id": "CAP-004:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is mostly accurate and detailed, correctly describing the recent play and pass accuracy, but it slightly misstates the possession percentage by 1%, which is not supported by the context."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents relevant information about the match moment, making it easy to follow and understand as a live broadcast caption."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, clear, and coherent with appropriate vocabulary and no significant errors, fitting the description of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-004",
+   "minute": "16'",
+   "moment_type": "stat",
+   "set": "first_draft",
+   "kind": "why_it_matters",
+   "bucket": "qualify",
+   "truth": "planted_error",
+   "author": "analyst",
+   "planted": "unverifiable_superlative",
+   "first_status": "QUALIFY",
+   "referee_flags": "well above their usual season average: A comparison beyond this match cannot be checked against the match data.",
+   "hand_check": "",
+   "response": "Northbridge FC’s 4 shots and 0.36 xG in 16 minutes show early control and offensive threat, well above their usual season average.",
+   "item_id": "CAP-004:why_it_matters:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response accurately reports the shots and xG from the context but adds an unsupported claim about being above the usual season average, which is not present in the context, making it partially correct but incomplete and partially inaccurate."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically explains the significance of the 16-minute statistics in a clear and connected manner, directly addressing the query with relevant information and smooth flow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, effectively conveying the intended message with appropriate vocabulary. It lacks complex sentence structures and advanced vocabulary, placing it at a competent level of fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-005",
+   "minute": "17'",
+   "moment_type": "sprint",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Collymore bursts to a top speed of 35.9 km/h for Riverside United after Morita's crucial ball recovery.",
+   "item_id": "CAP-005:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including the player, team, top speed, and the sequence of play involving Morita's ball recovery, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the sprint moment requested, with a smooth connection between the player's action and the preceding event, making it easy to understand and follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, with adequate vocabulary and sentence structure, but it lacks complexity and variety, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-006",
+   "minute": "24'",
+   "moment_type": "goal",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "wrong_score",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Strand nets his first after Benedetti’s clever assist, Riverside United lead Northbridge FC 0-1 following a relentless high press!",
+   "item_id": "CAP-006:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded and complete, accurately reflecting all key details from the context including scorer, assist, score, and the pressing tactic."
+    },
+    "coherence": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the key information about the goal in a well-structured sentence that fits the context of a live broadcast caption. It directly answers the query with a smooth flow and clear connections between ideas."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary for the context, but it lacks complex sentence structures and extensive vocabulary variety, placing it at a competent fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-006",
+   "minute": "24'",
+   "moment_type": "goal",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "wrong_score",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Riverside United lead Northbridge 0-2: Goal events give 0–1.",
+   "hand_check": "",
+   "response": "Strand nets his first after Benedetti’s clever assist, Riverside United lead Northbridge 0-2 following a relentless high press!",
+   "item_id": "CAP-006:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response correctly identifies the scorer, assist, and the pressing style but incorrectly states the score as 0-2 instead of 0-1, making it partially correct but incomplete and inaccurate in a key detail."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents the key information about the goal in a clear and organized manner, directly addressing the query with a smooth flow of ideas."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, clear, and coherent with good vocabulary and grammar. It effectively conveys the message with logical flow, fitting the description of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-006",
+   "minute": "24'",
+   "moment_type": "goal",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "rewritten",
+   "truth": "",
+   "author": "line_editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Strand's goal lifts Riverside United to a 1-0 lead over Northbridge FC, with the move starting from effective pressing that turned defense into attack, despite Northbridge holding 59.4% possession so far.",
+   "item_id": "CAP-006:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including the scorer, scoreline, pressing leading to the goal, and possession stats, without adding or omitting important information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the question with a clear, logical, and well-organized explanation that flows smoothly and is easy to follow."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, grammatically correct, and coherent with a good level of vocabulary and sentence complexity. Minor improvements could be made for style, but it clearly fits the proficient fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-006",
+   "minute": "24'",
+   "moment_type": "goal",
+   "set": "first_draft",
+   "kind": "why_it_matters",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "analyst",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Riverside's xG to 0.58: No rule can check this statement against the match data. | 54.8% possession for Northbridge: Home share is 59.4%.",
+   "hand_check": "",
+   "response": "Strand's goal lifts Riverside's xG to 0.58 despite 54.8% possession for Northbridge, showing effective pressing turning defense into attack.",
+   "item_id": "CAP-006:why_it_matters:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response attempts to relate to the context but introduces an incorrect xG value (0.58) for Riverside United not supported by the context and makes an interpretive claim about pressing that is not explicitly stated, making it partially inaccurate."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically explains why the 24' goal matters by linking the goal to Riverside's increased xG and the tactical effectiveness despite possession stats, all in a clear and connected manner."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary for the context. It conveys the idea effectively but lacks complexity and variety in sentence structure and vocabulary, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-007",
+   "minute": "28'",
+   "moment_type": "sprint",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Aiden Marsh sprints at 34.9 km/h for Northbridge FC.",
+   "item_id": "CAP-007:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key fact from the context about Aiden Marsh's top speed sprint for Northbridge FC, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents a caption that fits the moment described in the query, with a smooth and relevant sentence that directly addresses the request."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct but simple and brief, with limited vocabulary and no sentence complexity. It conveys the idea effectively without errors, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-007",
+   "minute": "28'",
+   "moment_type": "sprint",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Callum Reyes sprints at 34.9 km/h: Recorded top speed is 34.9 km/h. | Pell’s clever pass: No completed pass by that player in the last 2 minutes; the latest was by Aiden Marsh (P-0620). | Reyes: Names Callum Reyes, but no checked statement about him holds.",
+   "hand_check": "",
+   "response": "Callum Reyes sprints at 34.9 km/h for Northbridge FC after Pell’s clever pass and ball win against Riverside United.",
+   "item_id": "CAP-007:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains incorrect information about the player’s name, which is not supported by the context, making it inaccurate despite other correct details."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents a caption that fits the query, with a smooth flow and relevant details that make it easy to understand and follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with adequate vocabulary, but it lacks complex sentence structures or sophisticated vocabulary, placing it at a competent fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-008",
+   "minute": "33'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC enjoying 63% possession with 89% pass accuracy as Ashkenazi drives forward before Vence and Doyle link up.",
+   "item_id": "CAP-008:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the possession percentage, pass accuracy, and recent play details from the context without adding or omitting relevant information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents relevant match statistics and a brief play description in a clear, connected manner that fits the request for a live broadcast caption. It flows well and is easy to understand, effectively addressing the query."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary for the context. It lacks complex sentence structures but is well-articulated and easy to understand, fitting the definition of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-008",
+   "minute": "33'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC's 63% possession and 89% pass accuracy show growing control but still searching for a breakthrough after 18.2 minutes since their last shot on target.",
+   "item_id": "CAP-008:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the possession percentage, pass accuracy, and time since the last shot on target from the context, providing a relevant and grounded summary without adding incorrect or unrelated information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and logically organized, clearly connecting the statistics to the significance of the moment, thus effectively addressing the query despite being slightly longer than requested."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, clear, and uses appropriate vocabulary with no grammatical errors. It effectively conveys a complex idea in a single sentence, showing good fluency and coherence."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-009",
+   "minute": "38'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "trimmed",
+   "truth": "",
+   "author": "editor",
+   "planted": "unverifiable_superlative",
+   "first_status": "QUALIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Callum Reyes fires a big chance off target for Northbridge FC.",
+   "item_id": "CAP-009:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key information from the context about Callum Reyes' off-target big chance for Northbridge FC, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it directly and clearly addresses the query with a logically organized and relevant caption that is easy to understand and follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with adequate vocabulary, but it is simple and lacks complexity or variety in sentence structure, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-009",
+   "minute": "38'",
+   "moment_type": "chance",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "qualify",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "unverifiable_superlative",
+   "first_status": "QUALIFY",
+   "referee_flags": "easily the finest opportunity seen in the entire league this season: A judgement or comparison beyond this match cannot be checked against the match data.",
+   "hand_check": "",
+   "response": "Callum Reyes fires a big chance off target for Northbridge FC — easily the finest opportunity seen in the entire league this season!",
+   "item_id": "CAP-009:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response correctly identifies the key facts from the context but adds an unsubstantiated claim about the opportunity being the finest in the league this season, which is not supported by the context. Therefore, it is partially correct but incomplete and includes extraneous information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query by providing a logically organized, clear, and engaging caption that fits the moment described. It flows smoothly and is easy to follow, making it a coherent response."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-articulated with good grammar, appropriate vocabulary, and a coherent sentence structure. It flows smoothly and conveys the message clearly without errors, matching the criteria for proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-009",
+   "minute": "38'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "rewritten",
+   "truth": "",
+   "author": "line_editor",
+   "planted": "",
+   "first_status": "QUALIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC’s 0.64 xG and 63% possession show their dominance, but Callum Reyes’ off-target shot keeps the score at 0-1.",
+   "item_id": "CAP-009:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including the xG, possession, the off-target shot by Callum Reyes, and the current score, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response clearly and logically explains why the 38' chance matters by linking team dominance and a missed opportunity to the current score, making it coherent and easy to follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent but uses simple sentence structure and vocabulary without complexity or variety, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-009",
+   "minute": "38'",
+   "moment_type": "chance",
+   "set": "first_draft",
+   "kind": "why_it_matters",
+   "bucket": "qualify",
+   "truth": "true_detail_flagged",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "QUALIFY",
+   "referee_flags": "Reyes’ off-target shot prolongs their wait for a breakthrough: No rule can check this statement against the match data.",
+   "hand_check": "'Prolongs their wait for a breakthrough' is interpretation, read as a fact.",
+   "response": "Northbridge FC’s 0.64 xG and 63% possession show their dominance, but Reyes’ off-target shot prolongs their wait for a breakthrough.",
+   "item_id": "CAP-009:why_it_matters:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including team xG, possession, and the outcome of Reyes’ shot, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically explains why the moment matters by linking team dominance and a missed chance, directly addressing the query in a clear and organized manner."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary, but it lacks complex sentence structures and varied vocabulary that would demonstrate a higher level of fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-010",
+   "minute": "45'",
+   "moment_type": "card",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Yellow card for Kenji Morita of Riverside United.",
+   "item_id": "CAP-010:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key information from the context about the yellow card given to Kenji Morita of Riverside United without adding or omitting details."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it directly addresses the query with a clear, logically organized caption that is easy to follow and relevant to the moment described."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct but very simple and brief, lacking complexity or varied vocabulary. It fits the description of competent fluency, as it conveys the message clearly with minimal effort but does not demonstrate advanced language use."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-010",
+   "minute": "45'",
+   "moment_type": "card",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Yellow card for Arlo Whitcombe: The event names a different player. | he fouls Ashkenazi: No foul by that player in the last 2 minutes; the latest was by Kenji Morita (F-1008). | pressing him near the halfway line for Riverside United: No press by that player in the last 2 minutes; the latest was by Kenji Morita (PR-1007). | Ashkenazi: Names Lior Ashkenazi, but no checked statement about him holds. | Whitcombe: Names Arlo Whitcombe, but no checked statement about him holds.",
+   "hand_check": "",
+   "response": "Yellow card for Arlo Whitcombe as he fouls Ashkenazi after pressing him near the halfway line for Riverside United.",
+   "item_id": "CAP-010:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response incorrectly identifies the player who received the yellow card and committed the foul, which is not supported by the context. It attempts to respond but contains inaccurate details."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the event requested in the query, with a smooth flow and clear connections between the ideas, making it easy to understand as a live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary, but it lacks sentence complexity and variety, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-011",
+   "minute": "45+3'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC hold 64% possession with 89% pass accuracy at half-time, as Ashkenazi and Marsh push forward before Reyes carries on after Quiroga’s pass.",
+   "item_id": "CAP-011:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the possession stats and recent plays from the context without adding or omitting relevant details, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents relevant match statistics and player actions in a clear, connected manner that fits the live broadcast caption request for the 45+3' moment. It flows smoothly and is easy to understand."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, grammatically correct, and uses appropriate vocabulary for the context. It conveys the information clearly and coherently with logical connections between ideas, fitting the description of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-011",
+   "minute": "45+3'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC’s 64% possession and 89% pass accuracy show control, but 31 minutes since their last shot on target highlights their struggle to break through.",
+   "item_id": "CAP-011:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely conveys the key statistics from the context, including possession, pass accuracy, and the time since the last shot on target, without adding unrelated or incorrect information."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is coherent and logically organized but only partially addresses the query because it does not explain why the 45+3' moment specifically matters, making it a partially coherent response."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with adequate vocabulary and sentence structure, making it easily understood with minimal effort, which aligns with Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-012",
+   "minute": "50'",
+   "moment_type": "card",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Yellow card shown to Jonah Pell (Northbridge FC). Pell had been pressing hard moments before.",
+   "item_id": "CAP-012:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the context by mentioning the yellow card to Jonah Pell and his pressing actions just before the card, fully grounded in the provided information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the information requested in the query, with a smooth flow and relevant context, making it easy to understand and follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, but it is simple and lacks complex sentence structures or varied vocabulary, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-012",
+   "minute": "50'",
+   "moment_type": "card",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Yellow card shown to Ruairi Doyle (Northbridge FC): The event names a different player. | a foul on Abara (Riverside United): No foul by that player in the last 2 minutes; the latest was by Jonah Pell (F-1215). | Doyle: Names Ruairi Doyle, but no checked statement about him holds. | Abara: Names Theo Abara, but no checked statement about him holds.",
+   "hand_check": "",
+   "response": "Yellow card shown to Ruairi Doyle (Northbridge FC) after a foul on Abara (Riverside United). Pell had been pressing hard moments before.",
+   "item_id": "CAP-012:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains incorrect information by naming Ruairi Doyle as the player who received the yellow card instead of Jonah Pell, which contradicts the context. Therefore, it attempts to respond but includes incorrect details."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the information about the yellow card event in a way that is easy to follow and directly relevant to the query. It uses appropriate transitions and maintains a smooth flow, making it a well-organized and effective live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, with adequate vocabulary and simple sentence structure, making it easily understandable."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-013",
+   "minute": "55'",
+   "moment_type": "card",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "trimmed",
+   "truth": "",
+   "author": "editor",
+   "planted": "",
+   "first_status": "QUALIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Ibrahima Sow of Riverside United is shown a yellow card for a foul on Reyes.",
+   "item_id": "CAP-013:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the information in the context without adding or omitting any relevant details."
+    },
+    "coherence": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is coherent because it directly and clearly describes the event requested in the query with logical and orderly presentation, making it easy to understand and follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct but simple and straightforward, with limited vocabulary and no complex sentence structures. It effectively communicates the idea but does not demonstrate advanced fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-013",
+   "minute": "55'",
+   "moment_type": "card",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "qualify",
+   "truth": "true_detail_flagged",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "QUALIFY",
+   "referee_flags": "sustained pressure from Northbridge: No press by that player in the last 2 minutes; the latest was by Ibrahima Sow (PR-1338).",
+   "hand_check": "Northbridge did press in the build-up (Vence on Lind, PR-1328).",
+   "response": "Ibrahima Sow of Riverside United is shown a yellow card for a foul on Reyes after sustained pressure from Northbridge.",
+   "item_id": "CAP-013:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately conveys the information from the context, including the player, team, foul, card, and the sequence leading to the card, making it a complete and grounded answer."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the event requested in the query, with a smooth flow and clear connections between the details provided."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, with adequate vocabulary and sentence structure. It conveys the idea effectively but lacks complexity or varied sentence structures, fitting the definition of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-014",
+   "minute": "56'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "trimmed",
+   "truth": "",
+   "author": "editor",
+   "planted": "",
+   "first_status": "QUALIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Vence’s shot saved brilliantly after Marsh’s clever pass for Northbridge FC.",
+   "item_id": "CAP-014:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context about the chance involving Marsh’s pass to Vence and the shot being saved, without adding unrelated or incorrect information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query by providing a clear, logically organized caption describing the chance at the 56th minute. It flows smoothly and is easy to follow, making it a coherent response."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with adequate vocabulary, but it is simple and lacks sentence complexity and variety, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-014",
+   "minute": "56'",
+   "moment_type": "chance",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "qualify",
+   "truth": "true_detail_flagged",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "QUALIFY",
+   "referee_flags": "keeping Riverside United on their toes: No rule can check this statement against the match data.",
+   "hand_check": "'Keeping Riverside on their toes' is colour, read as a claim.",
+   "response": "Vence’s shot saved brilliantly after Marsh’s clever pass, keeping Riverside United on their toes.",
+   "item_id": "CAP-014:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key facts from the context about the shot being saved after Marsh’s pass to Vence, with only a minor, reasonable embellishment. It is fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the chance moment in the match, making it easy to follow and directly relevant to the query for a live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary, but it is relatively simple and lacks complex sentence structures, placing it at a competent fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-014",
+   "minute": "56'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "rewritten",
+   "truth": "",
+   "author": "line_editor",
+   "planted": "",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC’s 9 shots and 0.82 xG show their dominance, but Vence’s saved chance keeps the score at 0-1 at 56 minutes.",
+   "item_id": "CAP-014:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the key details from the context, including shots, xG, the saved chance by Vence, the score, and the time, without adding extraneous information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response clearly and logically explains why the 56' chance matters by linking the saved chance to the maintained scoreline, making it a coherent and relevant answer to the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary for the context. It effectively conveys the intended message without errors, but it lacks complex sentence structures or a wide variety of vocabulary, placing it at a competent level of fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-014",
+   "minute": "56'",
+   "moment_type": "chance",
+   "set": "first_draft",
+   "kind": "why_it_matters",
+   "bucket": "withhold",
+   "truth": "true_detail_flagged",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "WITHHOLD",
+   "referee_flags": "keeps them trailing: Goal events give 0–1.",
+   "hand_check": "'Keeps them trailing' is true (0-1); the extractor gave the score the wrong way round.",
+   "response": "Northbridge FC’s 9 shots and 0.82 xG show their dominance, but Vence’s saved chance keeps them trailing at 56 minutes.",
+   "item_id": "CAP-014:why_it_matters:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including shots, xG, the saved chance by Vence, and the current score, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the question by logically explaining why the 56' chance matters, with clear connections between ideas and smooth flow. It is concise and directly relevant to the moment described in the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response clearly conveys its message with correct grammar and appropriate vocabulary. It is coherent and easy to understand, though it lacks complex sentence structures or a wide range of vocabulary, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-015",
+   "minute": "61'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC hold 65% possession with 90% pass accuracy as Riverside's Strand loses the ball after Whitcombe's forward run.",
+   "item_id": "CAP-015:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the possession stats and recent play details from the context, making it a complete and grounded answer."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents relevant match statistics and a recent event in a clear, connected manner that fits the request for a live broadcast caption at the 61' mark."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary for the context. It effectively conveys the intended information without errors, but it lacks complexity and variety in sentence structure, placing it at a competent fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-015",
+   "minute": "61'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC's 65% possession and 90% pass accuracy show their control, but they still trail 0-1 despite 9 shots and 0.82 xG.",
+   "item_id": "CAP-015:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately conveys the key statistics and game situation from the context, including possession, pass accuracy, score, shots, and xG, without omitting important details or adding incorrect information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents relevant statistics to explain why the moment matters, showing a clear connection between possession, performance, and the current score, thus effectively addressing the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary for the context, but it is simple and lacks sentence complexity or variety, fitting Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-016",
+   "minute": "61'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Callum Reyes shoots for Northbridge FC but fires off target in a big chance at 61'.",
+   "item_id": "CAP-016:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the key details from the context, including the player, team, outcome, and timing, making it a complete and grounded answer."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the moment of the match at 61 minutes, providing a smooth and relevant caption that directly addresses the query without any confusion or disorganization."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, effectively conveying the intended message with adequate vocabulary and simple sentence structure. It fits well within competent fluency but lacks complexity and variety to be considered proficient."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-016",
+   "minute": "61'",
+   "moment_type": "chance",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Ashkenazi finds Brandt: No completed pass by that player in the last 2 minutes; the latest was by Ruairi Doyle (P-1473). | Brandt, who shoots for Northbridge: The event names a different player. | Brandt: Names Elias Brandt, but no checked statement about him holds. | Ashkenazi: Names Lior Ashkenazi, but no checked statement about him holds.",
+   "hand_check": "",
+   "response": "Ashkenazi finds Brandt, who shoots for Northbridge but fires off target in a big chance at 61'.",
+   "item_id": "CAP-016:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response attempts to describe the big chance at 61' but incorrectly names Brandt as the shooter instead of Callum Reyes, which is not supported by the context. This makes the response inaccurate despite being related to the event."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the chance at the 61st minute, directly addressing the query with a well-organized sentence that flows smoothly and is easy to understand."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with appropriate vocabulary, but it is simple and lacks sentence complexity or variety. It fits well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-016",
+   "minute": "61'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "wrong_player",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC has 10 shots and 65% possession, showing strong control; Reyes, with 5 shots, is driving their attack despite missing this big chance.",
+   "item_id": "CAP-016:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded and complete, accurately reflecting the key statistics and moment details from the context without omission or error."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and logically organized but does not directly and succinctly answer the query's request for a one-line explanation of why the 61' chance matters. It provides relevant information but lacks a clear, focused statement on the moment's significance."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary and sentence structure. It effectively conveys the intended message without errors, fitting the description of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-017",
+   "minute": "62'",
+   "moment_type": "press",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC on a pressing spell with 3 final-third recoveries in the last 5 minutes, none directly after pressing. Pell gives the ball away before Abara’s brief counter.",
+   "item_id": "CAP-017:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the key facts and recent play details from the context, providing a complete and relevant summary without extraneous or incorrect information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents information relevant to the query, with a smooth flow and clear connections between ideas, making it easy to follow and understand."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, clear, and uses appropriate vocabulary with no grammatical errors, making it a proficient and coherent piece of writing."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-017",
+   "minute": "62'",
+   "moment_type": "press",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "4 final-third recoveries in the last 5 minutes: The window contains 3, not 4.",
+   "hand_check": "",
+   "response": "Northbridge FC on a pressing spell with 4 final-third recoveries in the last 5 minutes, though none directly after pressing. Pell gives the ball away before Abara’s brief counter.",
+   "item_id": "CAP-017:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response incorrectly states 4 final-third recoveries instead of 3, which is a factual error based on the context. While other details are accurate, this mistake makes the response unreliable."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query with a clear, logical, and smoothly flowing description of the pressing moment in the match. It uses appropriate transitions and presents the information in an orderly manner, making it easy to understand."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, coherent, and uses appropriate vocabulary with no significant grammatical errors. It demonstrates good control of language and logical flow, fitting the definition of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-017",
+   "minute": "62'",
+   "moment_type": "press",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "rewritten",
+   "truth": "",
+   "author": "line_editor",
+   "planted": "",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC made 3 final-third recoveries in 5 minutes, none of which came immediately after pressing.",
+   "item_id": "CAP-017:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key information from the context about Northbridge FC's pressing spell and final-third recoveries, without introducing any unrelated or incorrect information."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is partially coherent because it provides relevant information related to the moment but lacks a clear, direct explanation of why the moment matters, making the logical flow incomplete and requiring inference from the reader."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with adequate vocabulary, but it is simple and lacks complexity or variety in sentence structure, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-017",
+   "minute": "62'",
+   "moment_type": "press",
+   "set": "first_draft",
+   "kind": "why_it_matters",
+   "bucket": "withhold",
+   "truth": "true_detail_flagged",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "WITHHOLD",
+   "referee_flags": "sustained pressure: No matching press in the last 2 minutes of play. | no direct gains from pressing: No matching press in the last 2 minutes of play.",
+   "hand_check": "'No direct gains from pressing' is true (none of the 3 recoveries came after a press); the extractor read it as a press that happened.",
+   "response": "Northbridge FC’s 3 final-third recoveries in 5 minutes show sustained pressure despite no direct gains from pressing.",
+   "item_id": "CAP-017:why_it_matters:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context about Northbridge FC's pressing spell and final-third recoveries, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it directly answers the query with a clear and logically organized statement that explains the importance of the 62' press moment in one line."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary for the context. It lacks complex sentence structures or sophisticated vocabulary but effectively communicates the intended idea without errors or awkwardness."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-018",
+   "minute": "65'",
+   "moment_type": "card",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Yellow card for Mensah-Reid after he fouls Whitcombe, following a quick Riverside press on Ashkenazi's misplaced pass.",
+   "item_id": "CAP-018:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the context, including the yellow card, the player involved, the foul, and the build-up play, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query by providing a logically organized and clear live broadcast caption that describes the event and its context in a smooth and understandable manner."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, with adequate vocabulary and sentence structure, but it does not demonstrate complex or varied sentence structures or sophisticated vocabulary."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-019",
+   "minute": "65'",
+   "moment_type": "sub",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Riverside United bring Remy Castell on for Ferrán as Mensah-Reid picks up a booking for fouling Whitcombe.",
+   "item_id": "CAP-019:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the substitution and booking events described in the context without omitting any key details or adding incorrect information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the substitution event and an additional relevant event in a connected and understandable manner, directly addressing the query for a live broadcast caption at the 65' substitution moment."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, with adequate vocabulary for the context. It lacks complexity and variety but is easily understood and well-structured."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-020",
+   "minute": "73'",
+   "moment_type": "press",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC on a pressing spell with three final third recoveries in five minutes, including two straight after pressing—Reyes just won a crucial tackle on Lind.",
+   "item_id": "CAP-020:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the pressing spell details, recoveries, and recent play involving Reyes and Lind from the context without adding or omitting important information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the pressing moment in the match with relevant details, making it easy to follow and understand as a live broadcast caption."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, coherent, and uses appropriate vocabulary with no grammatical errors, indicating proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-020",
+   "minute": "73'",
+   "moment_type": "press",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "unverifiable_superlative",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC’s three final-third recoveries in five minutes, two right after pressing, highlight their dominant 79% possession in the last 10 minutes, signaling mounting pressure.",
+   "item_id": "CAP-020:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded and complete, accurately reflecting all relevant details from the context without adding extraneous information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically connects the team's recoveries and possession stats to the mounting pressure, directly addressing why the moment matters in a clear and organized manner."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-constructed with complex sentence structure, appropriate vocabulary, and clear, coherent communication. Minor errors are absent, and the text flows smoothly, fitting the criteria for proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-021",
+   "minute": "73'",
+   "moment_type": "sub",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "73' Riverside United make a change as Oskar Nyman replaces Arlo Whitcombe. Lind and Abara link up during the play.",
+   "item_id": "CAP-021:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the substitution and the recent passing play between Lind and Abara as described in the context without adding unrelated or incorrect information."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response partially addresses the query with a relevant substitution caption but includes an unrelated second sentence that breaks the logical flow and focus, resulting in a partially coherent response."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with appropriate vocabulary, but it is simple and lacks complexity or variety in sentence structure, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-021",
+   "minute": "73'",
+   "moment_type": "sub",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Riverside United make a change as Tariq Bello replaces Arlo Whitcombe: Players coming on and off are the other way round. | Lind and Abara link up under pressure from Northbridge: No press by that player in the last 2 minutes; the latest was by Sami Okafor (PR-1753). | Whitcombe: Names Arlo Whitcombe, but no checked statement about him holds. | Bello: Names Tariq Bello, but no checked statement about him holds.",
+   "hand_check": "",
+   "response": "73' Riverside United make a change as Tariq Bello replaces Arlo Whitcombe, fresh legs coming onto the pitch as Lind and Abara link up under pressure from Northbridge.",
+   "item_id": "CAP-021:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response incorrectly names Tariq Bello as the substitute instead of Oskar Nyman, which is not supported by the context, making it partially inaccurate despite some relevant details."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query with a logically organized and smoothly flowing caption that clearly describes the substitution moment in the match."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and coherent with correct grammar and appropriate vocabulary for the context. It conveys the intended message effectively, though it lacks complex sentence structures and extensive vocabulary variety, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-022",
+   "minute": "74'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Strand’s shot for Riverside United is blocked after a slick move from Morita, Benedetti, and Nyman, with Doyle applying the pressure.",
+   "item_id": "CAP-022:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely conveys the key details from the context, including the players involved in the buildup, the blocked shot by Strand, and Doyle's pressure, without introducing any inaccuracies or irrelevant information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the sequence of events during the 74th-minute chance, making it easy to follow and directly relevant to the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary, but it lacks complexity and variety in sentence structure, placing it at a competent fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-022",
+   "minute": "74'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Strand’s blocked shot ends Riverside’s 44.5-minute drought since their last shot on target, showing their rare but dangerous attacking moments.",
+   "item_id": "CAP-022:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context about Strand’s blocked shot ending a 44.5-minute shot on target drought for Riverside United, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically explains the significance of the moment in a clear and organized manner, directly addressing the query with a smooth flow of ideas."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-constructed, grammatically sound, and uses appropriate vocabulary with a clear and coherent message, fitting the criteria for proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-023",
+   "minute": "75'",
+   "moment_type": "sub",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC make a change as Nico Albertsen replaces Jonah Pell, fresh legs on the pitch with the ball still buzzing around the box.",
+   "item_id": "CAP-023:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately conveys the substitution event from the context, including the correct players and team, and appropriately reflects the ongoing play without adding incorrect information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query by logically presenting the substitution event with clear connections and a smooth flow, making it easy to follow and appropriate for a live broadcast caption."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and uses appropriate vocabulary with coherent sentence structure. It is well-articulated but not highly complex or sophisticated, fitting well within proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-024",
+   "minute": "75'",
+   "moment_type": "sub",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Riverside United make a change as Tariq Bello replaces Ezra Collymore. Northbridge’s Vence fires a shot but Abara blocks it!",
+   "item_id": "CAP-024:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the substitution and the recent play involving Vence's shot and Abara's block, fully grounded in the context without omissions or errors."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and logically organized, clearly describing the substitution as requested. However, it includes an additional unrelated event, which slightly detracts from the focus and smooth flow of the caption. Overall, it effectively addresses the query with clear connections between ideas but is not perfectly focused on just the substitution moment."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with appropriate vocabulary, but it is simple and lacks complexity or variety in sentence structure, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-025",
+   "minute": "76'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "trimmed",
+   "truth": "",
+   "author": "editor",
+   "planted": "unverifiable_superlative",
+   "first_status": "QUALIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Vence’s big chance saved brilliantly by Riverside’s keeper—no goal scored.",
+   "item_id": "CAP-025:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context about Vence’s big chance being saved and no goal scored, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the moment in the match, directly addressing the query with a smooth and understandable sentence that connects the key elements of the event."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with appropriate vocabulary, but it is simple and lacks complexity or variety in sentence structure, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-025",
+   "minute": "76'",
+   "moment_type": "chance",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "qualify",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "unverifiable_superlative",
+   "first_status": "QUALIFY",
+   "referee_flags": "a shot that would have been the finest goal of the entire league season so far: A judgement or comparison beyond this match cannot be checked against the match data.",
+   "hand_check": "",
+   "response": "Vence’s big chance saved brilliantly by Riverside’s keeper—a shot that would have been the finest goal of the entire league season so far!",
+   "item_id": "CAP-025:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response accurately reflects the key event of Vence’s shot being saved but includes an unsupported subjective claim about the quality of the goal, which is not grounded in the context. Therefore, it is partially correct but incomplete and contains an extraneous opinion."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query with a logically organized and clear description of the moment, making it easy to understand and follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent but uses simple sentence structure and vocabulary without complexity or variety, fitting the Competent Fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-025",
+   "minute": "76'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "unverifiable_superlative",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC's 13 shots and 1.51 xG show dominance, but Vence’s saved chance highlights their struggle to convert despite 76.1% possession in the last 10 minutes.",
+   "item_id": "CAP-025:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including shots, xG, possession, and the saved chance by Vence, without adding unrelated or incorrect information. It is a fully grounded and complete response."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically explains why the 76' chance matters by linking team dominance and possession to the failure to convert a key opportunity, directly addressing the query in a clear and connected manner."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and coherent with correct grammar and appropriate vocabulary, effectively conveying the intended message. However, it lacks complexity and variety in sentence structure and vocabulary, placing it at a competent level rather than proficient or exceptional."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-026",
+   "minute": "77'",
+   "moment_type": "goal",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Reyes levels for Northbridge after Okafor’s assist, sparked by Albertsen’s relentless press to win the ball back!",
+   "item_id": "CAP-026:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the key details from the context, including the scorer, assist, pressing action, and the score leveling, making it a complete and precise summary of the event described."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the key details of the goal moment in a smooth and connected manner, making it easy to follow and appropriate for the requested live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with appropriate vocabulary and coherence, but it lacks complexity and variety in sentence structure, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-026",
+   "minute": "77'",
+   "moment_type": "goal",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge’s 14 shots and 1.63 xG show strong dominance, with Reyes’ goal capping relentless pressing and 77.2% possession in the last 10 minutes.",
+   "item_id": "CAP-026:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including shots, xG, possession, pressing, and the goal scorer, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is partially coherent as it includes relevant information about the goal and game context but does not clearly and directly answer why the 77' goal moment matters in one line. The logical flow is present but the focus is not fully aligned with the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary for the context. It effectively conveys the intended message without errors but does not demonstrate complex sentence structures or an extensive vocabulary range, placing it at a competent fluency level."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-027",
+   "minute": "81'",
+   "moment_type": "press",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC on a pressing spell with 3 final third recoveries in last 5 mins, one straight after pressing, as Vence and Reyes link up nicely in attack.",
+   "item_id": "CAP-027:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately reflects the pressing spell by Northbridge FC with 3 final third recoveries, including one straight after pressing, and correctly references the link-up between Vence and Reyes, which is supported by the recent play. It is complete and grounded in the context without adding unrelated information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the pressing moment in the match, linking the pressing action to specific recoveries and player interactions, making it easy to follow and relevant to the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response clearly conveys a specific idea with appropriate vocabulary and no grammatical errors. It is coherent and easy to understand but lacks complex sentence structures or a wide range of vocabulary, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-027",
+   "minute": "81'",
+   "moment_type": "press",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "4 final third recoveries in last 5 mins: The window contains 3, not 4.",
+   "hand_check": "",
+   "response": "Northbridge FC on a pressing spell with 4 final third recoveries in last 5 mins, one straight after pressing, as Vence and Reyes link up nicely in attack.",
+   "item_id": "CAP-027:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response incorrectly states 4 final third recoveries instead of 3, which is not supported by the context, making it partially inaccurate despite some correct details."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents the pressing moment with relevant details and clear connections between ideas, making it easy to follow and appropriate for a live broadcast caption."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-constructed, clear, and coherent with appropriate vocabulary and sentence complexity for the context. Minor complexity and good flow justify a proficient level of fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-027",
+   "minute": "81'",
+   "moment_type": "press",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC’s 3 final-third recoveries in 5 mins and 66% possession show sustained pressure and control late in the match.",
+   "item_id": "CAP-027:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely conveys the key details from the context about Northbridge FC's pressing spell and possession, showing sustained pressure and control late in the match without introducing extraneous information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query with clear, logically connected ideas that explain why the moment matters, making it a coherent answer."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with adequate vocabulary related to the topic. It conveys the intended message effectively but lacks complex sentence structures or sophisticated vocabulary that would indicate a higher level of fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-028",
+   "minute": "82'",
+   "moment_type": "sub",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC make a change as Saul replaces Quiroga, fresh legs coming on with 8 minutes plus added time to play.",
+   "item_id": "CAP-028:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the substitution event described in the context, including the players involved, the team, and the timing, without adding incorrect or unrelated information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the substitution event with relevant details and smooth flow, directly addressing the query for a live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary for the context, but it is simple and lacks sentence complexity or variety, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-029",
+   "minute": "82'",
+   "moment_type": "sub",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Riverside United make a change – Jesse Okonkwo replaces Viktor Strand as the game approaches its final stages.",
+   "item_id": "CAP-029:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely conveys the substitution event from the context, including the players and team involved, and appropriately references the timing of the substitution without adding unrelated or incorrect information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the substitution event in a way that fits the request for a live broadcast caption, with smooth flow and clear connections between ideas."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, effectively communicating the intended message with adequate vocabulary and sentence structure, but it lacks complexity and variety."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-030",
+   "minute": "83'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "trimmed",
+   "truth": "",
+   "author": "editor",
+   "planted": "",
+   "first_status": "QUALIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC hold 67% possession with 91% pass accuracy.",
+   "item_id": "CAP-030:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the possession and pass accuracy statistics for Northbridge FC as given in the context, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents relevant match statistics as a live broadcast caption, directly addressing the query with a well-structured and understandable sentence."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent but is very simple and lacks sentence complexity or varied vocabulary, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-030",
+   "minute": "83'",
+   "moment_type": "stat",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "qualify",
+   "truth": "own_error",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "QUALIFY",
+   "referee_flags": "Okafor’s recent giveaway under pressure from Marsh: No matching loss of possession in the last 2 minutes of play. | Okafor’s recent giveaway under pressure from Marsh: No matching press in the last 2 minutes of play. | Okafor: Names Sami Okafor, but no checked statement about him holds. | Marsh: Names Aiden Marsh, but no checked statement about him holds.",
+   "hand_check": "Okafor did give the ball away (P-1940), but not under pressure from Marsh, his own teammate; nobody pressed him.",
+   "response": "Northbridge FC hold 67% possession with 91% pass accuracy despite Okafor’s recent giveaway under pressure from Marsh.",
+   "item_id": "CAP-030:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the possession and pass accuracy stats and the recent play involving Okafor and Marsh, without adding or omitting relevant details."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents relevant match statistics and a recent event in a clear, connected manner that fits the live broadcast caption request. It flows smoothly and directly addresses the query without ambiguity."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary for the context. It lacks complexity but effectively conveys the intended message, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-030",
+   "minute": "83'",
+   "moment_type": "stat",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "rewritten",
+   "truth": "",
+   "author": "line_editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC hold 67% possession with 1.63 xG, showing clear dominance and control as they push for a late winner.",
+   "item_id": "CAP-030:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately reflects the possession percentage and xG from the context and reasonably interprets these stats as dominance, making it a fully grounded and complete response based on the provided context."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically connects the statistics to the significance of the moment in a clear and organized sentence that directly answers the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with adequate vocabulary, but it lacks complexity and variety in sentence structure, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-030",
+   "minute": "83'",
+   "moment_type": "stat",
+   "set": "first_draft",
+   "kind": "why_it_matters",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "analyst",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "1.9 xG: Home xg so far: 1.63, not 1.90.",
+   "hand_check": "",
+   "response": "Northbridge FC hold 67% possession with 1.9 xG, showing clear dominance and control as they push for a late winner.",
+   "item_id": "CAP-030:why_it_matters:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response correctly reports possession but incorrectly states xG as 1.9 instead of 1.63 and adds an unsupported interpretation, making it partially inaccurate and not fully grounded in the context."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent, directly addresses the query with a logically organized sentence, and clearly explains why the moment matters using relevant statistics and context."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary for the context. It effectively conveys the intended message without errors, but it lacks complexity and variety in sentence structure and vocabulary, placing it at a competent level rather than proficient or exceptional."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-031",
+   "minute": "84'",
+   "moment_type": "milestone",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Lior Ashkenazi hits 11km for Northbridge FC as Saul presses Bello, before Okafor fouls Morita in a tense Riverside United attack.",
+   "item_id": "CAP-031:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including the milestone and recent plays, without adding or omitting relevant information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and relevant, presenting a clear and logical sequence of events suitable for a live broadcast caption, though it could more explicitly emphasize the \"84' milestone\" aspect."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-structured, grammatically correct, and coherent with appropriate vocabulary for the context, demonstrating proficient fluency without significant errors or awkwardness."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-032",
+   "minute": "86'",
+   "moment_type": "sub",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC make a late change as Yusuf Darby replaces Callum Reyes.",
+   "item_id": "CAP-032:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the substitution event described in the context, including the teams and players involved, without omitting any relevant details or adding extraneous information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it clearly and logically presents the substitution event as requested, with a smooth and understandable sentence that fits the context of a live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct but simple and straightforward without complex sentence structures or varied vocabulary, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-033",
+   "minute": "86'",
+   "moment_type": "sub",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC make a late switch as Bastien Kerr replaces Dario Vence on the pitch.",
+   "item_id": "CAP-033:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the substitution event described in the context, including the teams and players involved, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the substitution event as requested, with a smooth and direct statement that is easy to follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent but simple and straightforward without complex sentence structures or advanced vocabulary, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-034",
+   "minute": "87'",
+   "moment_type": "milestone",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Sami Okafor of Northbridge FC hits 11km on the clock but promptly loses possession to Haddad, who feeds Bello on the break for Riverside United.",
+   "item_id": "CAP-034:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the milestone and the recent play sequence from the context, providing a complete and relevant summary without adding or omitting key details."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is coherent and logically organized but does not directly address the request for a live broadcast caption specifically highlighting the 87' milestone. It describes a play sequence instead of providing a concise caption focused on the milestone, making it only partially coherent relative to the query."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary and sentence structure. It effectively conveys the intended message without errors, fitting well within the competent to proficient fluency range."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-035",
+   "minute": "89'",
+   "moment_type": "goal",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Marsh nets his first of the match, assisted by Ashkenazi, to put Northbridge FC 2-1 up after a quick break started by Darby's brave carry under pressure.",
+   "item_id": "CAP-035:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely conveys the key details from the context, including the scorer, assist, scoreline, and the build-up play, without adding or omitting important information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query with a well-organized and clear caption that flows smoothly and is easy to follow."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is well-written, clear, and coherent with good grammar and vocabulary. It is a well-structured sentence that flows smoothly and conveys the intended message effectively, fitting the description of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-035",
+   "minute": "89'",
+   "moment_type": "goal",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "verified",
+   "truth": "",
+   "author": "analyst",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC’s 15 shots and 67% possession, plus Marsh’s 1 goal and 7 recoveries, show their dominance and control late in the match.",
+   "item_id": "CAP-035:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response accurately reflects key statistics and the goal scorer's contribution from the context but is somewhat vague and does not include all relevant details such as the assist or the exact scoreline after the goal. It is correct but not fully complete."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is coherent in structure but does not directly or clearly address why the 89' goal moment matters, making it only partially coherent relative to the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with adequate vocabulary, but it lacks sentence complexity and variety, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-036",
+   "minute": "90'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Okonkwo breaks free after Haddad’s pass but his shot for Riverside United flies off target under pressure from Doyle. Big chance wasted!",
+   "item_id": "CAP-036:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely reflects the key details of the context, including the players, the sequence of passes, the pressure from Doyle, and the shot outcome, making it a complete and precise summary of the event described."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the moment in the match, directly addressing the query with a well-structured and easy-to-understand caption that flows smoothly."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and uses appropriate vocabulary and sentence structure to convey the message effectively, fitting the criteria for proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-036",
+   "minute": "90'",
+   "moment_type": "chance",
+   "set": "aired",
+   "kind": "why_it_matters",
+   "bucket": "rewritten",
+   "truth": "",
+   "author": "line_editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Okonkwo’s 0.45 xG chance ends off target after 60.8 minutes without a shot on target for Riverside, showing their struggle to break Northbridge’s dominance.",
+   "item_id": "CAP-036:why_it_matters:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the key details from the context, including the xG value, shot outcome, time without a shot on target, and possession dominance, making it fully grounded and complete."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and logically organized, clearly explaining why the moment matters by linking the chance to the team's struggle and dominance in the game. It addresses the query directly and flows smoothly, making it easy to follow."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with appropriate vocabulary and sentence structure. It effectively conveys the intended message without errors, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-036",
+   "minute": "90'",
+   "moment_type": "chance",
+   "set": "first_draft",
+   "kind": "why_it_matters",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "analyst",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Okonkwo’s 0.75 xG chance: Recorded xG is 0.45.",
+   "hand_check": "",
+   "response": "Okonkwo’s 0.75 xG chance ends off target after 60.8 minutes without a shot on target for Riverside, showing their struggle to break Northbridge’s dominance.",
+   "item_id": "CAP-036:why_it_matters:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains an incorrect xG value (0.75 instead of 0.45) while correctly mentioning other details, so it attempts to respond but includes incorrect information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and logically structured, directly addressing the moment with clear connections between ideas. However, it is longer and more detailed than the one-line format requested, which slightly reduces its coherence relative to the query's specific instruction."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, coherent, and grammatically correct with adequate vocabulary, but it lacks complexity and variety in sentence structure, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-037",
+   "minute": "90+1'",
+   "moment_type": "sprint",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Faris Haddad bursts at 34.6 km/h, sprinting forward for Riverside United after winning the ball back in the dying moments!",
+   "item_id": "CAP-037:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately reflects the context details about Faris Haddad's sprint, including his top speed, team, and actions, making it a complete and grounded answer."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent and effectively addresses the query by providing a logically organized, clear, and relevant live broadcast caption that fits the moment described in the query. It flows well and is easy to understand."
+    },
+    "fluency": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and uses appropriate vocabulary with good sentence structure. It effectively conveys the idea in a smooth and coherent manner, fitting the description of proficient fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-038",
+   "minute": "90+3'",
+   "moment_type": "milestone",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "verified",
+   "truth": "",
+   "author": "narrator",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Lior Ashkenazi hits 12km for Northbridge as Doyle blocks Okonkwo’s late strike for Riverside United.",
+   "item_id": "CAP-038:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response fully and accurately conveys the milestone and recent play details from the context, making it a complete and grounded answer."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response contains relevant information about the match but lacks a clear, focused, and logically organized caption specifically for the 90+3' milestone. It partially addresses the query but the ideas are not smoothly connected or clearly centered on the requested moment, making it only partially coherent."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with appropriate vocabulary, but it is short and simple without complex sentence structures or advanced vocabulary, fitting the definition of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-039",
+   "minute": "90+5'",
+   "moment_type": "card",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Yellow card for Lior Ashkenazi of Northbridge FC as Bello pushed forward for Riverside United in stoppage time.",
+   "item_id": "CAP-039:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response correctly identifies the yellow card and the players involved but inaccurately describes the play by saying Bello pushed forward, which is not supported by the context that emphasizes Ashkenazi's foul on Bello. This makes the response partially correct but containing incorrect information."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents the information requested by the query. It directly addresses the moment of the match with a well-structured caption that flows smoothly and is easy to understand."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, effectively conveying the intended message with adequate vocabulary and sentence structure, but it lacks complexity and variety."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-039",
+   "minute": "90+5'",
+   "moment_type": "card",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "wrong_player",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Yellow card for Dario Vence: The event names a different player. | late tackle on Bello: No foul by that player in the last 2 minutes; the latest was by Lior Ashkenazi (F-2214). | Vence: Names Dario Vence, but no checked statement about him holds.",
+   "hand_check": "",
+   "response": "Yellow card for Dario Vence after a late tackle on Bello, who was pushing forward for Riverside United in stoppage time.",
+   "item_id": "CAP-039:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response attempts to address the context but incorrectly names the player who received the yellow card, making it inaccurate despite some relevance."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly describes the event at 90+5' with relevant details, making it easy to understand and appropriate for a live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, effectively conveying the intended message with adequate vocabulary and sentence structure, but it lacks complexity and variety."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-040",
+   "minute": "90+6'",
+   "moment_type": "milestone",
+   "set": "aired",
+   "kind": "caption",
+   "bucket": "withheld_then_corrected",
+   "truth": "",
+   "author": "editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Sami Okafor of Northbridge FC reaches 12 km on the pitch as Ashkenazi is booked for a late foul on Bello.",
+   "item_id": "CAP-040:caption:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response is fully grounded as it accurately and completely conveys the milestone of Sami Okafor reaching 12 km and the booking of Ashkenazi for a foul on Bello, both of which are explicitly stated in the context."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically and clearly presents relevant information about the match moment at 90+6', making it easy to understand and follow as a live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent but uses simple vocabulary and sentence structure without complexity or variety, matching the definition of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "CAP-040",
+   "minute": "90+6'",
+   "moment_type": "milestone",
+   "set": "first_draft",
+   "kind": "caption",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "narrator",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Sami Okafor of Northbridge FC reaches an impressive 14 km on the pitch: Recorded milestone is 12 km. | Okafor: Names Sami Okafor, but no checked statement about him holds.",
+   "hand_check": "",
+   "response": "Sami Okafor of Northbridge FC reaches an impressive 14 km on the pitch as Ashkenazi is booked for a late foul on Bello.",
+   "item_id": "CAP-040:caption:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains an incorrect distance milestone (14 km instead of 12 km) but correctly mentions Ashkenazi's booking for a foul on Bello. This mix of correct and incorrect information means the response attempts to relate to the context but includes inaccuracies."
+    },
+    "coherence": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is coherent because it logically presents relevant information about the match at the 90+6' milestone in a clear and connected manner, making it easy to understand and appropriate for a live broadcast caption."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent with appropriate vocabulary, but it lacks complexity and variety in sentence structure, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-HT.1",
+   "minute": "45+3'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Riverside United lead Northbridge FC 1-0 at half-time.",
+   "item_id": "RECAP-HT.1:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is accurate and directly grounded in the context, correctly stating the half-time score, but it is vague and does not include any additional details from the context."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and logically presented but is too brief and does not provide a multi-sentence recap as requested, making it only partially coherent in relation to the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct but very simple and limited in vocabulary and sentence complexity, making it a competent but not proficient example of fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-HT.2",
+   "minute": "45+3'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Viktor Strand scored for Riverside United in the 24th minute, assisted by Luca Benedetti.",
+   "item_id": "RECAP-HT.2:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely conveys the goal information from the context without adding or omitting any details about the goal, making it fully grounded and complete for that specific fact."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is coherent and relevant but only provides one sentence instead of a series of sentences as requested, limiting its completeness and flow. It partially addresses the query but does not fully meet the expectation of a multi-sentence recap."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent but simple in structure and vocabulary, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-HT.3",
+   "minute": "45+3'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "rewritten",
+   "truth": "",
+   "author": "line_editor",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC have 6 shots and 2 on target, Riverside United have 5 shots and 2 on target.",
+   "item_id": "RECAP-HT.3:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is accurate but only provides a small subset of the information from the context, making it a vague and incomplete summary rather than a fully grounded and complete response."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is coherent and relevant but only provides one sentence instead of multiple sentences as requested, limiting its completeness and flow. It is clear and logically organized but partially meets the query's requirements."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with simple vocabulary and sentence structure, making it easy to understand but lacking complexity and variety."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-HT.3",
+   "minute": "45+3'",
+   "moment_type": "recap",
+   "set": "first_draft",
+   "kind": "recap_sentence",
+   "bucket": "withhold",
+   "truth": "planted_error",
+   "author": "recap_writer",
+   "planted": "inflated_number",
+   "first_status": "WITHHOLD",
+   "referee_flags": "Riverside United have 7 shots: Away shots so far: 5, not 7.",
+   "hand_check": "",
+   "response": "Northbridge FC have 6 shots and 2 on target, Riverside United have 7 shots and 2 on target.",
+   "item_id": "RECAP-HT.3:recap_sentence:first_draft",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response contains an incorrect number of shots for Riverside United, which is not supported by the context, making it partially inaccurate."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is relevant and logically presented but incomplete as it only provides one sentence instead of multiple sentences as requested, making it partially coherent."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct but simple and lacks complexity or varied vocabulary, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-HT.4",
+   "minute": "45+3'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC dominate possession with 63.7% compared to Riverside United's 36.3%.",
+   "item_id": "RECAP-HT.4:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is accurate and directly grounded in the context but is very limited and only mentions possession percentages without including other relevant details from the context."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and logically presented but only provides a single sentence instead of a multi-sentence recap as requested, making it partially coherent but incomplete."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent but is simple and lacks complexity or varied vocabulary, fitting well within competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-HT.5",
+   "minute": "45+3'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Callum Reyes of Northbridge FC has taken 4 shots so far.",
+   "item_id": "RECAP-HT.5:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is accurate and directly supported by the context but is incomplete as it only mentions one fact without additional details from the context."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is relevant but minimal and does not provide a logically organized or comprehensive half-time recap as requested, making it only partially coherent."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with adequate vocabulary, but it is simple and lacks complexity or variety in sentence structure, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-HT.6",
+   "minute": "45+3'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Jonah Pell leads recoveries with 10 for Northbridge FC.",
+   "item_id": "RECAP-HT.6:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and completely reflects the information about Jonah Pell's recoveries from the context without adding or omitting details."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is coherent as a single sentence and relevant to the match recap, but it is incomplete and does not provide a full half-time summary as requested, limiting its coherence in the context of the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct with appropriate vocabulary, but it is short and simple without complex sentence structures or varied vocabulary, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-FT.1",
+   "minute": "90+7'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC won 2-1 against Riverside United at full-time.",
+   "item_id": "RECAP-FT.1:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is accurate and directly grounded in the context but is very vague and incomplete, as it only states the final score and match status without any additional details from the context."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and logically presented but only provides a single sentence summary instead of a full recap with multiple sentences as requested, making it partially coherent but incomplete."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct but simple and lacks complexity or varied vocabulary, fitting the description of Competent Fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-FT.2",
+   "minute": "90+7'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Viktor Strand scored for Riverside United in the 24th minute, assisted by Luca Benedetti.",
+   "item_id": "RECAP-FT.2:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is accurate but only mentions one goal from the match, omitting other key details such as the final score and other goals, making it a partially correct but incomplete answer."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and logically presented but only covers one event, not the full match recap as requested, making it partially coherent but incomplete."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, effectively conveying the intended information with adequate vocabulary and sentence structure, but it lacks complexity and variety in sentence construction."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-FT.3",
+   "minute": "90+7'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Callum Reyes equalized for Northbridge FC in the 77th minute, assisted by Sami Okafor.",
+   "item_id": "RECAP-FT.3:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 2.0,
+     "result": "fail",
+     "reason": "The response correctly identifies the scorer, assist, and timing but incorrectly calls the goal an equalizer, which is not supported by the context. This makes the response partially incorrect."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and logically structured as a single sentence but fails to provide a full recap as requested, making it only partially coherent in relation to the query."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, with adequate vocabulary and sentence structure, but it lacks complexity and variety in sentence construction."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-FT.4",
+   "minute": "90+7'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Aiden Marsh scored the winning goal for Northbridge FC in the 89th minute, assisted by Lior Ashkenazi.",
+   "item_id": "RECAP-FT.4:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is accurate and directly grounded in the context but only partially covers the information by focusing solely on the winning goal, omitting other relevant details from the match recap."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is coherent in itself but only provides a single event rather than a full recap, so it partially addresses the query but lacks completeness and logical progression of multiple sentences summarizing the match."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, effectively conveying the intended information. It lacks complexity and variety in sentence structure and vocabulary, which aligns with competent fluency rather than proficient or exceptional levels."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-FT.5",
+   "minute": "90+7'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Northbridge FC dominated with 17 shots, 7 on target, 1.85 xG, and 66.9% possession.",
+   "item_id": "RECAP-FT.5:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 4.0,
+     "result": "pass",
+     "reason": "The response is accurate and grounded in the context but only partially covers the information, focusing solely on Northbridge FC's attacking and possession stats without mentioning other key details like the final score or goal scorers."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and logically presented but only provides a single sentence summary rather than a full recap as requested, making it partially coherent but incomplete."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear and grammatically correct, conveying the information effectively. However, it is a simple sentence with limited vocabulary and no complex sentence structures, fitting the description of competent fluency."
+    }
+   }
+  },
+  {
+   "decision_id": "RECAP-FT.6",
+   "minute": "90+7'",
+   "moment_type": "recap",
+   "set": "aired",
+   "kind": "recap_sentence",
+   "bucket": "verified",
+   "truth": "",
+   "author": "recap_writer",
+   "planted": "",
+   "first_status": "VERIFY",
+   "referee_flags": "",
+   "hand_check": "",
+   "response": "Callum Reyes stood out with the most shots, firing 6 attempts for Northbridge FC.",
+   "item_id": "RECAP-FT.6:recap_sentence:aired",
+   "scores": {
+    "groundedness": {
+     "score": 5.0,
+     "result": "pass",
+     "reason": "The response accurately and specifically reflects a fact from the context about Callum Reyes having the most shots with 6 attempts, making it fully grounded and complete for that particular detail."
+    },
+    "coherence": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is coherent as a single sentence but only partially addresses the query since it does not provide a full recap or multiple sentences, resulting in a partially coherent response."
+    },
+    "fluency": {
+     "score": 3.0,
+     "result": "pass",
+     "reason": "The response is clear, grammatically correct, and coherent, effectively conveying the intended information with simple vocabulary and sentence structure. It fits well within the Competent Fluency level."
+    }
+   }
+  }
+ ]
+}

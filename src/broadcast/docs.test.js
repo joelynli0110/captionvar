@@ -48,3 +48,18 @@ test('the one-line positioning quotes the measured result', () => {
   for (const file of ['README.md', 'docs/SUBMISSION.md']) assert.ok(read(file).includes(line), `${file} positioning line`);
   assert.ok(read('docs/SUBMISSION.md').includes(`stopped only ${judgeStopped} of the ${own} errors`));
 });
+
+test('docs/EVALUATION.md: the Foundry evaluator tables match foundry-evaluators.foundry-demo.json', () => {
+  const fe = JSON.parse(read('public/traces/eval/foundry-evaluators.foundry-demo.json'));
+  const doc = read('docs/EVALUATION.md');
+  const of = (g, ev, failed = false) => `${failed ? g[ev].fail : g[ev].pass} of ${g.n}`;
+  const t = fe.first_drafts.by_truth;
+  assert.ok(doc.includes(`| Planted red-team errors | ${t.planted_error.n} of ${t.planted_error.n} | ${of(t.planted_error, 'groundedness', true)} |`));
+  assert.ok(doc.includes(`| The narrator's own error (CAP-030) | 1 of 1 | ${of(t.own_error, 'groundedness', true)} |`));
+  assert.ok(doc.includes(`| True details the referee flagged by mistake | ${t.true_detail_flagged.n} of ${t.true_detail_flagged.n} | ${of(t.true_detail_flagged, 'groundedness', true)} |`));
+  const k = fe.aired.by_kind;
+  for (const [label, key] of [['Captions', 'caption'], ['Lines on why it matters', 'why_it_matters'], ['Recap sentences', 'recap_sentence']]) {
+    const g = k[key];
+    assert.ok(doc.includes(`| ${label} | ${of(g, 'groundedness')} | ${of(g, 'coherence')} | ${of(g, 'fluency')} |`), `aired row ${label}`);
+  }
+});
