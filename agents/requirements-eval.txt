@@ -1,0 +1,4 @@
+# Foundry evaluators (agents/foundry_eval.py). Kept apart from requirements.txt
+# so the CI install stays small; the script imports the package only when it runs.
+-r requirements.txt
+azure-ai-evaluation==1.16.9
