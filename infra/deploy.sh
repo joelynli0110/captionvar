@@ -68,7 +68,9 @@ for ns in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistr
 done
 
 step "Resource group $RESOURCE_GROUP ($LOCATION)"
-az group create --name "$RESOURCE_GROUP" --location "$LOCATION" -o none
+if [ "$(az group exists --name "$RESOURCE_GROUP")" != "true" ]; then
+  az group create --name "$RESOURCE_GROUP" --location "$LOCATION" -o none
+fi
 
 step "Container registry $ACR_NAME"
 [ -n "$(try az acr show --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP" --query id -o tsv)" ] ||

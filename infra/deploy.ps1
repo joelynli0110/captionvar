@@ -138,7 +138,9 @@ foreach ($ns in @("Microsoft.App", "Microsoft.OperationalInsights", "Microsoft.C
 # ---------------------------------------------------------------- resources
 
 Step "Resource group $ResourceGroup ($Location)"
-AzRun group create --name $ResourceGroup --location $Location -o none | Out-Null
+if ((az group exists --name $ResourceGroup).Trim() -ne "true") {
+    AzRun group create --name $ResourceGroup --location $Location -o none | Out-Null
+}
 
 Step "Container registry $AcrName"
 if (-not (AzTry acr show --name $AcrName --resource-group $ResourceGroup --query id -o tsv)) {
